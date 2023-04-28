@@ -100,6 +100,8 @@ repositories {
 
 dependencies {
 
+    implementation("org.jbox2d:jbox2d-library:2.2.1.1")
+
 //    implementation(libs.jsoup)
 //    implementation(libs.gson)
 //    implementation(libs.csv)
