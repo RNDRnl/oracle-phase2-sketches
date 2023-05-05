@@ -5,6 +5,7 @@ import org.jbox2d.dynamics.*
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.isolated
+import org.openrndr.extensions.Screenshots
 import org.openrndr.extra.color.spaces.toOKHSLa
 import org.openrndr.ffmpeg.ScreenRecorder
 import org.openrndr.math.Vector2
@@ -13,8 +14,8 @@ import kotlin.random.Random
 
 fun main() = application {
     configure {
-        width = 1920
-        height = 1080
+        width = 1920 / 2
+        height = 1080 / 2
     }
 
     program {
@@ -40,7 +41,7 @@ fun main() = application {
             bodies.add(body)
         }
 
-        val box = Rectangle.fromCenter(Vector2(0.0, 0.0), 80.0, 800.0).contour
+        val box = Rectangle.fromCenter(Vector2(0.0, 0.0), 5.0, 800.0).contour
         fun addBox(p:Vector2) {
             val fixtureDef = FixtureDef().apply {
                 shape = box.polygonShape(simScale)
@@ -72,9 +73,8 @@ fun main() = application {
         addStaticBox(Rectangle(0.0, 0.0, 10.0, height-10.0))
         addStaticBox(Rectangle(width-10.0, 0.0, 10.0, height-10.0))
 
-        extend(ScreenRecorder()) {
-            frameRate = 60
-        }
+        extend(Screenshots())
+
         extend {
             drawer.clear(ColorRGBa.PINK)
             drawer.fill = ColorRGBa.PINK.shade(0.5)

@@ -13,6 +13,7 @@ val orxFeatures = setOf<String>(
 //  "orx-boofcv",
     "orx-camera",
 //  "orx-chataigne",
+    "orx-delegate-magic",
     "orx-color",
     "orx-compositor",
 //  "orx-dnk3",
@@ -27,7 +28,7 @@ val orxFeatures = setOf<String>(
 //  "orx-integral-image",
 //  "orx-interval-tree",
 //  "orx-jumpflood",
-//  "orx-kdtree",
+    "orx-kdtree",
 //  "orx-keyframer",      
 //  "orx-kinect-v1",
 //  "orx-kotlin-parser",
@@ -102,9 +103,10 @@ dependencies {
 
     implementation("org.jbox2d:jbox2d-library:2.2.1.1")
 
-//    implementation(libs.jsoup)
-//    implementation(libs.gson)
-//    implementation(libs.csv)
+    implementation(libs.jsoup)
+    implementation(libs.gson)
+    implementation(libs.csv)
+    implementation("org.apache.commons", "commons-csv", "1.5")
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.slf4j.api)
