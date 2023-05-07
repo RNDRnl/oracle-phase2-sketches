@@ -7,10 +7,14 @@ import org.openrndr.Program
 import org.openrndr.MouseEventType
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.isolated
+import org.openrndr.draw.loadFont
+import org.openrndr.draw.writer
 import org.openrndr.extra.color.spaces.toOKHSLa
 import org.openrndr.extra.noise.uniform
+import org.openrndr.extra.shapes.toRounded
 import org.openrndr.math.Vector2
 import org.openrndr.math.Vector4
+import org.openrndr.math.smoothstep
 import org.openrndr.shape.Rectangle
 import kotlin.random.Random
 
@@ -23,7 +27,6 @@ fun Program.screenTest01() {
     val frame = drawer.bounds
 
     val world = World(Vec2(0.0f, .81f))
-    val bodies = mutableListOf<Body>()
 
     var articles = listOf<Pair<ArticleData, ColorRGBa>>()
 
@@ -35,17 +38,16 @@ fun Program.screenTest01() {
             density = 1.0f
             friction = 0.3f
             restitution = 0.0f
-
         }
 
-        // TODO margin on the physicsim
+        val pos = Vector2((index.toDouble() / articles.size.toDouble()) * (frame.width - 50.0) + Double.uniform(-5.0, 5.0) + 50.0,
+                            Double.uniform(0.1, 0.5) * (frame.height - 50.0))
 
-        val pos = Vector2((index.toDouble() / books.size.toDouble()) * frame.width + Double.uniform(-10.0, 10.0),
-                            Double.uniform(0.1, 0.5) * frame.height)
+
         val bodyDef = BodyDef().apply {
             type = BodyType.DYNAMIC
             position.set(pos.toVec2().mul((1/simScale).toFloat()))
-            this.angle = Random.nextDouble(-Math.PI / 3, Math.PI / 3).toFloat()
+            this.angle = Random.nextDouble(-Math.PI / 6, Math.PI / 6).toFloat()
         }
         val body = world.createBody(bodyDef)
         body.createFixture(fixtureDef)
@@ -53,15 +55,18 @@ fun Program.screenTest01() {
         body.linearVelocity = Vec2(Random.nextFloat() * 50.0f  -25.0f, Random.nextFloat() * 50.0f - 25.0f).mul((1/simScale).toFloat())
         body.angularVelocity = (Random.nextFloat() * 100.0f - 50.0f) / 100.0f
 
-        bodies.add(body)
         return body
     }
 
-    fun show() {
+    fun show(zoom: Double) {
         for((index, article) in articles.withIndex()) {
+
+            val t = smoothstep(0.75, 1.0, Double.uniform(0.0, 1.0))
+            val boxWidth = if(t < zoom) 180.0 else 600.0
+
             val box = Rectangle.fromCenter(
                 Vector2.ZERO,
-                230.0 * Double.uniform(0.85, 1.15),
+                boxWidth * Double.uniform(0.85, 1.15),
                 1600.0 * Double.uniform(0.85, 1.15))
 
             val body = createBookBody(box, index)
@@ -71,27 +76,26 @@ fun Program.screenTest01() {
     }
 
     fun hide() {
-        println("hidin")
         for(body in books.map { it.body }) {
             if(body.type == BodyType.DYNAMIC) {
                 world.destroyBody(body)
             }
         }
         articles = listOf()
-        bodies.clear()
         books.clear()
     }
 
-    var update: (met: MouseEventType, articlesToColors: List<Pair<ArticleData, ColorRGBa>>)->Unit by this.userProperties
-    update = { met, atc ->
+    var update: (met: MouseEventType, articlesToColors: List<Pair<ArticleData, ColorRGBa>>, zoom: Double)->Unit by this.userProperties
+    update = { met, atc, zoom ->
         if(met == MouseEventType.BUTTON_DOWN) {
             hide()
         } else
         {
             articles = atc
-            show()
+            show(zoom)
         }
     }
+
 
     val staticBodies = mutableListOf<Body>()
 
@@ -113,31 +117,44 @@ fun Program.screenTest01() {
         staticBodies.add(body)
     }
 
-
     addStaticBox(Rectangle(0.0, height-10.0,  width*1.0, 10.0))
     addStaticBox(Rectangle(0.0, 0.0, 10.0, height-10.0))
     addStaticBox(Rectangle(width-10.0, 0.0, 10.0, height-10.0))
 
-    extend {
-        drawer.clear(ColorRGBa.BLACK)
+    val fm = loadFont("data/fonts/RobotoCondensed-Bold.ttf", 80.0, contentScale = 4.0)
 
-        world.gravity = Vec2(0.0f, 90.81f)
+    extend {
+
+        drawer.clear(ColorRGBa.BLUE.shade(0.35))
+
+        world.gravity = Vec2(0.0f, 100.81f)
         world.step(1.0f/200.0f, 100, 100)
 
+        drawer.fontMap = fm
+
         for (book in books) {
-            val body = book.body
-            drawer.fill = book.color
-            drawer.stroke = null
 
             drawer.isolated {
-                drawer.model = body.transform.matrix44()
-                drawer.contour(book.frame.contour)
+                drawer.fill = book.color
+                drawer.stroke = null
+                drawer.model = book.body.transform.matrix44()
+                drawer.contour(book.frame.offsetEdges(2.0).contour)
+
+                drawer.fill = ColorRGBa.BLACK
+                drawer.translate(book.frame.center)
+                drawer.rotate(-90.0)
+                drawer.translate(-book.frame.center)
+                writer {
+                    box = Rectangle(book.frame.y, book.frame.x, book.frame.height, book.frame.width).offsetEdges(-2.0)
+                    newLine()
+                    text(book.data.title.uppercase())
+                }
             }
         }
 
         drawer.fill = null
         drawer.stroke = ColorRGBa.PINK
-        drawer.strokeWeight = 10.0
+        drawer.strokeWeight = 8.0
         drawer.rectangle(frame)
 
 

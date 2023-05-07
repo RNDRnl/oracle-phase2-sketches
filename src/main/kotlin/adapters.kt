@@ -9,7 +9,7 @@ import org.openrndr.shape.ShapeContour
 fun ShapeContour.polygonShape(scale:Double = 100.0): PolygonShape {
     val linear = sampleLinear()
     val vertices = linear.segments.map { it.start }.map { Vec2((it.x/scale).toFloat(), (it.y/scale).toFloat()) }.toTypedArray()
-    println(vertices.size)
+
     return PolygonShape().apply {
         set(vertices, vertices.size)
     }

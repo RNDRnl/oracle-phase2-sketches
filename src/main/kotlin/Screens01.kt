@@ -10,6 +10,7 @@ import org.openrndr.launch
 import org.openrndr.math.IntVector2
 import org.openrndr.shape.Rectangle
 import kotlin.concurrent.thread
+import kotlin.math.ceil
 
 fun main() = application {
     configure {
@@ -28,7 +29,7 @@ fun main() = application {
 
         val screens = List(8) {
             val vb = viewBox(widescreenFrame) { screenTest01()  }
-            val update: (met: MouseEventType, articlesToColors: List<Pair<ArticleData, ColorRGBa>>)->Unit by vb.userProperties
+            val update: (met: MouseEventType, articlesToColors: List<Pair<ArticleData, ColorRGBa>>, zoom: Double)->Unit by vb.userProperties
             vb to update
         }
 
@@ -36,19 +37,28 @@ fun main() = application {
 
         receiver.stateReceived.listen {
             launch {
-                println("received ${it.indexesToColors.size}")
-                val n = it.indexesToColors.size / screens.size
+                val chunks = HashMap<Int, MutableList<Pair<ArticleData, ColorRGBa>>>(8)
 
-                if(n != 0) {
-                    screens.forEachIndexed { i, (vb, update) ->
-                        val chunk = it.indexesToColors.chunked(n)[i].take(18)
-                        val ad = chunk.map { articles[it.first] }
-                        val colors = chunk.map {
-                            val c = it.second
-                            ColorRGBa(c.r, c.g, c.b) }
-                        update(it.type, ad zip colors)
-                    }
+                println(it.indexesToColors.size)
+
+                var currentScreen = 0
+                for((i, rgb) in it.indexesToColors) {
+                    val color = rgb.run { ColorRGBa(r, g, b) }
+                    val c = chunks.getOrPut(currentScreen) { mutableListOf() }
+
+                    if(c.size < 14) {
+                        c.add(articles[i] to color)
+                    } else break
+
+                    currentScreen = if(currentScreen == 7) 0 else currentScreen + 1
                 }
+
+                for(chunk in chunks) {
+
+                    val updateFunc = screens[chunk.key].second
+                    updateFunc(it.type, chunk.value.toList(), it.zoom)
+                }
+
 
             }
          }

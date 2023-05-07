@@ -23,7 +23,6 @@ import java.net.InetSocketAddress
 import kotlin.concurrent.thread
 
 const val divider = 4
-
 fun main() = application {
     configure {
         width = 1920 / divider

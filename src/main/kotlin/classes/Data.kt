@@ -38,7 +38,7 @@ class Data {
     var activeFacultyColors = listOf<ColorRGBa>()
 
     fun loadArticles(): List<ArticleData> {
-        return Gson().fromJson(FileReader(File("data/mapped-v2r1.json")), Array<Entry>::class.java)
+        return Gson().fromJson(FileReader(File("offline-data/mapped-v2r1.json")), Array<Entry>::class.java)
             .drop(skipPoints).map {
                 ArticleData(
                     it.ogdata["Title"] as String,

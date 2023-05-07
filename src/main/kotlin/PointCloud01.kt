@@ -23,7 +23,7 @@ import java.net.InetSocketAddress
 import kotlin.concurrent.thread
 
 class Color(val r: Double, val g: Double, val b: Double): Serializable
-class EventObject(val type: MouseEventType, val indexesToColors: List<Pair<Int, Color>>): Serializable
+class EventObject(val type: MouseEventType, val indexesToColors: List<Pair<Int, Color>>, val zoom: Double): Serializable
 
 fun main() = application {
     configure {
@@ -35,6 +35,8 @@ fun main() = application {
     }
 
     program {
+
+        val address = "192.168.1.158"
 
         val data = Data()
         val positions = data.points
@@ -98,7 +100,7 @@ fun main() = application {
         mouse.dragged.listen {
             val p = it.position
             if(p in slider.bounds.offsetEdges(15.0)) {
-                slider.current = map(slider.bounds.x, slider.bounds.x + slider.width, 0.0, 1.0, p.x)
+                slider.current = map(slider.bounds.x, slider.bounds.x + slider.width, 1.0, 0.0, p.x)
                 qcam.zoom = slider.current
             }
         }
@@ -138,10 +140,9 @@ fun main() = application {
 
         thread {
             val socket = DatagramSocket()
-            val address = InetSocketAddress(InetAddress.getByName("192.168.1.103"), 9002)
+            val address = InetSocketAddress(InetAddress.getByName(address), 9002)
 
             fun send(state: EventObject) {
-                println(state.indexesToColors.size)
                 val baos = ByteArrayOutputStream(1024)
                 val oos = ObjectOutputStream(baos)
                 oos.writeUnshared(state)
@@ -153,12 +154,12 @@ fun main() = application {
 
             mouse.buttonUp.listen {
                 val ee = data.activePoints zip data.activeFacultyColors.map { c -> Color(c.r, c.g, c.b) }
-                send(EventObject(it.type, ee))
+                send(EventObject(it.type, ee, qcam.zoom))
             }
 
             mouse.buttonDown.listen {
                 val ee = data.activePoints zip data.activeFacultyColors.map { c -> Color(c.r, c.g, c.b) }
-                send(EventObject(it.type, ee))
+                send(EventObject(it.type, ee, qcam.zoom))
             }
         }
 

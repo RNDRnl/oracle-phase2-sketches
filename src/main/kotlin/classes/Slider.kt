@@ -23,7 +23,7 @@ class Slider(val pos: Vector2, val width: Double, val label: String = "SLIDER") 
 
         drawer.fill = ColorRGBa.WHITE
         drawer.text(label, pos - Vector2(0.0, 17.0))
-        drawer.circle(rail.position(current), radius)
+        drawer.circle(rail.position(1.0 - current), radius)
     }
 
 }
