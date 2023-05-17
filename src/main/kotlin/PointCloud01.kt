@@ -27,16 +27,16 @@ class EventObject(val type: MouseEventType, val indexesToColors: List<Pair<Int, 
 
 fun main() = application {
     configure {
-        width = 1920 / divider
-        height = 1080 / divider
+        width = 1920 / (divider)
+        height = 1080 / (divider)
         hideWindowDecorations = true
         windowAlwaysOnTop = true
-        position = IntVector2(1200, 250)
+        position = IntVector2(1020, 680)
     }
 
     program {
 
-        val address = "192.168.1.158"
+        val address = "192.168.1.62"
 
         val data = Data()
         val positions = data.points

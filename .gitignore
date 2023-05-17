@@ -6,4 +6,7 @@ out
 video/
 screenshots/
 gui-parameters/
+/offline-data/mapped-v2r1.json
+
 /offline-data/
+/src/main/kotlin/thingy.kt
