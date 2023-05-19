@@ -1,7 +1,7 @@
-import classes.Data
-import classes.QuaternionCameraSimple
-import classes.Slider
-import classes.facultyColors
+package v02
+
+import classes.*
+import divider
 import org.openrndr.MouseEventType
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
@@ -11,7 +11,6 @@ import org.openrndr.extra.fx.blur.GaussianBlur
 import org.openrndr.extra.fx.color.ColorCorrection
 import org.openrndr.extra.gui.GUI
 import org.openrndr.extra.gui.addTo
-import org.openrndr.launch
 import org.openrndr.math.*
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
@@ -21,9 +20,6 @@ import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import kotlin.concurrent.thread
-
-class Color(val r: Double, val g: Double, val b: Double): Serializable
-class EventObject(val type: MouseEventType, val indexesToColors: List<Pair<Int, Color>>, val zoom: Double): Serializable
 
 fun main() = application {
     configure {

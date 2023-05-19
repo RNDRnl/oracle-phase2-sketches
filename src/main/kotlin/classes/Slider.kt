@@ -6,6 +6,7 @@ import org.openrndr.math.Vector2
 import org.openrndr.shape.LineSegment
 import org.openrndr.shape.Rectangle
 
+
 class Slider(val pos: Vector2, val width: Double, val label: String = "SLIDER") {
 
     var current = 0.5
@@ -23,7 +24,7 @@ class Slider(val pos: Vector2, val width: Double, val label: String = "SLIDER") 
 
         drawer.fill = ColorRGBa.WHITE
         drawer.text(label, pos - Vector2(0.0, 17.0))
-        drawer.circle(rail.position(1.0 - current), radius)
+        drawer.circle(rail.position(current), radius)
     }
 
 }

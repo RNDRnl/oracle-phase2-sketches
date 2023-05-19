@@ -1,7 +1,5 @@
 package classes
 
-import EventObject
-import org.openrndr.MouseEventType
 import org.openrndr.events.Event
 import java.io.ByteArrayInputStream
 import java.io.IOException

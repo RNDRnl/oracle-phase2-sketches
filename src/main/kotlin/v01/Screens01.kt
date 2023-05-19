@@ -1,6 +1,9 @@
+package v01
+
 import classes.ArticleData
 import classes.Data
 import classes.Receiver
+import divider
 import org.openrndr.MouseEventType
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
@@ -8,47 +11,27 @@ import org.openrndr.extra.shapes.grid
 import org.openrndr.extra.viewbox.viewBox
 import org.openrndr.launch
 import org.openrndr.math.IntVector2
-import org.openrndr.math.Vector2
-import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import kotlin.concurrent.thread
-import kotlin.math.ceil
-import kotlin.math.pow
-import kotlin.math.sqrt
-
-
-var origin = Vector2(x=6400.0, y=2730.0)
 
 fun main() = application {
     configure {
-        width = (2560 * 4) / 5
-        height = (1080 * 3) / 5
+        width = (1920 * 2) / divider
+        height = (1080 * 4) / divider
         hideWindowDecorations = true
-        windowAlwaysOnTop = false
-        position = IntVector2(0, 250)
+        windowAlwaysOnTop = true
+        position = IntVector2(2, 2)
     }
     program {
 
         val articles = Data().articles
-        val active = setOf(0, 1, 4, 5, 6, 7, 8, 9)
+        val frames = drawer.bounds.grid(2, 4).flatten()
 
+        val widescreenFrame = Rectangle(0.0, 0.0, 3440.0, 2560.0)
 
-        val frames = Rectangle(0.0, 0.0, 2560 * 4.0, 1080.0 * 3).grid(4, 3)
-            .flatten()
-            .slice(active)
-            .sortedBy { it.center.distanceTo(origin) }
-
-
-
-        val widescreenFrame = Rectangle(0.0, 0.0, 2560.0, 1080.0)
-
-        val screens = frames.map {
-            val i = ceil(origin.distanceTo(it.center) / it.diagonalLength).toInt() - 1
-
-
-            val vb = viewBox(widescreenFrame) { screenTest02(i, it)  }
+        val screens = List(8) {
+            val vb = viewBox(widescreenFrame) { screenTest01()  }
             val update: (met: MouseEventType, articlesToColors: List<Pair<ArticleData, ColorRGBa>>, zoom: Double)->Unit by vb.userProperties
-
             vb to update
         }
 
@@ -88,24 +71,13 @@ fun main() = application {
             }
         }
 
-        val screensToFrames = (screens zip frames)
-
         extend {
 
-            //origin = mouse.position * 5.0
-            //println(origin)
-
-            drawer.scale(1.0 / 5.0)
-            screensToFrames.forEach { (screen, rect) ->
+            for((screen, rect) in screens zip frames) {
                 screen.first.update()
-                drawer.image(screen.first.result, screen.first.result.bounds, rect)
+                drawer.image(screen.first.result, widescreenFrame, rect)
             }
 
-            drawer.fill = ColorRGBa.RED
-            drawer.circle(origin, 10.0)
         }
     }
 }
-
-val Rectangle.diagonalLength: Double
-    get() = sqrt(width.pow(2) + height.pow(2))

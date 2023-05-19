@@ -1,9 +1,10 @@
+package v02
+
 import classes.ArticleData
 import orbox.matrix44
 import orbox.polygonShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.*
-import org.jbox2d.dynamics.contacts.CircleContact
 import org.openrndr.Program
 import org.openrndr.MouseEventType
 import org.openrndr.animatable.Animatable
@@ -18,6 +19,10 @@ import org.openrndr.math.Vector2
 import org.openrndr.math.smoothstep
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
+import origin
+import v01.Book
+import v01.simScale
+import v01.toVec2
 import kotlin.random.Random
 
 fun Program.screenTest02(i: Int, rect: Rectangle) {

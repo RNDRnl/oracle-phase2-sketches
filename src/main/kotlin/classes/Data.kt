@@ -90,7 +90,7 @@ class Data {
         }
 
     fun findActivePoints(): List<Int> {
-        return kdtree.findAllInRadius(lookAt, zoom.coerceAtLeast(0.1)).sortedBy { it.distanceTo(lookAt) }.map {
+        return kdtree.findAllInRadius(lookAt, (1.0 - zoom).coerceAtLeast(0.1)).sortedBy { it.distanceTo(lookAt) }.map {
             pointIndices[it] ?: error("point not found")
         }
     }

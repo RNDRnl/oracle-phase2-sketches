@@ -69,7 +69,7 @@ class QuaternionCameraSimple : Extension {
 
     override fun beforeDraw(drawer: Drawer, program: Program) {
         drawer.pushTransforms()
-        val fov = (zoom * 76.0 + 12.0).coerceAtMost(maxZoomOut)
+        val fov = ((1.0 - zoom) * 76.0 + 12.0).coerceAtMost(maxZoomOut)
         drawer.projection = perspective(fov, 2880.0/1920.0, 0.1, 50.0)
         drawer.view = orientation.matrix.matrix44
     }
