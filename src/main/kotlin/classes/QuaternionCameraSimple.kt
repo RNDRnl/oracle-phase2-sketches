@@ -45,7 +45,7 @@ class QuaternionCameraSimple : Extension {
                 if (!buttonDown) {
                     return@listen
                 }
-                val sensitivity = mix(1.0 / 100.0, 1.0 / 10.0, zoom)
+                val sensitivity = mix(1.0 / 100.0, 1.0 / 10.0, 1.0 - zoom)
 
                 orientation = Quaternion.fromAngles(
                     it.dragDisplacement.x * sensitivity,

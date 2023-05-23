@@ -43,7 +43,7 @@ fun main() = application {
 
         val screens = frames.mapIndexed { i, r ->
             val vb = viewBox(widescreenFrame) { screenTest03(i, r)  }
-            val update: (met: MouseEventType, articlesToColors: List<Pair<ArticleData, ColorRGBa>>, zoomLevel: Int)->Unit by vb.userProperties
+            val update: (met: MouseEventType, articlesToColors: List<Article>, zoomLevel: Int)->Unit by vb.userProperties
 
             vb to update
         }
@@ -57,20 +57,23 @@ fun main() = application {
                 in 0.33..0.8 -> 1
                 else -> 2
             }
+
             val deserialized = it.indexesToColors.map { (i, c) ->
-                articles[i] to c.run { ColorRGBa(r, g, b) }
+                Article(articles[i], c.run { ColorRGBa(r, g, b) })
             }
+            val deserializedSorted = deserialized.sortedBy { d -> d.ad.faculty }
 
             launch {
                 if(zoomLevel < 2) {
-                    val chunks = HashMap<Int, MutableList<Pair<ArticleData, ColorRGBa>>>(8)
+                    val chunks = HashMap<Int, MutableList<Article>>(8)
 
                     var currentScreen = 0
-                    for((ad, color) in deserialized) {
+                    val list = if(zoomLevel == 1) deserialized else deserializedSorted
+                    for(article in list) {
                         val c = chunks.getOrPut(currentScreen) { mutableListOf() }
 
-                        if(c.size < 300) {
-                            c.add(ad to color)
+                        if(c.size < 1000) {
+                            c.add(article)
                         } else break
 
                         currentScreen = if(currentScreen == 7) 0 else currentScreen + 1

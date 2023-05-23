@@ -30,7 +30,7 @@ import kotlin.random.Random
 
 fun Program.screenTest03(i: Int, rect: Rectangle) {
 
-    var articles = listOf<Pair<ArticleData, ColorRGBa>>()
+    var articles = listOf<Article>()
 
     class Controller: Animatable() {
         var showTimer = 0.0
@@ -70,7 +70,7 @@ fun Program.screenTest03(i: Int, rect: Rectangle) {
     }
 
 
-    var update: (met: MouseEventType, articlesToColors: List<Pair<ArticleData, ColorRGBa>>, zoomLevel: Int)->Unit by this.userProperties
+    var update: (met: MouseEventType, articlesToColors: List<Article>, zoomLevel: Int)->Unit by this.userProperties
     update = { met, atc, zoomlv ->
         if(met == MouseEventType.BUTTON_DOWN) {
             hide()
@@ -112,6 +112,8 @@ fun Program.screenTest03(i: Int, rect: Rectangle) {
 
     }
 }
+
+class Article(val ad: ArticleData, val color: ColorRGBa)
 
 fun Vector2.transform(m : Matrix44) : Vector2 {
     return (m * this.xy01).xy

@@ -26,9 +26,9 @@ import kotlin.random.Random
 
 open class ZoomLevel(val i: Int, val rect: Rectangle, val drawer: Drawer) {
 
-    open fun populate(articles: List<Pair<ArticleData, ColorRGBa>>) { }
+    open fun populate(articles: List<Article>) { }
 
-    open fun clear() { }
+    open fun clear() { animations.fadeOut() }
 
     inner class Animations: Animatable() {
         var fade = 0.0
@@ -42,8 +42,8 @@ open class ZoomLevel(val i: Int, val rect: Rectangle, val drawer: Drawer) {
         fun fadeOut() {
             ::textFade.cancel()
             ::fade.cancel()
-            ::fade.animate(0.0, 250, Easing.SineInOut)
-            ::textFade.animate(0.0, 350, Easing.SineInOut)
+            ::fade.animate(0.0, 250, Easing.SineInOut).completed.listen { fade = 0.0 }
+            ::textFade.animate(0.0, 350, Easing.SineInOut).completed.listen { textFade = 0.0 }
         }
     }
     val animations = Animations()
@@ -61,10 +61,22 @@ open class ZoomLevel(val i: Int, val rect: Rectangle, val drawer: Drawer) {
 
 class Zoom0(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer) {
 
+    var rects = listOf<Rectangle>()
+    var color = ColorRGBa.GRAY
+
+    override fun populate(articles: List<Article>) {
+        color = articles[0].color
+        rects = Rectangle(0.0, 0.0, rect.width, rect.height).grid(articles.size, 1).flatten()
+        animations.fadeIn()
+    }
+
     override fun draw(circle: Circle) {
         drawer.isolated {
             fill = ColorRGBa.BLUE
-            circle(bounds.center, 100.0)
+            for(rect in rects.take((animations.fade * rects.size).toInt())) {
+                drawer.fill = color
+                drawer.rectangle(rect)
+            }
         }
     }
 }
@@ -82,12 +94,6 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
                 density = 2.0f
                 friction = 0.01f
                 restitution = 0.1f
-
-                /*    if (floor) {
-                        filter.categoryBits = controller.floorBits
-                        filter.maskBits = controller.bookBits
-                    }*/
-
             }
             val bodyDef = BodyDef().apply {
                 type = BodyType.STATIC
@@ -129,7 +135,7 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
     }
 
 
-    override fun populate(articles: List<Pair<ArticleData, ColorRGBa>>) {
+    override fun populate(articles: List<Article>) {
         books.clear()
 
         for((index, article) in articles.withIndex()) {
@@ -146,12 +152,13 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
                 Double.uniform(0.3, 0.7) * (drawer.height - 50.0))
 
             val body = createBookBody(pos, box, index)
-            val book = Book(box, article.first, article.second, body)
+            val book = Book(box, article.ad, article.color, body)
             books.add(book)
         }
     }
 
     override fun clear() {
+        animations.fadeOut()
         for(body in books.map { it.body }) {
             world.destroyBody(body)
         }
@@ -199,19 +206,19 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
 
 class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer) {
 
-    var currentArticle: Pair<ArticleData, ColorRGBa>? = null
-    var sameFaculty = listOf<Pair<ArticleData, ColorRGBa>>()
-    var sameTopic = listOf<Pair<ArticleData, ColorRGBa>>()
+    var currentArticle: Article? = null
+    var sameFaculty = listOf<Article>()
+    var sameTopic = listOf<Article>()
 
     override fun clear() {
         animations.fadeOut()
     }
 
-    override fun populate(articles: List<Pair<ArticleData, ColorRGBa>>) {
+    override fun populate(articles: List<Article>) {
         animations.fadeIn()
         currentArticle = if(articles.isNotEmpty()) articles.first() else null
         if(currentArticle != null) {
-            sameFaculty = List(10) { articles.filter { it.first.faculty == currentArticle!!.first.faculty }.random() }
+            sameFaculty = List(10) { articles.filter { it.ad.faculty == currentArticle!!.ad.faculty }.random() }
             sameTopic = List(10) { articles.random() }
         }
     }
@@ -219,21 +226,21 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
     override fun draw(circle: Circle) {
         drawer.isolated {
             if(currentArticle != null) {
-                val (ad, color) = currentArticle!!
+                val article = currentArticle!!
 
-                drawer.fill = when(i) { 0, 2, 6 -> color else -> ColorRGBa.BLACK }.opacify(animations.fade)
+                drawer.fill = when(i) { 0, 2, 6 -> article.color else -> ColorRGBa.BLACK }.opacify(animations.fade)
                 drawer.stroke = null
                 drawer.rectangle(bounds)
 
                 drawer.fill = ColorRGBa.WHITE
                 when(i) {
-                    0 -> singleColumnText(ad.title)
-                    1 -> infoText(ad)
-                    2 -> singleColumnText(ad.department)
+                    0 -> singleColumnText(article.ad.title)
+                    1 -> infoText(article.ad)
+                    2 -> singleColumnText(article.ad.department)
                     3 -> multiColumnText("ABSTRACT", lipsum, 3)
-                    4 -> books(sameFaculty)
-                    5 -> books(sameTopic)
-                    6 -> singleColumnText(ad.date)
+                    4 -> books(sameFaculty, "FROM THE SAME FACULTY")
+                    5 -> books(sameTopic, "FROM THE SAME TOPIC")
+                    6 -> singleColumnText(article.ad.date)
                     7 -> timeline()
                 }
             }
@@ -256,8 +263,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         drawer.writer {
             box = authorsBox
             newLine()
-            println(ad.author)
-            text(ad.author)
+            text(ad.author.take((animations.textFade * ad.author.length).toInt()))
         }
 
         val dateBox = Rectangle(rects[1].x, rects[1].y + (stfm.height * 2.0), rects[1].width, 150.0)
@@ -267,45 +273,39 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         drawer.writer {
             box = dateBox
             newLine()
-            text(ad.date)
+            text(ad.date.take((animations.textFade * ad.date.length).toInt()))
         }
 
-        val facultyBox = Rectangle(rects[1].x,dateBox.y + dateBox.height + (stfm.height * 2.0), rects[1].width, rects[1].height)
+        val facultyBox = Rectangle(rects[1].x,dateBox.y + dateBox.height + (stfm.height * 2.0), rects[1].width, 250.0)
         drawer.fontMap = stfm
-        drawer.text("FACULTY", dateBox.corner +  Vector2(0.0, dateBox.height + stfm.height))
+        drawer.text("FACULTY", dateBox.corner + Vector2(0.0, dateBox.height + stfm.height))
         drawer.fontMap = fm
         drawer.writer {
             box = facultyBox
             newLine()
-            text(ad.faculty)
+            text(ad.faculty.take((animations.textFade * ad.faculty.length).toInt()))
         }
 
-
-        val departmentBox = Rectangle(rects[1].x, rects[1].y + facultyBox.height, rects[1].width, rects[1].height)
+        val departmentBox = Rectangle(rects[1].x, facultyBox.y + facultyBox.height + (stfm.height * 2.0), rects[1].width, 250.0)
         drawer.fontMap = stfm
-        drawer.text("DEPARTMENT", rects[1].corner + stfm.height)
+        drawer.text("DEPARTMENT", facultyBox.corner + Vector2(0.0, facultyBox.height + stfm.height))
         drawer.fontMap = fm
         drawer.writer {
             box = departmentBox
             newLine()
-            text(ad.department)
+            text(ad.department.take((animations.textFade * ad.department.length).toInt()))
         }
 
-        /*
-        val infoBox = Rectangle(rects[2].x, rects[2].y + (stfm.height * 2.0), rects[2].width, 150.0)
+
+        val infoBox = Rectangle(rects[2].x, rects[2].y + (stfm.height * 2.0), rects[2].width, rects[2].height)
         drawer.fontMap = stfm
-        drawer.text("INFO", rects[2].corner + stfm.height)
+        drawer.text("INFO", rects[2].corner + Vector2(0.0, stfm.height))
         drawer.fontMap = fm
         drawer.writer {
             box = infoBox
             newLine()
-            text(ad.department)
-        }*/
-
-//        drawer.strokeWeight = 4.0
-//        drawer.stroke = ColorRGBa.RED
-//        drawer.fill = null
-//        drawer.rectangles(listOf(authorsBox, dateBox, departmentBox, infoBox))
+            text(lipsum.take((animations.textFade * lipsum.length).toInt()))
+        }
 
     }
 
@@ -342,11 +342,33 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         }
     }
 
-    private fun books(bookList: List<Pair<ArticleData, ColorRGBa>>) {
+    private fun books(bookList: List<Article>, text: String = "") {
         drawer.stroke = null
-        for((i, sf) in bookList.withIndex()) {
-            drawer.fill = sf.second
-            drawer.rectangle(i * 10.0, 100.0, 10.0, 200.0)
+
+        drawer.fontMap = stfm
+        drawer.text(text, drawer.bounds.corner + Vector2(60.0, 120.0))
+
+        var acc = 0.0
+        drawer.translate(60.0, 0.0)
+        drawer.fontMap = fm
+        for((i, sf) in bookList.take((bookList.size * animations.fade).toInt()).withIndex()) {
+            val w = Double.uniform(80.0, 160.0, Random(i))
+            val r = Rectangle(acc, drawer.height - 480.0, w,380.0)
+            drawer.fill = sf.color
+            drawer.rectangle(r)
+
+            drawer.fill = ColorRGBa.BLACK
+
+            drawer.pushTransforms()
+            drawer.translate(r.x + 50.0, r.y + r.height - 20.0)
+            drawer.rotate(-90.0)
+            drawer.translate(-r.x, -(r.y + r.height))
+            drawer.text(sf.ad.title.uppercase().take(
+                (r.width / fm.characterWidth('"')).toInt()
+            ), r.x, r.y + r.height)
+            drawer.popTransforms()
+
+            acc += w + 10.0
         }
     }
 
