@@ -182,9 +182,6 @@ fun Program.screenTest02(i: Int, rect: Rectangle) {
         //.reversed().take(t0).drop(t1)
         for (book in books) {
 
-            fun Vector2.transform(m : Matrix44) : Vector2 {
-                return (m * this.xy01).xy
-            }
 
             if(book.frame.center.transform(book.body.transform.matrix44()) + rect.corner in circle) {
                 drawer.isolated {
@@ -221,3 +218,8 @@ fun Program.screenTest02(i: Int, rect: Rectangle) {
 
     }
 }
+
+fun Vector2.transform(m : Matrix44) : Vector2 {
+    return (m * this.xy01).xy
+}
+

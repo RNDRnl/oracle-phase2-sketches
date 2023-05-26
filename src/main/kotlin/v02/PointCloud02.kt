@@ -2,7 +2,6 @@ package v02
 
 import classes.*
 import divider
-import org.openrndr.MouseEventType
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.*
@@ -12,9 +11,9 @@ import org.openrndr.extra.fx.color.ColorCorrection
 import org.openrndr.extra.gui.GUI
 import org.openrndr.extra.gui.addTo
 import org.openrndr.math.*
+import v03.Slider
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
-import java.io.Serializable
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress

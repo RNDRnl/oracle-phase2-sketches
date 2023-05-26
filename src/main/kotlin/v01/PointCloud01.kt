@@ -2,7 +2,7 @@ package v01
 
 import classes.Data
 import classes.QuaternionCameraSimple
-import classes.Slider
+import v03.Slider
 import classes.facultyColors
 import divider
 import org.openrndr.MouseEventType
@@ -14,7 +14,6 @@ import org.openrndr.extra.fx.blur.GaussianBlur
 import org.openrndr.extra.fx.color.ColorCorrection
 import org.openrndr.extra.gui.GUI
 import org.openrndr.extra.gui.addTo
-import org.openrndr.launch
 import org.openrndr.math.*
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream

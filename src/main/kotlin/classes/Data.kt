@@ -23,13 +23,16 @@ class Data {
         val pointsData = csvReader().readAllWithHeader(File("data/corrected-15.csv")).drop(skipPoints).map {
             Vector2(it["x"]!!.toDouble(), it["y"]!!.toDouble())
         }
+
         val bounds = pointsData.bounds
         val llbounds = Rectangle(-240.0, 10.0, 480.0, 160.0)
         val latlon = pointsData.map { it.map(bounds, llbounds) }
 
 
         return latlon.map { Spherical(it.x, it.y, 10.0).cartesian }
+
     }
+
     val points = loadPoints()
     val pointIndices = points.indices.map { Pair(points[it], it) }.associate { it }
 
