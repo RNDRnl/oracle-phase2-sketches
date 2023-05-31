@@ -81,7 +81,7 @@ class SearchBar(val keyboard: KeyEvents, val frame: Rectangle) {
 
 }
 
-fun Program.pointCloud04(data: DataModel) {
+fun Program.pointCloud04(data: DataModelNew) {
 
     val camera = Camera2D()
 
@@ -122,7 +122,7 @@ fun Program.pointCloud04(data: DataModel) {
 
     searchBar.queryChanged.listen { s ->
         data.changed.trigger(Unit)
-        data.filteredIndices = data.pointIndices.filter { data.articles[it.value].title.contains(s) }
+        data.filtered = data.pointsToArticles.filter { it.value.title.contains(s) }
     }
 
     val fm = loadFont("data/fonts/Roboto-Regular.ttf", 18.0)
@@ -132,15 +132,12 @@ fun Program.pointCloud04(data: DataModel) {
 
         drawer.strokeWeight = 0.05
         drawer.rectangles {
-            for (p in data.points) {
-                val i = data.pointIndices[p]!!
-                val fi = data.facultyIndexes[i].let { if (it == -1) 9 else it }
+            for ((point, article) in data.pointsToArticles) {
+                val opacity = if(data.filtered[point] != null) 1.0 else 0.0
+                this.stroke = if (point in data.activePoints) ColorRGBa.YELLOW else null
 
-                val opacity = if(data.filteredIndices[p] != null) 1.0 else 0.0
-                this.stroke = if (i in data.activePoints && data.filteredIndices[p] != null) ColorRGBa.YELLOW else null
-
-                this.fill = (facultyColors.getOrNull(fi)?: ColorRGBa.WHITE).opacify(opacity)
-                this.rectangle(Rectangle.fromCenter(p, 0.65, 1.0))
+                this.fill = article.faculty.color.opacify(opacity)
+                this.rectangle(Rectangle.fromCenter(point, 0.65, 1.0))
             }
         }
 
@@ -148,14 +145,14 @@ fun Program.pointCloud04(data: DataModel) {
 
         drawer.fontMap = fm
         drawer.fill = ColorRGBa.WHITE
-        when(slider.current) {
+      /*  when(slider.current) {
             in 0.8..1.0 -> {
                 for(i in data.activePoints.filter { data.filteredIndices[data.points[it]] != null }) {
                     val p = data.points[i].transform(camera.view)
                     drawer.text(data.articles[i].title, p)
                 }
             }
-        }
+        }*/
 
         slider.draw(drawer)
 
@@ -177,7 +174,7 @@ fun main() = application {
     }
     program {
 
-        val data = DataModel(drawer.bounds)
+        val data = DataModelNew(drawer.bounds)
         val pc = viewBox(drawer.bounds) { pointCloud04(data) }
 
         extend {

@@ -1,132 +1,100 @@
 package v04
 
-import classes.ArticleData
-import classes.Entry
-import classes.facultyNames
-import classes.skipPoints
-import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
-import com.google.gson.Gson
-import org.apache.commons.csv.CSVFormat
-import org.apache.commons.csv.CSVParser
+import classes.*
 import org.jetbrains.kotlinx.dataframe.DataFrame
-import org.jetbrains.kotlinx.dataframe.api.column
-import org.jetbrains.kotlinx.dataframe.api.convert
-import org.jetbrains.kotlinx.dataframe.api.join
+import org.jetbrains.kotlinx.dataframe.annotations.ColumnName
+import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.read
-import org.jetbrains.kotlinx.dataframe.size
+import org.jetbrains.kotlinx.dataframe.io.toStandaloneHTML
 import org.openrndr.events.Event
 import org.openrndr.extra.kdtree.kdTree
 import org.openrndr.math.Vector2
 import org.openrndr.shape.Rectangle
 import org.openrndr.shape.bounds
 import org.openrndr.shape.map
-import java.io.File
-import java.io.FileReader
-import java.nio.file.Paths
-import kotlin.io.path.bufferedReader
+import java.net.URL
 
-class Article(title: String, author: String, contributor: String, publicationYear: String, faculty: String, department: String)
+class DataModelNew(frame: Rectangle) {
 
-fun main() {
-    val dmn = DataModelNew(Rectangle.EMPTY)
-    println(dmn.points.size())
-    println(dmn.articles.size())
-}
+    val changed = Event<Unit>()
 
-class DataModelNew(val frame: Rectangle) {
+    private val articlesDf = DataFrame.read("offline-data/islandora_doctoral_thesis_full.csv")
+        .select{ cols(0..7) }
+        .fillNulls("Faculty").with { "Unknown Faculty" }
+        .convert("Faculty").with { Faculty.fromName(it as String) }
+        .fillNulls("Abstract").with { "No abstract provided" }
+        .fillNulls("Author").with { "Unknown Author" }
+        .fillNulls("Contributor","Department").with { "" }
+        .fillNulls("Date").with { "No date" }
+        .update("Date").with { it.toString().takeLast(4) }
+        .rename { colsOf<URL>() }.into { "Link" }
+        .move("Link").toRight()
 
-    private val pointsDf = DataFrame.read("data/data-umap-highlight.csv", header = listOf("uuid","x","y"))
-    private val articlesDf = DataFrame.read("data/data-umap-highlight.csv", header = listOf("uuid","title","author","contributor","publication year","faculty","department"))
+    val pos by column<Vector2>()
 
-    val uuid by column<String>()
+    private val pointsDf = DataFrame.read("offline-data/data-umap-highlight-v1.csv")
+        .take(articlesDf.rowsCount())
+        .merge { "x"<Double>() and "y"() }
+        .by { Vector2(it[0], it[1]) }
+        .into(pos)
 
-    val x by column<Double>()
-    val y by column<Double>()
+    val dataFrame = pointsDf.add(articlesDf)
 
-    val title by column<String>()
-    val author by column<String>()
-    val contributor by column<String>()
-    val publicationYear by column<String>()
-    val faculty by column<String>()
-    val department by column<String>()
 
-    val points = pointsDf.convert { x and y }.to<Vector2>()
-    val articles = articlesDf.convert {
-        title and author and contributor and publicationYear and faculty and department
-    }.to<ArticleEntity>()
+    val articles = articlesDf.toListOf<Article>()
+    val points = pointsDf[pos].toList().run { map(this.bounds, frame) }
 
-    val data = points.join(articles)
+    val pointsToArticles = (points zip articles).toMap()
 
-    /*val points = csvReader().readAllWithHeader(File("data/corrected-15.csv")).drop(skipPoints).map {
-        Vector2(it["x"]!!.toDouble(), it["y"]!!.toDouble())
-    }.run { map(this.bounds, frame) }
 
     val kdtree = points.kdTree()
 
-    val pointIndices = points.indices.map { Pair(points[it], it) }.associate { it }
-    var filteredIndices = pointIndices
+    var radius = 40.0
+    var lookAt = frame.center
+        set(value) {
+            activePoints = findActivePoints(value, radius)
+        }
+
+    var filtered = pointsToArticles
+
+    fun findActivePoints(pos: Vector2, radius: Double): List<Vector2> {
+        return kdtree.findAllInRadius(pos, radius).sortedBy { it.distanceTo(pos) }
+    }
 
     var activePoints = findActivePoints(frame.center, radius)
         set(value) {
             field = value
             changed.trigger(Unit)
         }
+}
 
-    val changed = Event<Unit>()
-    var radius = 40.0
+data class Article(
+    @ColumnName("Title")
+    val title: String,
 
-    var lookAt = frame.center
-        set(value) {
-            activePoints = findActivePoints(value, radius)
-        }
+    @ColumnName("Author")
+    val author: String,
 
-    fun findActivePoints(pos: Vector2, radius: Double): List<Int> {
-        return kdtree.findAllInRadius(pos, radius)
-            .sortedBy { it.distanceTo(pos) }
-            .map {
-                pointIndices[it] ?: error("point not found")
-            }
-    }
+    @ColumnName("Contributor")
+    val contributor: String,
 
-    fun loadArticles(): List<ArticleData> {
-        return Gson().fromJson(FileReader(File("offline-data/mapped-v2r1.json")), Array<Entry>::class.java)
-            .drop(skipPoints).map {
-                ArticleData(
-                    it.ogdata["Title"] as String,
-                    it.ogdata["Author"] as String,
-                    it.ogdata["Faculty"] as String,
-                    it.ogdata["Department"] as String,
-                    it.ogdata["Date"] as String
-                )
-            }
-    }
-    val articles = loadArticles()
-    val pointsToArticles = (points zip articles).associate { it }
+    @ColumnName("Faculty")
+    val faculty: Faculty,
 
-    fun loadFacultyIndexes(): List<Int> {
-        val lookUp = mutableMapOf<String, String>() // List<
+    @ColumnName("Department")
+    val department: String,
 
-        val allText = Paths.get("data/faculty-corrections.csv").bufferedReader()
-        CSVParser(allText, CSVFormat.newFormat(';')).onEach {
-            lookUp[it.get(0)] = it.get(1)
-        }
+    @ColumnName("Date")
+    val date: String,
 
-        val correctedFaculties = articles.map {
-            val correctedFaculty = lookUp[it.faculty.lowercase()]
-            correctedFaculty
-        }
+    @ColumnName("Abstract")
+    val abstract: String,
 
+    @ColumnName("Link")
+    val link: URL,
+)
 
-        val indexes = correctedFaculties.mapIndexed { i, it ->
-            if(it != null) {
-                facultyNames.indexOf(it)
-            } else {
-                8
-            }
-        }
-
-
-        return indexes
-    }
-    val facultyIndexes = loadFacultyIndexes()*/
+fun main() {
+    val dmn = DataModelNew(Rectangle.EMPTY)
+    dmn.dataFrame.toStandaloneHTML().openInBrowser()
 }

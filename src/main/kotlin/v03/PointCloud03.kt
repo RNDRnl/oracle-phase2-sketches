@@ -22,16 +22,16 @@ import kotlin.concurrent.thread
 
 fun main() = application {
     configure {
-        width = 1920 / (divider)
-        height = 1080 / (divider)
+        width = 1280
+        height = 1024
         hideWindowDecorations = true
         windowAlwaysOnTop = true
-        position = IntVector2(1020, 680)
+        //position = IntVector2(1020, 680)
     }
 
     program {
 
-        val ipAddress = "192.168.1.62"
+        val ipAddress = "192.168.0.172"
 
         val data = Data()
         val positions = data.points

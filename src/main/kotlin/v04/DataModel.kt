@@ -89,7 +89,7 @@ class DataModel(val frame: Rectangle) {
 
         val allText = Paths.get("data/faculty-corrections.csv").bufferedReader()
         CSVParser(allText, CSVFormat.newFormat(';')).onEach {
-            lookUp[it.get(0)] = it.get(1)
+            lookUp[it[0]] = it[1]
         }
 
         val correctedFaculties = articles.map {
