@@ -56,7 +56,7 @@ class DataModelNew(val frame: Rectangle) {
         .filter(210.0)
         .delaunayTriangulation()
         .triangles()
-        .map { it.contour to topics.random() }
+        .mapIndexed { i, it -> it.contour to topics.random() }
 
     fun  Map<Vector2, Article>.addFakeTopics(): Map<Vector2, Article> {
         return this.onEach {
