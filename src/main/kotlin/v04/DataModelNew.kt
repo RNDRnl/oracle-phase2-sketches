@@ -1,38 +1,40 @@
 package v04
 
-import classes.*
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.ColumnName
 import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.read
 import org.jetbrains.kotlinx.dataframe.io.toStandaloneHTML
 import org.openrndr.events.Event
+import org.openrndr.extra.hashgrid.filter
 import org.openrndr.extra.kdtree.kdTree
+import org.openrndr.extra.triangulation.delaunayTriangulation
 import org.openrndr.math.Vector2
 import org.openrndr.shape.Rectangle
 import org.openrndr.shape.bounds
+import org.openrndr.shape.contains
 import org.openrndr.shape.map
+import java.io.File
 import java.net.URL
 
-class DataModelNew(frame: Rectangle) {
+class DataModelNew(val frame: Rectangle) {
+
 
     val changed = Event<Unit>()
 
-    private val articlesDf = DataFrame.read("offline-data/islandora_doctoral_thesis_full.csv")
+    private val articlesDf = DataFrame.read("offline-data/all-data-v3.csv")
         .select{ cols(0..7) }
-        .fillNulls("Faculty").with { "Unknown Faculty" }
-        .convert("Faculty").with { Faculty.fromName(it as String) }
-        .fillNulls("Abstract").with { "No abstract provided" }
-        .fillNulls("Author").with { "Unknown Author" }
-        .fillNulls("Contributor","Department").with { "" }
-        .fillNulls("Date").with { "No date" }
-        .update("Date").with { it.toString().takeLast(4) }
-        .rename { colsOf<URL>() }.into { "Link" }
-        .move("Link").toRight()
+        .fillNulls("faculty").with { "Unknown Faculty" }
+        .convert("faculty").with { Faculty.fromName(it as String) }
+        .fillNulls("abstract").with { "No abstract provided" }
+        .fillNulls("author").with { "Unknown Author" }
+        .fillNulls("contributor","department").with { "" }
+        .fillNulls("publication year").with { "No date" }
+        .add("topic") { "no topic" }
 
     val pos by column<Vector2>()
 
-    private val pointsDf = DataFrame.read("offline-data/data-umap-highlight-v1.csv")
+    private val pointsDf = DataFrame.read("offline-data/all-data-v3-umap-2d.csv")
         .take(articlesDf.rowsCount())
         .merge { "x"<Double>() and "y"() }
         .by { Vector2(it[0], it[1]) }
@@ -44,7 +46,27 @@ class DataModelNew(frame: Rectangle) {
     val articles = articlesDf.toListOf<Article>()
     val points = pointsDf[pos].toList().run { map(this.bounds, frame) }
 
-    val pointsToArticles = (points zip articles).toMap()
+    //// fake topics logic
+    val topics = File("offline-data/labels.txt").readText()
+        .split(", ").map { it.drop(1).dropLast(1) }
+        .also { println(it) }
+        .also { println(it.size) }
+
+    val fakeTriangulation = points.map(frame, frame.offsetEdges(150.0))
+        .filter(210.0)
+        .delaunayTriangulation()
+        .triangles()
+        .map { it.contour to topics.random() }
+
+    fun  Map<Vector2, Article>.addFakeTopics(): Map<Vector2, Article> {
+        return this.onEach {
+            val topic = fakeTriangulation.firstOrNull { (c, s) -> c.contains(it.key) }
+            it.value.topic = topic?.second ?: "no topic"
+        }
+    }
+    /// end fake topics logic
+
+    val pointsToArticles = (points zip articles).toMap().addFakeTopics()
 
 
     val kdtree = points.kdTree()
@@ -56,9 +78,23 @@ class DataModelNew(frame: Rectangle) {
         }
 
     var filtered = pointsToArticles
+        set(value) {
+            activePoints = findActivePoints(frame.center, radius)
+            field = value
+        }
 
-    fun findActivePoints(pos: Vector2, radius: Double): List<Vector2> {
-        return kdtree.findAllInRadius(pos, radius).sortedBy { it.distanceTo(pos) }
+    fun findActivePoints(pos: Vector2, radius: Double): Map<Vector2, Article> {
+        val nearest = kdtree.findAllInRadius(pos, radius).sortedBy { it.distanceTo(pos) }
+        val active = mutableMapOf<Vector2, Article>()
+
+        for(p in nearest) {
+            val pap = filtered[p]
+            if(pap != null) {
+                active[p] = pap
+            }
+        }
+
+        return active.toMap()
     }
 
     var activePoints = findActivePoints(frame.center, radius)
@@ -69,29 +105,32 @@ class DataModelNew(frame: Rectangle) {
 }
 
 data class Article(
-    @ColumnName("Title")
+    @ColumnName("title")
     val title: String,
 
-    @ColumnName("Author")
+    @ColumnName("author")
     val author: String,
 
-    @ColumnName("Contributor")
+    @ColumnName("contributor")
     val contributor: String,
 
-    @ColumnName("Faculty")
+    @ColumnName("faculty")
     val faculty: Faculty,
 
-    @ColumnName("Department")
+    @ColumnName("department")
     val department: String,
 
-    @ColumnName("Date")
-    val date: String,
+    @ColumnName("publication year")
+    val year: String,
 
-    @ColumnName("Abstract")
+    @ColumnName("abstract")
     val abstract: String,
 
-    @ColumnName("Link")
-    val link: URL,
+    @ColumnName("uuid")
+    val uuid: String,
+
+
+    var topic: String,
 )
 
 fun main() {

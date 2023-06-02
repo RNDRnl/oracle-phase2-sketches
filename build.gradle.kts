@@ -28,6 +28,7 @@ val orxFeatures = setOf<String>(
 //  "orx-integral-image",
 //  "orx-interval-tree",
 //  "orx-jumpflood",
+    "orx-hash-grid",
     "orx-kdtree",
 //  "orx-keyframer",      
 //  "orx-kinect-v1",
@@ -55,7 +56,7 @@ val orxFeatures = setOf<String>(
 //  "orx-tensorflow",    
 //  "orx-time-operators",
 //  "orx-timer",
-//  "orx-triangulation",
+    "orx-triangulation",
     "orx-video-profiles",
     "orx-view-box",
 )
