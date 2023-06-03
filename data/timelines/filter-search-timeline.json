@@ -2,25 +2,36 @@
   {
     "time": 0.0,
     "easing": "sine-in-out",
-    "pc_scale": 1.0,
-    "pc_x": 0.0
+    "pc_scale": 0.0,
+    "pc_x": 0.0,
+    "pc_y": 0.0
   },
   {
     "time": 1.0,
     "easing": "sine-in-out",
-    "pc_scale": 1.0,
-    "pc_x": 0.175
+    "pc_scale": 0.0,
+    "pc_x": 0.175,
+    "pc_y": 0.0
   },
   {
     "time": 2.0,
     "easing": "cubic-in-out",
-    "pc_scale": 0.7,
-    "pc_x": 0.175
+    "pc_scale": 0.175,
+    "pc_x": 0.225,
+    "pc_y": 0.0
   },
   {
-  "time": 3.0,
-  "easing": "cubic-in-out",
-    "pc_scale": 0.0,
-    "pc_x": 0.0
+    "time": 3.0,
+    "easing": "cubic-in-out",
+    "pc_scale": 0.475,
+    "pc_x": 0.35,
+    "pc_y": 0.0
+  },
+  {
+    "time": 4.0,
+    "easing": "cubic-in-out",
+    "pc_scale": 0.70,
+    "pc_x": 0.375,
+    "pc_y": 0.175
   }
 ]

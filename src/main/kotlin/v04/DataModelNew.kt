@@ -63,6 +63,7 @@ class DataModelNew(val frame: Rectangle) {
     /// end fake topics logic
 
     val pointsToArticles = (points zip articles).toMap().addFakeTopics()
+    val articlesToPoints = pointsToArticles.entries.associateBy({ it.value }) { it.key }
 
 
     val kdtree = points.kdTree()
