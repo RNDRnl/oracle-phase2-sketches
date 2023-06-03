@@ -96,7 +96,7 @@ class FilterMultiple(val data: DataModelNew, frame: Rectangle, val mouse: MouseE
     val titlesBox = Box(Rectangle(topicsBox.x + topicsBox.width, facultyBox.y, frame.width * 0.35, facultyBox.height), ::titles)
     val authorsBox = Box(Rectangle(titlesBox.x + titlesBox.width, facultyBox.y, frame.width * 0.2, facultyBox.height), ::authors)
 
-    fun setupListeners() {
+    private fun setupListeners() {
 
         var lastEvent = MouseEventType.BUTTON_UP
 

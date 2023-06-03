@@ -45,8 +45,10 @@ val facultyColors = listOf(
     ColorRGBa.fromHex("00A8B4"),
     ColorRGBa.fromHex("E54949"),
     ColorRGBa.fromHex("FFAD8F"),
-    ColorRGBa.WHITE
+    ColorRGBa.GRAY.mix(ColorRGBa.WHITE, 0.5)
 )
+
+val facultyNameToColors = (facultyNames zip facultyColors).toMap()
 
 val abbreviations = listOf(
     "ABE",
@@ -59,3 +61,4 @@ val abbreviations = listOf(
     "TPM",
     "???"
 )
+

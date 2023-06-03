@@ -1,0 +1,26 @@
+[
+  {
+    "time": 0.0,
+    "easing": "sine-in-out",
+    "pc_scale": 1.0,
+    "pc_x": 0.0
+  },
+  {
+    "time": 1.0,
+    "easing": "sine-in-out",
+    "pc_scale": 1.0,
+    "pc_x": 0.175
+  },
+  {
+    "time": 2.0,
+    "easing": "cubic-in-out",
+    "pc_scale": 0.7,
+    "pc_x": 0.175
+  },
+  {
+  "time": 3.0,
+  "easing": "cubic-in-out",
+    "pc_scale": 0.0,
+    "pc_x": 0.0
+  }
+]

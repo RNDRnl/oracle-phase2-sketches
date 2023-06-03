@@ -16,6 +16,8 @@ import org.openrndr.shape.Rectangle
 
 class Slider(val pos: Vector2): Animatable() {
 
+    var visible = true
+
     var fader = 0.0
 
     var timer = 0.0
@@ -42,25 +44,27 @@ class Slider(val pos: Vector2): Animatable() {
 
     val fm = loadFont("data/fonts/RobotoCondensed-Bold.ttf", 20.0)
     fun draw(drawer: Drawer) {
-        updateAnimation()
-        drawer.stroke = null
+        if(visible) {
+            updateAnimation()
+            drawer.stroke = null
 
-        val h = 50.0 + (30.0 * fader)
-        bounds = Rectangle.fromCenter(pos, 250.0 + (100.0 * fader), h)
-        drawer.fill = ColorRGBa.WHITE.opacify(0.3 + (0.4 * fader))
-        drawer.roundedRectangle(bounds.offsetEdges(10.0).toRounded(1999.0))
+            val h = 50.0 + (30.0 * fader)
+            bounds = Rectangle.fromCenter(pos, 250.0 + (100.0 * fader), h)
+            drawer.fill = ColorRGBa.WHITE.opacify(0.3 + (0.4 * fader))
+            drawer.roundedRectangle(bounds.offsetEdges(10.0).toRounded(1999.0))
 
-        drawer.fill = ColorRGBa.WHITE.opacify(0.7 + 0.3 * fader)
-        val rail = LineSegment(bounds.x + h / 2.0, bounds.y + bounds.height / 2.0,
-                               bounds.x + bounds.width - (h / 2.0), bounds.y + bounds.height / 2.0)
-        val pos = rail.position(current)
-        drawer.circle(pos, h / 2.0)
+            drawer.fill = ColorRGBa.WHITE.opacify(0.7 + 0.3 * fader)
+            val rail = LineSegment(bounds.x + h / 2.0, bounds.y + bounds.height / 2.0,
+                bounds.x + bounds.width - (h / 2.0), bounds.y + bounds.height / 2.0)
+            val pos = rail.position(current)
+            drawer.circle(pos, h / 2.0)
 
-        drawer.fill = ColorRGBa.BLACK
-        drawer.fontMap = fm
-        val n = current.toString().take(3)
-        val textWidth = n.fold(0.0) { acc, next -> fm.characterWidth(next) + acc }
-        drawer.text(n, pos.x - (textWidth / 2.0), pos.y + (fm.height / 2.0))
+            drawer.fill = ColorRGBa.BLACK
+            drawer.fontMap = fm
+            val n = current.toString().take(3)
+            val textWidth = n.fold(0.0) { acc, next -> fm.characterWidth(next) + acc }
+            drawer.text(n, pos.x - (textWidth / 2.0), pos.y + (fm.height / 2.0))
+        }
     }
 
 }

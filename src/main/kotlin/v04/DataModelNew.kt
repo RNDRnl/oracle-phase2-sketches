@@ -47,10 +47,6 @@ class DataModelNew(val frame: Rectangle) {
     val points = pointsDf[pos].toList().run { map(this.bounds, frame) }
 
     //// fake topics logic
-    val topics = File("offline-data/labels.txt").readText()
-        .split(", ").map { it.drop(1).dropLast(1) }
-        .also { println(it) }
-        .also { println(it.size) }
 
     val fakeTriangulation = points.map(frame, frame.offsetEdges(150.0))
         .filter(210.0)
@@ -103,6 +99,16 @@ class DataModelNew(val frame: Rectangle) {
             changed.trigger(Unit)
         }
 }
+
+
+val faculties by lazy { facultyNames.map { Faculty.fromName(it) } }
+
+val topics by lazy {
+    File("offline-data/labels.txt").readText()
+        .split(", ").map { it.drop(1).dropLast(1) }
+}
+
+val mappings = (facultyNames zip topics.chunked(topics.size / faculties.size)).toMap()
 
 data class Article(
     @ColumnName("title")
