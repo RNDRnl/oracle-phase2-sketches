@@ -1,6 +1,5 @@
 package v04
 
-import classes.ArticleData
 import orbox.matrix44
 import orbox.polygonShape
 import org.jbox2d.common.Vec2
@@ -14,19 +13,19 @@ import org.openrndr.draw.loadFont
 import org.openrndr.draw.writer
 import org.openrndr.extra.noise.uniform
 import org.openrndr.extra.shapes.grid
-import org.openrndr.math.Matrix44
 import org.openrndr.math.Vector2
-import org.openrndr.math.smoothstep
+import org.openrndr.math.map
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
-import v01.Book
 import v01.simScale
 import v01.toVec2
 import kotlin.random.Random
 
+class ArticleBody(val frame: Rectangle, val body: Body)
+
 open class ZoomLevel(val i: Int, val rect: Rectangle, val drawer: Drawer) {
 
-    open fun populate(articles: List<ArticleEntity>) { }
+    open fun populate(articles: List<Article>) { }
 
     open fun clear() { animations.fadeOut() }
 
@@ -64,8 +63,8 @@ class Zoom0(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
     var rects = listOf<Rectangle>()
     var color = ColorRGBa.GRAY
 
-    override fun populate(articles: List<ArticleEntity>) {
-        color = articles[0].color
+    override fun populate(articles: List<Article>) {
+        color = articles[0].faculty.facultyColor()
         rects = Rectangle(0.0, 0.0, rect.width, rect.height).grid(articles.size, 1).flatten()
         animations.fadeIn()
     }
@@ -84,7 +83,7 @@ class Zoom0(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
 class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer) {
 
     val world = World(Vec2(0.0f, .81f))
-    val books = mutableListOf<Book>()
+    val articleBodies = mutableMapOf<Article, ArticleBody>()
     val staticBodies = mutableListOf<Body>()
 
     init {
@@ -110,14 +109,13 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         addStaticBox(Rectangle(drawer.width-10.0, 0.0, 10.0, drawer.height-10.0))
     }
 
-    fun createBookBody(pos: Vector2, box: Rectangle, index: Int): Body {
+    fun createArticleBody(pos: Vector2, box: Rectangle): Body {
         val fixtureDef = FixtureDef().apply {
             shape = box.contour.polygonShape(simScale)
             density = 1.0f
-            friction = 0.3f
+            friction = 0.9f
             restitution = 0.0f
         }
-
 
 
         val bodyDef = BodyDef().apply {
@@ -134,66 +132,66 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         return body
     }
 
+    override fun populate(articles: List<Article>) {
 
-    override fun populate(articles: List<ArticleEntity>) {
-        books.clear()
-
-        for((index, article) in articles.withIndex()) {
-
-            val t = smoothstep(0.75, 1.0, Double.uniform(0.0, 1.0))
-            val boxWidth = if(t < 0.5) 180.0 else 600.0
-
-            val box = Rectangle.fromCenter(
-                Vector2.ZERO,
-                boxWidth * Double.uniform(0.85, 1.15),
-                1600.0 * Double.uniform(0.85, 1.15))
-
-            val pos = Vector2((index.toDouble() / articles.size.toDouble()) * (drawer.width - 50.0) + Double.uniform(-5.0, 5.0) + 50.0,
-                Double.uniform(0.3, 0.7) * (drawer.height - 50.0))
-
-            val body = createBookBody(pos, box, index)
-            val book = Book(box, article.ad, article.color, body)
-            books.add(book)
-        }
-    }
-
-    override fun clear() {
         animations.fadeOut()
-        for(body in books.map { it.body }) {
+        for(body in articleBodies.map { it.value.body }) {
             world.destroyBody(body)
         }
+
+        articleBodies.clear()
+
+        var previousX = 0.0
+
+        for((index, article) in articles.withIndex()) {
+            val boxWidth = article.title.length.toDouble().map(0.0, 300.0, drawer.width / 50.0, drawer.width / 12.0)
+            val boxHeight = drawer.height * Double.uniform(0.75, 0.85)
+
+            if(previousX >= drawer.width) break
+            else {
+                val box = Rectangle.fromCenter(
+                    Vector2.ZERO,
+                    boxWidth,
+                    boxHeight)
+
+                val pos = Vector2(previousX + 80.0 * index, drawer.height - boxHeight - 10.0)
+
+                val body = createArticleBody(pos + Vector2(100.0, 0.0), box)
+                val articleBody = ArticleBody(box, body)
+
+                articleBodies[article] = articleBody
+                previousX = boxWidth + 80.0 * index
+            }
+        }
+
     }
 
     override fun draw(circle: Circle) {
         drawer.isolated {
 
-            world.gravity = Vec2(0.0f, 180.81f)
+            world.gravity = Vec2(0.0f, 900.81f)
             world.step(1.0f/200.0f, 100, 100)
 
             drawer.fontMap = fm
 
 
-            for (book in books) {
+            for ((article, body) in articleBodies) {
 
-                fun Vector2.transform(m : Matrix44) : Vector2 {
-                    return (m * this.xy01).xy
-                }
-
-                if(book.frame.center.transform(book.body.transform.matrix44()) + rect.corner in circle) {
+                if(body.frame.center.transform(body.body.transform.matrix44()) + rect.corner in circle) {
                     drawer.isolated {
-                        drawer.fill = book.color
+                        drawer.fill = article.faculty.facultyColor()
                         drawer.stroke = null
-                        drawer.model = book.body.transform.matrix44()
-                        drawer.contour(book.frame.offsetEdges(2.0).contour)
+                        drawer.model = body.body.transform.matrix44()
+                        drawer.contour(body.frame.offsetEdges(2.0).contour)
 
                         drawer.fill = ColorRGBa.BLACK
-                        drawer.translate(book.frame.center)
+                        drawer.translate(body.frame.center)
                         drawer.rotate(-90.0)
-                        drawer.translate(-book.frame.center)
+                        drawer.translate(-body.frame.center)
                         writer {
-                            box = Rectangle(book.frame.y, book.frame.x, book.frame.height, book.frame.width).offsetEdges(-2.0)
+                            box = Rectangle(body.frame.y, body.frame.x, body.frame.height, body.frame.width).offsetEdges(-2.0)
                             newLine()
-                            text(book.data.title.uppercase())
+                            text(article.title.uppercase())
                         }
                     }
                 }
@@ -206,19 +204,19 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
 
 class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer) {
 
-    var currentArticle: ArticleEntity? = null
-    var sameFaculty = listOf<ArticleEntity>()
-    var sameTopic = listOf<ArticleEntity>()
+    var currentArticle: Article? = null
+    var sameFaculty = listOf<Article>()
+    var sameTopic = listOf<Article>()
 
     override fun clear() {
         animations.fadeOut()
     }
 
-    override fun populate(articles: List<ArticleEntity>) {
+    override fun populate(articles: List<Article>) {
         animations.fadeIn()
         currentArticle = if(articles.isNotEmpty()) articles.first() else null
         if(currentArticle != null) {
-            sameFaculty = List(10) { articles.filter { it.ad.faculty == currentArticle!!.ad.faculty }.random() }
+            sameFaculty = List(10) { articles.filter { it.faculty == currentArticle!!.faculty }.random() }
             sameTopic = List(10) { articles.random() }
         }
     }
@@ -228,19 +226,19 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
             if(currentArticle != null) {
                 val article = currentArticle!!
 
-                drawer.fill = when(i) { 0, 2, 6 -> article.color else -> ColorRGBa.BLACK }.opacify(animations.fade)
+                drawer.fill = when(i) { 0, 2, 6 -> article.faculty.facultyColor() else -> ColorRGBa.BLACK }.opacify(animations.fade)
                 drawer.stroke = null
                 drawer.rectangle(bounds)
 
                 drawer.fill = ColorRGBa.WHITE
                 when(i) {
-                    0 -> singleColumnText(article.ad.title)
-                    1 -> infoText(article.ad)
-                    2 -> singleColumnText(article.ad.department)
-                    3 -> multiColumnText("ABSTRACT", lipsum, 3)
+                    0 -> singleColumnText(article.title)
+                    1 -> infoText(article)
+                    2 -> singleColumnText(article.department)
+                    3 -> multiColumnText("ABSTRACT", article.abstract, 3)
                     4 -> books(sameFaculty, "FROM THE SAME FACULTY")
                     5 -> books(sameTopic, "FROM THE SAME TOPIC")
-                    6 -> singleColumnText(article.ad.date)
+                    6 -> singleColumnText(article.year)
                     7 -> timeline()
                 }
             }
@@ -248,7 +246,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
     }
 
 
-    private fun infoText(ad: ArticleData) {
+    private fun infoText(ad: Article) {
 
         val rects = Rectangle(50.0, 50.0, drawer.width - 100.0, drawer.height - 200.0)
             .grid(3, 1,
@@ -273,7 +271,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         drawer.writer {
             box = dateBox
             newLine()
-            text(ad.date.take((animations.textFade * ad.date.length).toInt()))
+            text(ad.year.take((animations.textFade * ad.year.length).toInt()))
         }
 
         val facultyBox = Rectangle(rects[1].x,dateBox.y + dateBox.height + (stfm.height * 2.0), rects[1].width, 250.0)
@@ -342,7 +340,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         }
     }
 
-    private fun books(bookList: List<ArticleEntity>, text: String = "") {
+    private fun books(bookList: List<Article>, text: String = "") {
         drawer.stroke = null
 
         drawer.fontMap = stfm
@@ -354,7 +352,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         for((i, sf) in bookList.take((bookList.size * animations.fade).toInt()).withIndex()) {
             val w = Double.uniform(80.0, 160.0, Random(i))
             val r = Rectangle(acc, drawer.height - 480.0, w,380.0)
-            drawer.fill = sf.color
+            drawer.fill = sf.faculty.facultyColor()
             drawer.rectangle(r)
 
             drawer.fill = ColorRGBa.BLACK
@@ -363,7 +361,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
             drawer.translate(r.x + 50.0, r.y + r.height - 20.0)
             drawer.rotate(-90.0)
             drawer.translate(-r.x, -(r.y + r.height))
-            drawer.text(sf.ad.title.uppercase().take(
+            drawer.text(sf.title.uppercase().take(
                 (r.width / fm.characterWidth('"')).toInt()
             ), r.x, r.y + r.height)
             drawer.popTransforms()
@@ -380,25 +378,3 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
 
 }
 
-val lipsum = "Lorem ipsum dolor sit amet. " +
-        "Quo quia delectus sed iste eaque nam deleniti " +
-        "asperiores et temporibus illo quo aliquid doloremque " +
-        "sit explicabo recusandae? Ad quibusdam consectetur est " +
-        "doloremque molestiae qui quidem perspiciatis ut odit " +
-        "galisum 33 asperiores illo nam nostrum eius eum beatae " +
-        "voluptatem! " +
-        "asperiores et temporibus illo quo aliquid doloremque " +
-        "sit explicabo recusandae? Ad quibusdam consectetur est " +
-        "doloremque molestiae qui quidem perspiciatis ut odit " +
-        "galisum 33 asperiores illo nam nostrum eius eum beatae " +
-        "voluptatem! " +
-        "asperiores et temporibus illo quo aliquid doloremque " +
-        "sit explicabo recusandae? Ad quibusdam consectetur est " +
-        "doloremque molestiae qui quidem perspiciatis ut odit " +
-        "galisum 33 asperiores illo nam nostrum eius eum beatae " +
-        "voluptatem! " +
-        "asperiores et temporibus illo quo aliquid doloremque " +
-        "sit explicabo recusandae? Ad quibusdam consectetur est " +
-        "doloremque molestiae qui quidem perspiciatis ut odit " +
-        "galisum 33 asperiores illo nam nostrum eius eum beatae " +
-        "voluptatem! "

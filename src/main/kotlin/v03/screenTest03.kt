@@ -48,7 +48,7 @@ fun Program.screenTest03(i: Int, rect: Rectangle) {
         fun fadeOut() {
             ::showTimer.cancel()
             ::hideTimer.animate(1.0, 150L).completed.listen {
-                //books.clear()
+                //articleBodies.clear()
             }
         }
     }

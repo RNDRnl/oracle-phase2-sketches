@@ -1,9 +1,6 @@
 package v04
 
-import org.openrndr.Extension
-import org.openrndr.MouseButton
-import org.openrndr.MouseEvents
-import org.openrndr.Program
+import org.openrndr.*
 import org.openrndr.draw.Drawer
 import org.openrndr.draw.RenderTarget
 import org.openrndr.events.Event
@@ -66,29 +63,25 @@ class Camera2D : Extension, ChangeEvents {
         get() = dirty
 
 
-    fun setupMouseEvents(mouse: MouseEvents) {
-        mouse.dragged.listen {
-            if(!inUiElement) {
-                view = buildTransform {
-                    translate(it.dragDisplacement)
-                } * view
-                dirty = true
-            }
-        }
-        mouse.scrolled.listen {
-            val scaleFactor = 1.0 - it.rotation.y * zoomSpeed
-
+    fun dragged(mouse: MouseEvent) {
+        if(!inUiElement) {
             view = buildTransform {
-                translate(it.position)
-                scale(scaleFactor)
-                translate(-it.position)
+                translate(mouse.dragDisplacement)
             } * view
             dirty = true
         }
+
     }
 
-    override fun setup(program: Program) {
-        setupMouseEvents(program.mouse)
+    fun scrolled(mouse: MouseEvent) { // this
+        val scaleFactor = 1.0 - mouse.rotation.y * zoomSpeed
+
+        view = buildTransform {
+            translate(mouse.position)
+            scale(scaleFactor)
+            translate(-mouse.position)
+        } * view
+        dirty = true
     }
 
     override fun beforeDraw(drawer: Drawer, program: Program) {

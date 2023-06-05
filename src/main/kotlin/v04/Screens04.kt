@@ -1,23 +1,24 @@
 package v04
 
-import org.openrndr.MouseEventType
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
+import org.openrndr.color.ColorRGBa.Companion.BLUE
 import org.openrndr.extra.shapes.grid
 import org.openrndr.extra.viewbox.viewBox
+import org.openrndr.launch
 import org.openrndr.math.*
 import org.openrndr.shape.Rectangle
-import v03.Article
-import v03.screenTest03
+import kotlin.concurrent.thread
 
 fun main() = application {
     val debug = true
+    val scale = 3
 
     configure {
         if(debug) {
-            width = (2560 * 4) / 5
-            height = (1080 * 3) / 5
-            position = IntVector2(0, 250)
+            width = (2560 * 4) / scale
+            height = (1080 * 3) / scale
+            position = IntVector2(-300, -1800)
         } else {
             width = (2560 * 4)
             height = (1080 * 3)
@@ -28,38 +29,43 @@ fun main() = application {
     }
     program {
 
-        val frames = Rectangle(0.0, 0.0, 2560 * 4.0, 1080.0 * 3).grid(4, 3).flatten()
+        val data = DataModelNew(Rectangle(Vector2.ZERO, 1920.0, 1080.0))
+        val frames = Rectangle(0.0, 0.0, 2560 * 4.0, 1080.0 * 3)
+            .grid(4, 3)
+            .flatten()
+            .slice(setOf(0, 1, 4, 5, 6, 7, 8, 9))
 
-        val screens = frames.slice(setOf(0, 1, 4, 5, 6, 7, 8, 9)).mapIndexed { i, r ->
-            val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenTest03(i, r)  }
-            val update: (met: MouseEventType, articlesToColors: List<Article>, zoomLevel: Int)->Unit by vb.userProperties
+        val screens = frames.mapIndexed { i, r ->
+            val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenTest04(i, r)  }
+            val update: (articles: MutableList<Article>, zoomLevel: Int)->Unit by vb.userProperties
 
             vb to update
         }
-/*
+
 
         val receiver = Receiver()
 
-        receiver.stateReceived.listen {
 
-            val zoomLevel = when (it.zoom) {
+        receiver.stateReceived.listen { e ->
+            val zoomLevel = when (e.zoom) {
                 in 0.0..0.33 -> 0
-                in 0.33..0.8 -> 1
+                in 0.2..0.8 -> 1
                 else -> 2
             }
 
-            val deserialized = it.indexesToColors.map { (i, c) ->
-                Article(articles[i], c.run { ColorRGBa(r, g, b) })
+            val newArticles = mutableListOf<Article>()
+            for(i in e.articleIndexes) {
+                newArticles.add(data.articles[i])
             }
-            val deserializedSorted = deserialized.sortedBy { d -> d.ad.faculty }
 
+
+            println(newArticles.size)
             launch {
                 if(zoomLevel < 2) {
                     val chunks = HashMap<Int, MutableList<Article>>(8)
 
                     var currentScreen = 0
-                    val list = if(zoomLevel == 1) deserialized else deserializedSorted
-                    for(article in list) {
+                    for(article in newArticles) {
                         val c = chunks.getOrPut(currentScreen) { mutableListOf() }
 
                         if(c.size < 1000) {
@@ -71,27 +77,26 @@ fun main() = application {
 
                     for(chunk in chunks) {
                         val updateFunc = screens[chunk.key].second
-                        updateFunc(it.type, chunk.value.toList(), zoomLevel)
+                        updateFunc(chunk.value, zoomLevel)
                     }
                 } else {
                     for((_, updateFunc) in screens) {
-                        updateFunc(it.type, deserialized, zoomLevel)
+                        updateFunc(newArticles.toMutableList(), zoomLevel)
                     }
                 }
             }
         }
+
 
         thread (isDaemon = true) {
             while (true) {
                 receiver.work()
             }
         }
-*/
-
 
         extend {
 
-            if(debug) drawer.scale(1.0 / 5.0)
+            if(debug) drawer.scale(1.0 / scale)
 
             (screens zip frames).forEach { (screen, rect) ->
                 screen.first.update()

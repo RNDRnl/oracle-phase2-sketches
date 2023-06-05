@@ -1,5 +1,8 @@
 package v04
 
+import org.openrndr.MouseButton
+import org.openrndr.MouseEvent
+import org.openrndr.MouseEventType
 import org.openrndr.MouseEvents
 import org.openrndr.animatable.Animatable
 import org.openrndr.animatable.easing.Easing
@@ -9,6 +12,7 @@ import org.openrndr.draw.loadFont
 import org.openrndr.extra.shapes.roundedRectangle
 import org.openrndr.extra.shapes.toRounded
 import org.openrndr.math.Vector2
+import org.openrndr.math.map
 import org.openrndr.math.mix
 import org.openrndr.shape.LineSegment
 import org.openrndr.shape.Rectangle
@@ -39,6 +43,24 @@ class Slider(val pos: Vector2): Animatable() {
             }
             field = value.coerceIn(0.0, 1.0)
         }
+
+    fun dragged(it: MouseEvent, mouse: MouseEvents) {
+        if(visible && it.position in bounds.offsetEdges(65.0, 0.0)) {
+            val old = current
+
+            current = map(
+                bounds.x,
+                bounds.x + bounds.width,
+                0.0,
+                1.1,
+                it.position.x.coerceIn(bounds.x, bounds.x + bounds.width))
+
+            mouse.scrolled.trigger(
+                MouseEvent(bounds.center,Vector2.UNIT_Y * (old - current), Vector2.ZERO, MouseEventType.SCROLLED, MouseButton.NONE, setOf())
+            )
+        }
+    }
+
 
     var bounds = Rectangle.fromCenter(pos, 350.0, 80.0)
 

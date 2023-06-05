@@ -10,11 +10,7 @@ import org.openrndr.extra.compositor.layer
 import org.openrndr.extra.compositor.post
 import org.openrndr.extra.fx.blur.GaussianBlur
 import org.openrndr.extra.gui.GUI
-import org.openrndr.extra.gui.addTo
-import org.openrndr.extra.noise.Random
 import org.openrndr.extra.noise.uniform
-import org.openrndr.extra.viewbox.viewBox
-import org.openrndr.ffmpeg.ScreenRecorder
 import org.openrndr.math.*
 import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Circle
@@ -23,7 +19,7 @@ import org.openrndr.shape.Triangle
 import org.openrndr.shape.bounds
 import v02.transform
 
-fun Program.pointCloud04(data: DataModelNew) {
+fun Program.pc04(data: DataModelNew) {
 
     val camera = Camera2D()
 
@@ -36,9 +32,9 @@ fun Program.pointCloud04(data: DataModelNew) {
             data.filtered = data.pointsToArticles
         } else {
             data.filtered = data.pointsToArticles.filter { a ->
-                filters[0] isNullOr { a.value.faculty.name == filters[0] } &&
-                        filters[1] isNullOr { a.value.topic == filters[1] } &&
-                        filters[2] isNullOr { a.value.title + " | " + a.value.author == filters[2] }
+                filters[0] checkNullOr { a.value.faculty == filters[0] } &&
+                        filters[1] checkNullOr { a.value.topic == filters[1] } &&
+                        filters[2] checkNullOr { a.value.title + " | " + a.value.author == filters[2] }
             }
         }
 
@@ -47,35 +43,44 @@ fun Program.pointCloud04(data: DataModelNew) {
     val obstacles = listOf(slider.bounds)
 
     listOf(mouse.buttonDown, mouse.buttonUp).listen {
-        if(slider.visible) {
+        if(slider.visible && !filter.visible) {
             val obst = obstacles.firstOrNull { o -> it.position in o.offsetEdges(5.0) }
             camera.inUiElement = obst != null
         }
         // val e = EventObject(it.type, data.activePoints, camera.mappedZoom)
     }
 
-    mouse.dragged.listen {
-        if(slider.visible && it.position in slider.bounds.offsetEdges(65.0, 0.0)) {
-            val old = slider.current
+    mouse.buttonDown.listen {
+        filter.buttonDown(it)
+    }
 
-            slider.current = map(
-                slider.bounds.x,
-                slider.bounds.x + slider.bounds.width,
-                0.0,
-                1.1,
-                it.position.x.coerceIn(slider.bounds.x, slider.bounds.x + slider.bounds.width))
+    mouse.buttonUp.listen {
+        filter.buttonUp(it)
+    }
 
-            mouse.scrolled.trigger(
-                MouseEvent(drawer.bounds.center,Vector2.UNIT_Y * (old - slider.current), Vector2.ZERO, MouseEventType.SCROLLED, MouseButton.NONE, setOf())
-            )
+    mouse.scrolled.listen {
+        if(!filter.visible) {
+            camera.scrolled(it)
         }
+    }
+
+    mouse.dragged.listen {
+        if(!filter.visible) {
+            camera.dragged(it)
+        } else {
+            filter.dragged(it)
+        }
+        slider.dragged(it, mouse)
     }
 
     camera.changed.listen {
         slider.current = camera.mappedZoom
 
-        data.radius = 40.0 / camera.view.c0r0
-        data.lookAt = (camera.view.inversed * drawer.bounds.center.xy01).xy
+        data.apply {
+            zoom = camera.mappedZoom
+            radius = 40.0 / camera.view.c0r0
+            lookAt = (camera.view.inversed * drawer.bounds.center.xy01).xy
+        }
     }
 
     val g = GUI()
@@ -122,7 +127,7 @@ fun Program.pointCloud04(data: DataModelNew) {
 
                         val size = if(filter.visible && filter.timelineSlider > 1.0 && data.filtered[point] != null) 6 else 2
 
-                        this.fill = article.faculty.color.opacify(opacity)
+                        this.fill = article.faculty.facultyColor().opacify(opacity)
                         this.rectangle(Rectangle.fromCenter(point, 0.65 * size, 1.0 * size))
                     }
                 }
@@ -141,7 +146,7 @@ fun Program.pointCloud04(data: DataModelNew) {
 
                             if(filter.topicsBox.current == text) {
                                 drawer.fill = null
-                                drawer.stroke = filter.facultyBox.currentFaculty.color
+                                drawer.stroke = filter.facultyBox.currentFaculty.facultyColor()
                                 drawer.strokeWeight = 3.0
                                 drawer.contour(triangle.contour)
                             }
@@ -202,12 +207,12 @@ fun Program.pointCloud04(data: DataModelNew) {
         }
     }
 
-
     extend(camera) {
         enabled = !filter.visible
     }
     //extend(g)
     extend {
+
         slider.visible = !filter.visible
         c.draw(drawer)
         //searchBar.draw(drawer)
@@ -216,22 +221,4 @@ fun Program.pointCloud04(data: DataModelNew) {
 
 }
 
-fun main() = application {
-    configure {
-        width = 1920
-        height = 1080
-        position = IntVector2(0, -1200)
-    }
-    program {
-
-        val data = DataModelNew(Rectangle.fromCenter(drawer.bounds.center, height * 1.0, height * 1.0))
-        val pc = viewBox(drawer.bounds) { pointCloud04(data) }
-
-
-        extend {
-            pc.draw()
-        }
-    }
-}
-
-inline infix fun <T> T?.isNullOr(predicate: (T) -> Boolean): Boolean = if (this != null) predicate(this) else true
+inline infix fun <T> T?.checkNullOr(predicate: (T) -> Boolean): Boolean = if (this != null) predicate(this) else true

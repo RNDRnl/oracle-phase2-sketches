@@ -15,17 +15,17 @@ import org.openrndr.shape.bounds
 import org.openrndr.shape.contains
 import org.openrndr.shape.map
 import java.io.File
+import java.io.Serializable
 import java.net.URL
 
 class DataModelNew(val frame: Rectangle) {
-
 
     val changed = Event<Unit>()
 
     private val articlesDf = DataFrame.read("offline-data/all-data-v3.csv")
         .select{ cols(0..7) }
         .fillNulls("faculty").with { "Unknown Faculty" }
-        .convert("faculty").with { Faculty.fromName(it as String) }
+        .convert("faculty").with { (it as String).correctedFaculty() }
         .fillNulls("abstract").with { "No abstract provided" }
         .fillNulls("author").with { "Unknown Author" }
         .fillNulls("contributor","department").with { "" }
@@ -68,6 +68,7 @@ class DataModelNew(val frame: Rectangle) {
 
     val kdtree = points.kdTree()
 
+    var zoom = 0.0
     var radius = 40.0
     var lookAt = frame.center
         set(value) {
@@ -101,15 +102,10 @@ class DataModelNew(val frame: Rectangle) {
         }
 }
 
-
-val faculties by lazy { facultyNames.map { Faculty.fromName(it) } }
-
 val topics by lazy {
     File("offline-data/labels.txt").readText()
         .split(", ").map { it.drop(1).dropLast(1) }
 }
-
-val mappings = (facultyNames zip topics.chunked(topics.size / faculties.size)).toMap()
 
 data class Article(
     @ColumnName("title")
@@ -122,7 +118,7 @@ data class Article(
     val contributor: String,
 
     @ColumnName("faculty")
-    val faculty: Faculty,
+    val faculty: String,
 
     @ColumnName("department")
     val department: String,
@@ -136,11 +132,11 @@ data class Article(
     @ColumnName("uuid")
     val uuid: String,
 
-
     var topic: String,
-)
+
+):Serializable
 
 fun main() {
-    val dmn = DataModelNew(Rectangle.EMPTY)
+    val dmn = DataModelNew(Rectangle.fromCenter(Vector2.ZERO, 1920.0, 1080.0))
     dmn.dataFrame.toStandaloneHTML().openInBrowser()
 }

@@ -10,19 +10,8 @@ val corrections by lazy {
     df.rows().associate { it[1] as String to it[0] as String }
 }
 
-data class Faculty(val name: String, val abbr: String, val color: ColorRGBa) {
-    companion object {
 
-        fun fromName(name: String): Faculty {
-            val corrected = corrections.getOrDefault(name.lowercase(), name)
-            val i = facultyNames.indexOf(corrected)
-
-            return Faculty(name, abbreviations[i], facultyColors[i])
-        }
-
-    }
-}
-
+fun String.correctedFaculty(): String = corrections.getOrDefault(this.lowercase(), this)
 
 val facultyNames = listOf(
     "Architecture and The Built Environment",
@@ -48,17 +37,6 @@ val facultyColors = listOf(
     ColorRGBa.GRAY.mix(ColorRGBa.WHITE, 0.5)
 )
 
-val facultyNameToColors = (facultyNames zip facultyColors).toMap()
+val facultyToColor = (facultyNames zip facultyColors).toMap()
 
-val abbreviations = listOf(
-    "ABE",
-    "AE",
-    "AS",
-    "CEG",
-    "EEMCS",
-    "IDE",
-    "3mE",
-    "TPM",
-    "???"
-)
-
+fun String.facultyColor(): ColorRGBa = facultyToColor[this] ?: facultyColors.last()

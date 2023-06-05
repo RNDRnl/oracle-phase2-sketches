@@ -45,7 +45,6 @@ fun main() = application {
         val screens = frames.map {
             val i = ceil(origin.distanceTo(it.center) / it.diagonalLength).toInt() - 1
 
-
             val vb = viewBox(widescreenFrame) { screenTest02(i, it)  }
             val update: (met: MouseEventType, articlesToColors: List<Pair<ArticleData, ColorRGBa>>, zoom: Double)->Unit by vb.userProperties
 
