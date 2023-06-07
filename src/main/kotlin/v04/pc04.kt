@@ -9,7 +9,6 @@ import org.openrndr.extra.compositor.draw
 import org.openrndr.extra.compositor.layer
 import org.openrndr.extra.compositor.post
 import org.openrndr.extra.fx.blur.GaussianBlur
-import org.openrndr.extra.gui.GUI
 import org.openrndr.extra.noise.uniform
 import org.openrndr.math.*
 import org.openrndr.poissonfill.PoissonFill
@@ -83,7 +82,10 @@ fun Program.pc04(data: DataModelNew) {
         }
     }
 
-    val g = GUI()
+    slider.valueChanged.listen {
+        camera.setNormalizedScale(it)
+    }
+
 
     val c = compose {
         layer {

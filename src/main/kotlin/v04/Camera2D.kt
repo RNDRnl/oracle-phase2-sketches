@@ -14,10 +14,7 @@ import org.openrndr.math.transforms.normalMatrix
 import org.openrndr.shape.Rectangle
 import org.openrndr.shape.ShapeContour
 import org.openrndr.shape.contains
-import kotlin.math.ln
-import kotlin.math.log
-import kotlin.math.log10
-import kotlin.math.log2
+import kotlin.math.*
 
 /**
  * The [Camera2D] extension enables panning, rotating and zooming the view
@@ -37,13 +34,14 @@ class Camera2D : Extension, ChangeEvents {
     var maxZoom = 60.0
 
     var mappedZoom = 0.0
-
+    var zoomPosition = Vector2(0.0, 0.0)
+    lateinit var program: Program
     var view = Matrix44.IDENTITY
         set(value) {
             val scale = (value * Vector4(1.0, 1.0, 0.0, 0.0).normalized).xy.length
 
             if (scale in minZoom..maxZoom) {
-                mappedZoom = ln(scale).map(ln(minZoom), ln(maxZoom), 0.0, 1.0)
+                mappedZoom = toNormalizedScale(scale)
                 field = value
             }
         }
@@ -51,6 +49,32 @@ class Camera2D : Extension, ChangeEvents {
     var inUiElement = false
 
     override val changed = Event<Unit>()
+
+    fun Matrix44.scale(): Double = (this * Vector4(1.0, 1.0, 0.0, 0.0).normalized).xy.length
+
+    fun toNormalizedScale(scale: Double): Double {
+        return ln(scale).map(ln(minZoom), ln(maxZoom), 0.0, 1.0, clamp = true)
+    }
+
+    fun toExpScale(scale: Double): Double {
+        val lnScale = scale.map(0.0, 1.0, ln(minZoom), ln(maxZoom))
+        return exp(lnScale)
+    }
+
+    fun setNormalizedScale(targetScaleNormalized: Double) {
+        val targetScale = toExpScale(targetScaleNormalized)
+        val currentScale = view.scale()
+        val factor = targetScale/currentScale
+        zoomPosition = program.drawer.bounds.center
+        view = buildTransform {
+            translate(zoomPosition)
+            scale(factor)
+            translate(-zoomPosition)
+        } * view
+        dirty = true
+
+    }
+
 
     var dirty = true
         set(value) {
@@ -75,6 +99,7 @@ class Camera2D : Extension, ChangeEvents {
 
     fun scrolled(mouse: MouseEvent) { // this
         val scaleFactor = 1.0 - mouse.rotation.y * zoomSpeed
+        zoomPosition = mouse.position
 
         view = buildTransform {
             translate(mouse.position)
@@ -84,6 +109,9 @@ class Camera2D : Extension, ChangeEvents {
         dirty = true
     }
 
+    override fun setup(program: Program) {
+        this.program = program
+    }
     override fun beforeDraw(drawer: Drawer, program: Program) {
         drawer.pushTransforms()
         drawer.ortho(RenderTarget.active)

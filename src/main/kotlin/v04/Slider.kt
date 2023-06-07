@@ -9,6 +9,7 @@ import org.openrndr.animatable.easing.Easing
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
 import org.openrndr.draw.loadFont
+import org.openrndr.events.Event
 import org.openrndr.extra.shapes.roundedRectangle
 import org.openrndr.extra.shapes.toRounded
 import org.openrndr.math.Vector2
@@ -36,12 +37,16 @@ class Slider(val pos: Vector2): Animatable() {
         }
     }
 
+    val valueChanged = Event<Double>()
+
     var current = 0.0
         set(value) {
-            if(field != value) {
+            val safeValue = value.coerceIn(0.0, 1.0)
+            if(field != safeValue) {
                 if(fader == 0.0) focus() else unfocus()
+                field = safeValue
+                valueChanged.trigger(field)
             }
-            field = value.coerceIn(0.0, 1.0)
         }
 
     fun dragged(it: MouseEvent, mouse: MouseEvents) {
@@ -55,9 +60,9 @@ class Slider(val pos: Vector2): Animatable() {
                 1.1,
                 it.position.x.coerceIn(bounds.x, bounds.x + bounds.width))
 
-            mouse.scrolled.trigger(
-                MouseEvent(bounds.center,Vector2.UNIT_Y * (old - current), Vector2.ZERO, MouseEventType.SCROLLED, MouseButton.NONE, setOf())
-            )
+//            mouse.scrolled.trigger(
+//                MouseEvent(bounds.center,Vector2.UNIT_Y * (old - current), Vector2.ZERO, MouseEventType.SCROLLED, MouseButton.NONE, setOf())
+//            )
         }
     }
 

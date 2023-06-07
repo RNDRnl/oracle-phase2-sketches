@@ -105,9 +105,6 @@ fun main() = application {
                 drawer.stroke = ColorRGBa.PINK
                 drawer.rectangle(rect)
             }
-
-
-
         }
     }
 }
