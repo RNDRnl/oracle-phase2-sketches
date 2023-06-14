@@ -1,4 +1,4 @@
-package v04
+package v05
 
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
@@ -35,7 +35,7 @@ fun main() = application {
             .slice(setOf(0, 1, 4, 5, 6, 7, 8, 9))
 
         val screens = frames.mapIndexed { i, r ->
-            val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenTest04(i, r)  }
+            val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenTest05(i, r)  }
             val update: (articles: MutableList<Article>, zoomLevel: Int)->Unit by vb.userProperties
 
             vb to update

@@ -1,4 +1,4 @@
-package v04
+package v05
 
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.*
@@ -22,7 +22,7 @@ val corrections by lazy {
     df.rows().associate { it[1] as String to it[0] as String }
 }
 
-fun String.correctedFaculty(): String = v05.corrections.getOrDefault(this.lowercase(), this)
+fun String.correctedFaculty(): String = corrections.getOrDefault(this.lowercase(), this)
 
 
 val facultyAbbreviations = listOf(
@@ -49,6 +49,6 @@ val facultyColors = listOf(
     ColorRGBa.GRAY.mix(ColorRGBa.WHITE, 0.5)
 )
 
-val facultyToColor = (v05.facultyNames zip v05.facultyColors).toMap()
+val facultyToColor = (facultyNames zip facultyColors).toMap()
 
-fun String.facultyColor(): ColorRGBa = v05.facultyToColor[this] ?: v05.facultyColors.last()
+fun String.facultyColor(): ColorRGBa = facultyToColor[this] ?: facultyColors.last()

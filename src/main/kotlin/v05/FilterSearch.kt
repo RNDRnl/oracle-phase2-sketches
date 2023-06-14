@@ -1,4 +1,4 @@
-package v04
+package v05
 
 import org.openrndr.MouseEvent
 import org.openrndr.MouseEventType
@@ -226,7 +226,7 @@ class FilterSearch(val data: DataModel, val frame: Rectangle, val mouse: MouseEv
 
         timeline.loadFromJson(File("data/timelines/filter-search-timeline.json"))
 
-        facultyBox.list = v05.facultyNames
+        facultyBox.list = facultyNames
         topicsBox.list = topicNames
         articlesBox.list = articleToAuthor
 

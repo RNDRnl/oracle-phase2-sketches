@@ -1,8 +1,7 @@
-package v04
+package v05
 
 import org.openrndr.application
 import org.openrndr.extra.viewbox.viewBox
-import org.openrndr.math.IntVector2
 import org.openrndr.shape.Rectangle
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
@@ -14,6 +13,7 @@ import java.net.InetSocketAddress
 import kotlin.concurrent.thread
 
 data class EventObject(val articleIndexes: List<Int>, val zoom: Double): Serializable
+
 fun main() = application {
     configure {
         width = 1280
@@ -24,7 +24,7 @@ fun main() = application {
         val ipAddress = "192.168.1.158"
 
         val data = DataModel(Rectangle.fromCenter(drawer.bounds.center, height * 1.0, height * 1.0))
-        val pc = viewBox(drawer.bounds) { pc04(data) }
+        val pc = viewBox(drawer.bounds) { pc05(data) }
 
         thread {
             val socket = DatagramSocket()

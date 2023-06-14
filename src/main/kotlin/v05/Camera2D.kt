@@ -1,4 +1,4 @@
-package v04
+package v05
 
 import org.openrndr.*
 import org.openrndr.draw.Drawer
@@ -10,10 +10,6 @@ import org.openrndr.math.Vector2
 import org.openrndr.math.Vector4
 import org.openrndr.math.map
 import org.openrndr.math.transforms.buildTransform
-import org.openrndr.math.transforms.normalMatrix
-import org.openrndr.shape.Rectangle
-import org.openrndr.shape.ShapeContour
-import org.openrndr.shape.contains
 import kotlin.math.*
 
 class Camera2D : Extension, ChangeEvents {

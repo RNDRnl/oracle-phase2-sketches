@@ -1,26 +1,33 @@
-package v04
+package v05
 
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.ColumnName
 import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.read
+import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jetbrains.kotlinx.dataframe.io.toStandaloneHTML
 import org.openrndr.events.Event
-import org.openrndr.extra.hashgrid.filter
 import org.openrndr.extra.kdtree.kdTree
-import org.openrndr.extra.triangulation.delaunayTriangulation
 import org.openrndr.math.Vector2
 import org.openrndr.shape.Rectangle
 import org.openrndr.shape.bounds
-import org.openrndr.shape.contains
 import org.openrndr.shape.map
-import java.io.File
 import java.io.Serializable
-import java.net.URL
+import java.math.BigDecimal
 
-class DataModelNew(val frame: Rectangle) {
+class DataModel(val frame: Rectangle) {
 
     val changed = Event<Unit>()
+
+    private val topicsDf = DataFrame.readCSV("offline-data/zeroshot-all-data-v3.csv")
+        .add("topic") {
+            val r = getRow(index()).toMap().values
+            val i = r.indexOf(rowMax())
+            topicNames[i]
+        }
+        .move { pathOf("topic") }.toLeft()
+        .merge { colsOf<Number>()  }.into("scores")
+
 
     private val articlesDf = DataFrame.read("offline-data/all-data-v3.csv")
         .select{ cols(0..7) }
@@ -30,7 +37,8 @@ class DataModelNew(val frame: Rectangle) {
         .fillNulls("author").with { "Unknown Author" }
         .fillNulls("contributor","department").with { "" }
         .fillNulls("publication year").with { "No date" }
-        .add("topic") { "no topic" }
+        .add(topicsDf)
+
 
     val pos by column<Vector2>()
 
@@ -46,25 +54,8 @@ class DataModelNew(val frame: Rectangle) {
     val articles = articlesDf.toListOf<Article>()
     val points = pointsDf[pos].toList().run { map(this.bounds, frame) }
 
-    //// fake topics logic
-
-    val fakeTriangulation = points.map(frame, frame.offsetEdges(150.0))
-        .filter(210.0)
-        .delaunayTriangulation()
-        .triangles()
-        .mapIndexed { i, it -> it.contour to topics.random() }
-
-    fun  Map<Vector2, Article>.addFakeTopics(): Map<Vector2, Article> {
-        return this.onEach {
-            val topic = fakeTriangulation.firstOrNull { (c, s) -> c.contains(it.key) }
-            it.value.topic = topic?.second ?: "no topic"
-        }
-    }
-    /// end fake topics logic
-
-    val pointsToArticles = (points zip articles).toMap().addFakeTopics()
+    val pointsToArticles = (points zip articles).toMap()
     val articlesToPoints = pointsToArticles.entries.associateBy({ it.value }) { it.key }
-
 
     val kdtree = points.kdTree()
 
@@ -98,13 +89,7 @@ class DataModelNew(val frame: Rectangle) {
     var activePoints = findActivePoints(frame.center, radius)
         set(value) {
             field = value
-            changed.trigger(Unit)
         }
-}
-
-val topics by lazy {
-    File("offline-data/labels.txt").readText()
-        .split(", ").map { it.drop(1).dropLast(1) }
 }
 
 data class Article(
@@ -132,11 +117,17 @@ data class Article(
     @ColumnName("uuid")
     val uuid: String,
 
-    var topic: String,
+    @ColumnName("topic")
+    val topic: String,
+
+    @ColumnName("scores")
+    val topicScores: List<BigDecimal>,
 
 ):Serializable
 
 fun main() {
-    val dmn = DataModelNew(Rectangle.fromCenter(Vector2.ZERO, 1920.0, 1080.0))
+    val dmn = DataModel(Rectangle.fromCenter(Vector2.ZERO, 1920.0, 1080.0))
     dmn.dataFrame.toStandaloneHTML().openInBrowser()
+
+    println(dmn.articles.random().topicScores)
 }

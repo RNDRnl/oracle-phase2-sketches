@@ -1,4 +1,4 @@
-package v04
+package v05
 
 import org.openrndr.animatable.Animatable
 import org.openrndr.color.ColorRGBa
@@ -63,7 +63,7 @@ class FilterSearchSelector(val r: Rectangle, val type: FilterSearchSelectors): A
             currentFaculty = if(type == FilterSearchSelectors.FACULTY && field != null) {
                 current!!
             } else {
-                v05.facultyNames.last()
+                facultyNames.last()
             }
         }
 
