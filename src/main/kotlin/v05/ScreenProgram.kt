@@ -9,6 +9,9 @@ import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import origin
 
+
+class ScreenState(var mode: Int = IDLE, var zoomLevel: Int = 0)
+
 fun Program.screenProgram(i: Int, rect: Rectangle) {
 
     var articles = listOf<Article>()
@@ -25,27 +28,27 @@ fun Program.screenProgram(i: Int, rect: Rectangle) {
             ::showTimer.cancel()
             ::showTimer.animate(1.0, 3200L, Easing.SineOut)
         }
-
     }
     val controller = Controller()
 
+    val state = ScreenState()
+
     val zoomLevels = listOf(::Zoom0, ::Zoom1, ::Zoom2).map { it(i, rect, drawer) }
-    var currentZoom = 1
 
 
-    var update: (articlesToColors: MutableList<Article>, zoomLevel: Int)->Unit by this.userProperties
-    update = { newArticles, zoomlv ->
 
+    var update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int)->Unit by this.userProperties
+    update = { mode, newArticles, zoomLevel ->
+        state.mode = mode
         controller.fadeIn()
-        currentZoom = zoomlv
-        zoomLevels[currentZoom].populate(newArticles)
-
+        state.zoomLevel = zoomLevel
+        zoomLevels[zoomLevel].populate(newArticles)
         articles = newArticles
     }
 
     extend {
         controller.updateAnimation()
-        zoomLevels[currentZoom].update()
+        zoomLevels[state.zoomLevel].update()
 
         drawer.clear(ColorRGBa.BLACK.shade(0.35))
 
@@ -70,7 +73,7 @@ fun Program.screenProgram(i: Int, rect: Rectangle) {
         drawer.shadeStyle = null
 
         drawer.defaults()
-        zoomLevels[currentZoom].draw(circle)
+        zoomLevels[state.zoomLevel].draw(circle)
 
     }
 }

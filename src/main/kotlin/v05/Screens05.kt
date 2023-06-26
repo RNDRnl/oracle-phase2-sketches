@@ -52,8 +52,7 @@ fun main() = application {
 
         val screens = frames.mapIndexed { i, r ->
             val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenProgram(i, r) }
-            val update: (articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
-
+            val update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
             vb to update
         }
 
@@ -116,11 +115,11 @@ fun main() = application {
 
                     for (chunk in chunks) {
                         val updateFunc = screens[chunk.key].second
-                        updateFunc(chunk.value, zoomLevel)
+                        updateFunc(e.screenMode, chunk.value, zoomLevel)
                     }
                 } else {
                     for ((_, updateFunc) in screens) {
-                        updateFunc(newArticles.toMutableList(), zoomLevel)
+                        updateFunc(e.screenMode, newArticles.toMutableList(), zoomLevel)
                     }
                 }
             }
