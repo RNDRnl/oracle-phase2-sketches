@@ -48,7 +48,21 @@ fun main() = application {
             if (it.character == '1') {
                 receiver.stateReceived.trigger(
                     EventObject(
-                        data.articles.shuffled().take(10).map { data.articles.indexOf(it) }, 0.1
+                        data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 0.1
+                    )
+                )
+            }
+            if (it.character == '2') {
+                receiver.stateReceived.trigger(
+                    EventObject(
+                        data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 0.34
+                    )
+                )
+            }
+            if (it.character == '3') {
+                receiver.stateReceived.trigger(
+                    EventObject(
+                        data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 1.0
                     )
                 )
             }
@@ -57,7 +71,7 @@ fun main() = application {
         receiver.stateReceived.listen { e ->
             val zoomLevel = when (e.zoom) {
                 in 0.0..0.33 -> 0
-                in 0.2..0.8 -> 1
+                in 0.33..0.8 -> 1
                 else -> 2
             }
 
