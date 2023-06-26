@@ -9,7 +9,7 @@ import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import origin
 
-fun Program.screenTest05(i: Int, rect: Rectangle) {
+fun Program.screenProgram(i: Int, rect: Rectangle) {
 
     var articles = listOf<Article>()
 
@@ -38,7 +38,7 @@ fun Program.screenTest05(i: Int, rect: Rectangle) {
 
         controller.fadeIn()
         currentZoom = zoomlv
-        zoomLevels[currentZoom].populate(articles)
+        zoomLevels[currentZoom].populate(newArticles)
 
         articles = newArticles
     }

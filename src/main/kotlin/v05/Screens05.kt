@@ -14,7 +14,7 @@ fun main() = application {
     val scale = 3
 
     configure {
-        if(debug) {
+        if (debug) {
             width = (2560 * 4) / scale
             height = (1080 * 3) / scale
             position = IntVector2(-300, -1800)
@@ -35,8 +35,8 @@ fun main() = application {
             .slice(setOf(0, 1, 4, 5, 6, 7, 8, 9))
 
         val screens = frames.mapIndexed { i, r ->
-            val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenTest05(i, r)  }
-            val update: (articles: MutableList<Article>, zoomLevel: Int)->Unit by vb.userProperties
+            val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenProgram(i, r) }
+            val update: (articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
 
             vb to update
         }
@@ -44,6 +44,15 @@ fun main() = application {
 
         val receiver = Receiver()
 
+        keyboard.character.listen {
+            if (it.character == '1') {
+                receiver.stateReceived.trigger(
+                    EventObject(
+                        data.articles.shuffled().take(10).map { data.articles.indexOf(it) }, 0.1
+                    )
+                )
+            }
+        }
 
         receiver.stateReceived.listen { e ->
             val zoomLevel = when (e.zoom) {
@@ -53,33 +62,34 @@ fun main() = application {
             }
 
             val newArticles = mutableListOf<Article>()
-            for(i in e.articleIndexes) {
+
+            for (i in e.articleIndexes) {
                 newArticles.add(data.articles[i])
             }
 
+            println("number of articles: ${newArticles.size}")
 
-            println(newArticles.size)
             launch {
-                if(zoomLevel < 2) {
+                if (zoomLevel < 2) {
                     val chunks = HashMap<Int, MutableList<Article>>(8)
 
                     var currentScreen = 0
-                    for(article in newArticles) {
+                    for (article in newArticles) {
                         val c = chunks.getOrPut(currentScreen) { mutableListOf() }
 
-                        if(c.size < 1000) {
+                        if (c.size < 1000) {1
                             c.add(article)
                         } else break
 
-                        currentScreen = if(currentScreen == 7) 0 else currentScreen + 1
+                        currentScreen = if (currentScreen == 7) 0 else currentScreen + 1
                     }
 
-                    for(chunk in chunks) {
+                    for (chunk in chunks) {
                         val updateFunc = screens[chunk.key].second
                         updateFunc(chunk.value, zoomLevel)
                     }
                 } else {
-                    for((_, updateFunc) in screens) {
+                    for ((_, updateFunc) in screens) {
                         updateFunc(newArticles.toMutableList(), zoomLevel)
                     }
                 }
@@ -87,7 +97,7 @@ fun main() = application {
         }
 
 
-        thread (isDaemon = true) {
+        thread(isDaemon = true) {
             while (true) {
                 receiver.work()
             }
@@ -95,7 +105,7 @@ fun main() = application {
 
         extend {
 
-            if(debug) drawer.scale(1.0 / scale)
+            if (debug) drawer.scale(1.0 / scale)
 
             (screens zip frames).forEach { (screen, rect) ->
                 screen.first.update()

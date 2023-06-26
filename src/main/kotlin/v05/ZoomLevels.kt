@@ -64,9 +64,15 @@ class Zoom0(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
     var color = ColorRGBa.GRAY
 
     override fun populate(articles: List<Article>) {
-        color = articles[0].faculty.facultyColor()
-        rects = Rectangle(0.0, 0.0, rect.width, rect.height).grid(articles.size, 1).flatten()
-        animations.fadeIn()
+
+        if (articles.isNotEmpty()) {
+
+            color = articles[0].faculty.facultyColor()
+            rects = Rectangle(0.0, 0.0, rect.width, rect.height).grid(articles.size, 1).flatten()
+            animations.fadeIn()
+        } else {
+            println("error: asked to be populated from an empty list ${articles}")
+        }
     }
 
     override fun draw(circle: Circle) {
