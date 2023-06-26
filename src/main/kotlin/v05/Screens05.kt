@@ -11,7 +11,11 @@ import kotlin.concurrent.thread
 
 
 fun main() = application {
-    val appMode = AppMode.Debug
+    val appMode = when (val mode=System.getProperty("appMode")) {
+        "production" -> AppMode.Production
+        "prototype" -> AppMode.Prototype
+        else -> AppMode.Debug
+    }
     val scale = 3
 
     configure {
