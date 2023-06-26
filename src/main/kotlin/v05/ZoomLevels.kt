@@ -23,7 +23,13 @@ import kotlin.random.Random
 
 class ArticleBody(val frame: Rectangle, val body: Body)
 
-open class ZoomLevel(val i: Int, val rect: Rectangle, val drawer: Drawer) {
+interface ScreenDrawer {
+    fun update()
+    fun draw(circle: Circle)
+}
+
+
+abstract class ZoomLevel(val i: Int, val rect: Rectangle, val drawer: Drawer) : ScreenDrawer {
 
     open fun populate(articles: List<Article>) { }
 
@@ -47,7 +53,7 @@ open class ZoomLevel(val i: Int, val rect: Rectangle, val drawer: Drawer) {
     }
     val animations = Animations()
 
-    fun update() {
+    override fun update() {
         animations.updateAnimation()
     }
 
@@ -55,7 +61,7 @@ open class ZoomLevel(val i: Int, val rect: Rectangle, val drawer: Drawer) {
     val tfm = loadFont("data/fonts/RobotoCondensed-Bold.ttf", 200.0, contentScale = 1.0)
     val stfm = loadFont("data/fonts/default.otf", 80.0, contentScale = 1.0)
 
-    open fun draw(circle: Circle) { }
+
 }
 
 class Zoom0(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer) {

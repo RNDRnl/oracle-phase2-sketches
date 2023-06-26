@@ -21,6 +21,7 @@ fun main() = application {
                 height = (1080 * 3) / scale
                 position = IntVector2(-300, -1800)
             }
+
             AppMode.Prototype -> { // used for testing at RNDR
                 width = 1920 * 3
                 height = 1080 * 2
@@ -28,6 +29,7 @@ fun main() = application {
                 hideWindowDecorations = true
                 windowAlwaysOnTop = true
             }
+
             AppMode.Production -> { // used for production
                 width = (2560 * 4)
                 height = (1080 * 3)
@@ -57,24 +59,36 @@ fun main() = application {
         keyboard.character.listen {
             if (it.character == '1') {
                 receiver.stateReceived.trigger(
-                    EventObject(NAVIGATE,
+                    EventObject(
+                        NAVIGATE,
                         data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 0.1
                     )
                 )
             }
             if (it.character == '2') {
                 receiver.stateReceived.trigger(
-                    EventObject(NAVIGATE,
+                    EventObject(
+                        NAVIGATE,
                         data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 0.34
                     )
                 )
             }
             if (it.character == '3') {
                 receiver.stateReceived.trigger(
-                    EventObject(NAVIGATE,
+                    EventObject(
+                        NAVIGATE,
                         data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 1.0
                     )
                 )
+            }
+            if (it.character == 'i') {
+                receiver.stateReceived.trigger(
+                    EventObject(
+                        IDLE,
+                        emptyList(), 0.0
+                    )
+                )
+
             }
         }
 
@@ -94,30 +108,39 @@ fun main() = application {
             println("number of articles: ${newArticles.size}")
 
             launch {
-                if (zoomLevel < 2) {
-                    val chunks = HashMap<Int, MutableList<Article>>(8)
+                if (e.screenMode == NAVIGATE) {
+                    if (zoomLevel < 2) {
+                        val chunks = HashMap<Int, MutableList<Article>>(8)
 
-                    var currentScreen = 0
-                    for (article in newArticles) {
-                        val c = chunks.getOrPut(currentScreen) { mutableListOf() }
+                        var currentScreen = 0
+                        for (article in newArticles) {
+                            val c = chunks.getOrPut(currentScreen) { mutableListOf() }
 
-                        if (c.size < 1000) {1
-                            c.add(article)
-                        } else break
+                            if (c.size < 1000) {
+                                c.add(article)
+                            } else break
 
-                        currentScreen = if (currentScreen == 7) 0 else currentScreen + 1
+                            currentScreen = if (currentScreen == 7) 0 else currentScreen + 1
+                        }
+
+                        for (chunk in chunks) {
+                            val updateFunc = screens[chunk.key].second
+                            updateFunc(e.screenMode, chunk.value, zoomLevel)
+                        }
+                    } else {
+                        for ((_, updateFunc) in screens) {
+                            updateFunc(e.screenMode, newArticles.toMutableList(), zoomLevel)
+                        }
                     }
-
-                    for (chunk in chunks) {
-                        val updateFunc = screens[chunk.key].second
-                        updateFunc(e.screenMode, chunk.value, zoomLevel)
-                    }
-                } else {
+                } else if (e.screenMode == IDLE) {
                     for ((_, updateFunc) in screens) {
-                        updateFunc(e.screenMode, newArticles.toMutableList(), zoomLevel)
+                        updateFunc(e.screenMode, newArticles, 0)
                     }
                 }
+
+
             }
+
         }
 
 
@@ -129,7 +152,7 @@ fun main() = application {
 
         extend {
 
-            when(appMode) {
+            when (appMode) {
                 AppMode.Debug -> drawer.scale(1.0 / scale)
                 else -> {}
             }
