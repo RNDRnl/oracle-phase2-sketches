@@ -42,17 +42,35 @@ fun main() = application {
     program {
 
         val data = DataModel(Rectangle(Vector2.ZERO, 1920.0, 1080.0))
-        val frames = Rectangle(0.0, 0.0, 2560 * 4.0, 1080.0 * 3)
+        var frames = Rectangle(0.0, 0.0, 2560 * 4.0, 1080.0 * 3)
             .grid(4, 3)
             .flatten()
             .slice(setOf(0, 1, 4, 5, 6, 7, 8, 9))
 
-        val screens = frames.mapIndexed { i, r ->
+        var screens = frames.mapIndexed { i, r ->
             val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenProgram(i, r) }
             val update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
             vb to update
         }
 
+        when(appMode) {
+            AppMode.Debug -> {
+            }
+            AppMode.Prototype -> {
+                frames = Rectangle(0.0, 0.0, 1920 * 3.0, 1080.0 * 2)
+                    .grid(3, 2)
+                    .flatten()
+                    .slice(setOf(0, 1, 2, 4))
+
+                screens = frames.mapIndexed { i, r ->
+                    val vb = viewBox(Rectangle(0.0, 0.0, 1920.0, 1080.0)) { screenProgram(i, r) }
+                    val update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
+                    vb to update
+                }
+            }
+            AppMode.Production -> {
+            }
+        }
 
         val receiver = Receiver()
 
@@ -93,7 +111,7 @@ fun main() = application {
         }
 
         receiver.stateReceived.listen { e ->
-            val zoomLevel = when (e.zoom) {
+            val zoomLevel = if (e.articleIndexes.size == 1) 2 else when (e.zoom) {
                 in 0.0..0.33 -> 0
                 in 0.33..0.8 -> 1
                 else -> 2
@@ -121,6 +139,10 @@ fun main() = application {
                             } else break
 
                             currentScreen = if (currentScreen == 7) 0 else currentScreen + 1
+                        }
+
+                        for (screen in screens) {
+                            screen.second(e.screenMode, emptyList<Article>().toMutableList(), zoomLevel)
                         }
 
                         for (chunk in chunks) {

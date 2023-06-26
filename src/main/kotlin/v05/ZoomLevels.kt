@@ -25,11 +25,11 @@ class ArticleBody(val frame: Rectangle, val body: Body)
 
 interface ScreenDrawer {
     fun update()
-    fun draw(circle: Circle)
+    fun draw(drawer: Drawer, circle: Circle)
 }
 
 
-abstract class ZoomLevel(val i: Int, val rect: Rectangle, val drawer: Drawer) : ScreenDrawer {
+abstract class ZoomLevel(val i: Int, val bounds: Rectangle) : ScreenDrawer {
 
     open fun populate(articles: List<Article>) { }
 
@@ -64,7 +64,7 @@ abstract class ZoomLevel(val i: Int, val rect: Rectangle, val drawer: Drawer) : 
 
 }
 
-class Zoom0(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer) {
+class Zoom0(i: Int, rect: Rectangle) : ZoomLevel(i, rect) {
 
     var rects = listOf<Rectangle>()
     var color = ColorRGBa.GRAY
@@ -74,14 +74,14 @@ class Zoom0(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         if (articles.isNotEmpty()) {
 
             color = articles[0].faculty.facultyColor()
-            rects = Rectangle(0.0, 0.0, rect.width, rect.height).grid(articles.size, 1).flatten()
+            rects = Rectangle(0.0, 0.0, bounds.width, bounds.height).grid(articles.size, 1).flatten()
             animations.fadeIn()
         } else {
             println("error: asked to be populated from an empty list ${articles}")
         }
     }
 
-    override fun draw(circle: Circle) {
+    override fun draw(drawer: Drawer, circle: Circle) {
         drawer.isolated {
             fill = ColorRGBa.BLUE
             for(rect in rects.take((animations.fade * rects.size).toInt())) {
@@ -92,7 +92,7 @@ class Zoom0(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
     }
 }
 
-class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer) {
+class Zoom1(i: Int, bounds: Rectangle) : ZoomLevel(i, bounds) {
 
     val world = World(Vec2(0.0f, .81f))
     val articleBodies = mutableMapOf<Article, ArticleBody>()
@@ -116,9 +116,9 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
             staticBodies.add(body)
         }
 
-        addStaticBox(Rectangle(0.0, drawer.height-10.0,  drawer.width*1.0, 10.0))
-        addStaticBox(Rectangle(0.0, 0.0, 10.0, drawer.height-10.0))
-        addStaticBox(Rectangle(drawer.width-10.0, 0.0, 10.0, drawer.height-10.0))
+        addStaticBox(Rectangle(0.0, bounds.height-10.0,  bounds.width*1.0, 10.0))
+        addStaticBox(Rectangle(0.0, 0.0, 10.0, bounds.height-10.0))
+        addStaticBox(Rectangle(bounds.width-10.0, 0.0, 10.0, bounds.height-10.0))
     }
 
     fun createArticleBody(pos: Vector2, box: Rectangle): Body {
@@ -145,7 +145,6 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
     }
 
     override fun populate(articles: List<Article>) {
-
         animations.fadeOut()
         for(body in articleBodies.map { it.value.body }) {
             world.destroyBody(body)
@@ -156,17 +155,17 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         var previousX = 0.0
 
         for((index, article) in articles.withIndex()) {
-            val boxWidth = article.title.length.toDouble().map(0.0, 300.0, drawer.width / 50.0, drawer.width / 12.0)
-            val boxHeight = drawer.height * Double.uniform(0.75, 0.85)
+            val boxWidth = article.title.length.toDouble().map(0.0, 300.0, bounds.width / 50.0, bounds.width / 12.0)
+            val boxHeight = bounds.height * Double.uniform(0.75, 0.85)
 
-            if(previousX >= drawer.width) break
+            if(previousX >= bounds.width) break
             else {
                 val box = Rectangle.fromCenter(
                     Vector2.ZERO,
                     boxWidth,
                     boxHeight)
 
-                val pos = Vector2(previousX + 80.0 * index, drawer.height - boxHeight - 10.0)
+                val pos = Vector2(previousX + 80.0 * index, bounds.height - boxHeight - 10.0)
 
                 val body = createArticleBody(pos + Vector2(100.0, 0.0), box)
                 val articleBody = ArticleBody(box, body)
@@ -178,7 +177,7 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
 
     }
 
-    override fun draw(circle: Circle) {
+    override fun draw(drawer: Drawer, circle: Circle) {
         drawer.isolated {
 
             world.gravity = Vec2(0.0f, 900.81f)
@@ -189,7 +188,7 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
 
             for ((article, body) in articleBodies) {
 
-                if(body.frame.center.transform(body.body.transform.matrix44()) + rect.corner in circle) {
+                if(body.frame.center.transform(body.body.transform.matrix44()) + this@Zoom1.bounds.corner in circle) {
                     drawer.isolated {
                         drawer.fill = article.faculty.facultyColor()
                         drawer.stroke = null
@@ -214,7 +213,7 @@ class Zoom1(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
 
 }
 
-class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer) {
+class Zoom2(i: Int, rect: Rectangle) : ZoomLevel(i, rect) {
 
     var currentArticle: Article? = null
     var sameFaculty = listOf<Article>()
@@ -233,7 +232,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         }
     }
 
-    override fun draw(circle: Circle) {
+    override fun draw(drawer: Drawer, circle: Circle) {
         drawer.isolated {
             if(currentArticle != null) {
                 val article = currentArticle!!
@@ -245,21 +244,21 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
 
                 drawer.fill = ColorRGBa.WHITE
                 when(i) {
-                    0 -> singleColumnText(article.title)
-                    1 -> infoText(article)
-                    2 -> singleColumnText(article.department)
-                    3 -> multiColumnText("ABSTRACT", article.abstract, 3)
-                    4 -> books(sameFaculty, "FROM THE SAME FACULTY")
-                    5 -> books(sameTopic, "FROM THE SAME TOPIC")
-                    6 -> singleColumnText(article.year)
-                    7 -> timeline()
+                    0 -> singleColumnText(drawer, article.title)
+                    1 -> infoText(drawer, article)
+                    2 -> singleColumnText(drawer, article.department)
+                    3 -> multiColumnText(drawer, "ABSTRACT", article.abstract, 3)
+                    4 -> books(drawer, sameFaculty, "FROM THE SAME FACULTY")
+                    5 -> books(drawer, sameTopic, "FROM THE SAME TOPIC")
+                    6 -> singleColumnText(drawer, article.year)
+                    7 -> timeline(drawer)
                 }
             }
         }
     }
 
 
-    private fun infoText(ad: Article) {
+    private fun infoText(drawer: Drawer, ad: Article) {
 
         val rects = Rectangle(50.0, 50.0, drawer.width - 100.0, drawer.height - 200.0)
             .grid(3, 1,
@@ -320,7 +319,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
 
     }
 
-    private fun multiColumnText(title: String, text: String, cols: Int = 2) {
+    private fun multiColumnText(drawer: Drawer, title: String, text: String, cols: Int = 2) {
         drawer.fontMap = stfm
         drawer.text(title, drawer.bounds.corner + Vector2(60.0, 120.0))
 
@@ -344,7 +343,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         }
     }
 
-    private fun singleColumnText(text: String) {
+    private fun singleColumnText(drawer: Drawer, text: String) {
         drawer.fontMap = tfm
         drawer.writer {
             box = drawer.bounds.offsetEdges(-20.0)
@@ -353,7 +352,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         }
     }
 
-    private fun books(bookList: List<Article>, text: String = "") {
+    private fun books(drawer: Drawer, bookList: List<Article>, text: String = "") {
         drawer.stroke = null
 
         drawer.fontMap = stfm
@@ -383,7 +382,7 @@ class Zoom2(i: Int, rect: Rectangle, drawer: Drawer) : ZoomLevel(i, rect, drawer
         }
     }
 
-    private fun timeline() {
+    private fun timeline(drawer: Drawer) {
         drawer.stroke = ColorRGBa.WHITE
         drawer.lineSegment(0.0, 100.0, drawer.width * 1.0, 100.0)
     }
