@@ -21,7 +21,7 @@ fun main() = application {
     }
     program {
 
-        val ipAddress = "192.168.1.158"
+        val ipAddress = "192.168.1.62"
 
         val data = DataModel(Rectangle.fromCenter(drawer.bounds.center, height * 1.0, height * 1.0))
         val pc = viewBox(drawer.bounds) { pc05(data) }
@@ -40,6 +40,7 @@ fun main() = application {
             }
 
             data.changed.listen {
+                println("sending")
                 val indices = data.activePoints.map { data.articles.indexOf(it.value) }
                 send(EventObject(indices, data.zoom))
             }

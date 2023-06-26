@@ -87,9 +87,6 @@ class DataModel(val frame: Rectangle) {
     }
 
     var activePoints = findActivePoints(frame.center, radius)
-        set(value) {
-            field = value
-        }
 }
 
 data class Article(

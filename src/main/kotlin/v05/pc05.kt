@@ -55,6 +55,7 @@ fun Program.pc05(data: DataModel) {
 
     mouse.buttonUp.listen {
         filter.buttonUp(it)
+        data.changed.trigger(Unit)
     }
 
     mouse.scrolled.listen {
