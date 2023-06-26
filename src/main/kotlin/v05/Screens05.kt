@@ -42,17 +42,35 @@ fun main() = application {
     program {
 
         val data = DataModel(Rectangle(Vector2.ZERO, 1920.0, 1080.0))
-        val frames = Rectangle(0.0, 0.0, 2560 * 4.0, 1080.0 * 3)
+        var frames = Rectangle(0.0, 0.0, 2560 * 4.0, 1080.0 * 3)
             .grid(4, 3)
             .flatten()
             .slice(setOf(0, 1, 4, 5, 6, 7, 8, 9))
 
-        val screens = frames.mapIndexed { i, r ->
+        var screens = frames.mapIndexed { i, r ->
             val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenProgram(i, r) }
             val update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
             vb to update
         }
 
+        when(appMode) {
+            AppMode.Debug -> {
+            }
+            AppMode.Prototype -> {
+                frames = Rectangle(0.0, 0.0, 1920 * 3.0, 1080.0 * 2)
+                    .grid(3, 2)
+                    .flatten()
+                    .slice(setOf(0, 1, 2, 4))
+
+                screens = frames.mapIndexed { i, r ->
+                    val vb = viewBox(Rectangle(0.0, 0.0, 1920.0, 1080.0)) { screenProgram(i, r) }
+                    val update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
+                    vb to update
+                }
+            }
+            AppMode.Production -> {
+            }
+        }
 
         val receiver = Receiver()
 
