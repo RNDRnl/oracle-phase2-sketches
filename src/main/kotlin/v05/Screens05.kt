@@ -9,22 +9,38 @@ import org.openrndr.math.*
 import org.openrndr.shape.Rectangle
 import kotlin.concurrent.thread
 
+enum class AppMode {
+    Debug,
+    Prototype,
+    Production
+}
+
 fun main() = application {
-    val debug = true
+    val appMode = AppMode.Debug
     val scale = 3
 
     configure {
-        if (debug) {
-            width = (2560 * 4) / scale
-            height = (1080 * 3) / scale
-            position = IntVector2(-300, -1800)
-        } else {
-            width = (2560 * 4)
-            height = (1080 * 3)
-            position = IntVector2(0, 0)
+        when (appMode) {
+            AppMode.Debug -> { // local testing
+                width = (2560 * 4) / scale
+                height = (1080 * 3) / scale
+                position = IntVector2(-300, -1800)
+            }
+            AppMode.Prototype -> { // used for testing at RNDR
+                width = 1920 * 3
+                height = 1080 * 2
+                position = IntVector2(-300, -1800)
+                hideWindowDecorations = true
+                windowAlwaysOnTop = true
+            }
+            AppMode.Production -> { // used for production
+                width = (2560 * 4)
+                height = (1080 * 3)
+                position = IntVector2(0, 0)
+                hideWindowDecorations = true
+                windowAlwaysOnTop = true
+            }
         }
-        hideWindowDecorations = true
-        windowAlwaysOnTop = false
     }
     program {
 
@@ -119,7 +135,10 @@ fun main() = application {
 
         extend {
 
-            if (debug) drawer.scale(1.0 / scale)
+            when(appMode) {
+                AppMode.Debug -> drawer.scale(1.0 / scale)
+                else -> {}
+            }
 
             (screens zip frames).forEach { (screen, rect) ->
                 screen.first.update()
