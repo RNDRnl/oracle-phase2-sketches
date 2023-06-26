@@ -115,7 +115,7 @@ fun main() = application {
         }
 
         receiver.stateReceived.listen { e ->
-            val zoomLevel = when (e.zoom) {
+            val zoomLevel = if (e.articleIndexes.size == 1) 2 else when (e.zoom) {
                 in 0.0..0.33 -> 0
                 in 0.33..0.8 -> 1
                 else -> 2
@@ -143,6 +143,10 @@ fun main() = application {
                             } else break
 
                             currentScreen = if (currentScreen == 7) 0 else currentScreen + 1
+                        }
+
+                        for (screen in screens) {
+                            screen.second(e.screenMode, emptyList<Article>().toMutableList(), zoomLevel)
                         }
 
                         for (chunk in chunks) {
