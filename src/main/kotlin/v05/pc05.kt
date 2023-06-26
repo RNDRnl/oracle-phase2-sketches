@@ -22,10 +22,10 @@ fun Program.pc05(data: DataModel) {
     val camera = Camera2D()
 
     val slider = Slider(Vector2(width / 2.0, height - 60.0))
-    val filter = FilterMenu(data, drawer.bounds.offsetEdges(-20.0), mouse)
+    val filterMenu = FilterMenu(data, drawer.bounds.offsetEdges(-20.0), mouse)
     val carousel = Carousel(data)
 
-    filter.filterChanged.listen { filters ->
+    filterMenu.filterChanged.listen { filters ->
         if(filters.all { it == null }) {
             data.filtered = data.pointsToArticles
         } else {
@@ -53,6 +53,7 @@ fun Program.pc05(data: DataModel) {
 
     mouse.buttonUp.listen {
         //filter.buttonUp(it)
+        filterMenu.buttonUpDown(it)
         data.changed.trigger(Unit)
     }
 
@@ -156,7 +157,7 @@ fun Program.pc05(data: DataModel) {
 
             layer {
                 draw {
-                    filter.draw(drawer)
+                    filterMenu.draw(drawer)
                 }
             }
         }

@@ -1,10 +1,11 @@
 package v05.filters
 
 import org.openrndr.draw.Drawer
+import org.openrndr.shape.Rectangle
 import org.openrndr.svg.loadSVG
 import java.io.File
 
-class TopGraduates: Filter() {
+class TopGraduatesFilter: Filter() {
 
     init {
         icon = loadSVG(File("data/icons/topGraduatesIcon.svg"))
@@ -15,10 +16,13 @@ class TopGraduates: Filter() {
     override fun draw(drawer: Drawer) {
 
         updateAnimation()
-
-        drawer.translate(
+        val expandedY = drawer.height * 0.6 * expandT
+        bounds = Rectangle(
             10.0,
-            drawer.height - bounds.height * 2 - 10.0)
+            (drawer.height - boundsHeight * 2 - 10.0) - expandedY,
+            boundsWidth,
+            boundsHeight + expandedY)
+
         drawBasics(drawer)
 
 
