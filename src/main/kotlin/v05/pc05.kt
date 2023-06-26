@@ -16,6 +16,7 @@ import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import org.openrndr.shape.bounds
+import v04.checkNullOr
 
 
 fun Program.pc05(data: DataModel) {
@@ -36,7 +37,6 @@ fun Program.pc05(data: DataModel) {
                         filters[2] checkNullOr { a.value.title + " | " + a.value.author == filters[2] }
             }
         }
-
     }
 
     val obstacles = listOf(slider.bounds)
@@ -80,6 +80,10 @@ fun Program.pc05(data: DataModel) {
             radius = 40.0 / camera.view.c0r0
             lookAt = (camera.view.inversed * drawer.bounds.center.xy01).xy
         }
+    }
+
+    slider.valueChanged.listen {
+        camera.setNormalizedScale(it)
     }
 
     val g = GUI()
