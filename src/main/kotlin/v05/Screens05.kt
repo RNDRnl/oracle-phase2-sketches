@@ -9,11 +9,6 @@ import org.openrndr.math.*
 import org.openrndr.shape.Rectangle
 import kotlin.concurrent.thread
 
-enum class AppMode {
-    Debug,
-    Prototype,
-    Production
-}
 
 fun main() = application {
     val appMode = AppMode.Debug

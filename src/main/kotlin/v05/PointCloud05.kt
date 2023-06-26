@@ -16,9 +16,23 @@ import kotlin.concurrent.thread
 const val IDLE = 1
 const val NAVIGATE = 2
 data class EventObject(val screenMode: Int, val articleIndexes: List<Int>, val zoom: Double) : Serializable
+val appMode = AppMode.Debug
 
 fun main() = application {
     configure {
+        when (appMode) {
+            AppMode.Debug -> {
+
+            }
+            AppMode.Prototype -> {
+                hideWindowDecorations = true
+                windowAlwaysOnTop = true
+            }
+            AppMode.Production -> {
+                hideWindowDecorations = true
+                windowAlwaysOnTop = true
+            }
+        }
         width = 1280
         height = 1024
     }
