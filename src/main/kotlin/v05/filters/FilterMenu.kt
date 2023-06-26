@@ -67,15 +67,6 @@ class FilterMenu(val data: DataModel, val frame: Rectangle, val mouse: MouseEven
     fun draw(drawer: Drawer) {
         filters.map {
             drawer.defaults()
-            drawer.stroke = ColorRGBa.BLUE
-            drawer.fill = null
-            drawer.rectangle(it.bounds)
-
-            drawer.stroke = ColorRGBa.GREEN
-            drawer.fill = null
-            drawer.rectangle(it.bounds.copy(height = 80.0))
-
-
             it.draw(drawer)
         }
     }
@@ -84,6 +75,5 @@ class FilterMenu(val data: DataModel, val frame: Rectangle, val mouse: MouseEven
     init {
         discover.articles = data.articles
         discover.titlesToAuthors = data.articles.map { it.title + " | " + it.author }
-        discover.reset()
     }
 }

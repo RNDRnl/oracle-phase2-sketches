@@ -37,9 +37,9 @@ class DiscoverFilter: Filter() {
     val activeList = listOf(::activeFaculties, ::activeTopics, ::activeArticles)
 
     var selectorBoxes = listOf(
-        Rectangle(110.0, 90.0, (bounds.width - 110.0) * 0.3, 25.0),
-        Rectangle(110.0 + (bounds.width - 110.0) * 0.3, 90.0, (bounds.width - 110.0) * 0.3, 25.0),
-        Rectangle(110.0 + (bounds.width - 110.0) * 0.6, 90.0, (bounds.width - 110.0) * 0.4, 25.0)
+        Rectangle(80.0, 90.0, (bounds.width - 80.0) * 0.3, 25.0),
+        Rectangle(80.0 + (bounds.width - 80.0) * 0.3, 90.0, (bounds.width - 80.0) * 0.3, 25.0),
+        Rectangle(80.0 + (bounds.width - 80.0) * 0.6, 90.0, (bounds.width - 80.0) * 0.4, 25.0)
     )
     var currentBox = 0
 
@@ -62,11 +62,6 @@ class DiscoverFilter: Filter() {
             }
         }
 
-    fun reset() {
-        activeFaculties = faculties.indices.toMutableList()
-        activeTopics = topics.indices.toMutableList()
-        activeArticles = articles.indices.toMutableList()
-    }
 
     override fun buttonUp(e: MouseEvent) {
         val target = selectorBoxes.firstOrNull { e.position in it.movedBy(bounds.corner) }
@@ -107,7 +102,7 @@ class DiscoverFilter: Filter() {
             val currentList = fullList[currentBox].get()
 
             entriesInView = currentList.withIndex().associate { (i, item) ->
-                val box = Rectangle(110.0, i * 30.0 + (25.0 * i) + 160.0, 80.0, 30.0)
+                val box = Rectangle(selectorBoxes[currentBox].x, i * 30.0 + (25.0 * i) + 160.0, 80.0, 30.0)
                 val pos = box.center + bounds.corner
 
 
@@ -121,11 +116,11 @@ class DiscoverFilter: Filter() {
 
                         when(currentBox) {
                             0 -> {
-                                drawer.fill = if(i in activeFaculties) facultyColors[i] else ColorRGBa.TRANSPARENT
+                                drawer.fill = if(activeFaculties.size != faculties.size && i in activeFaculties) facultyColors[i] else ColorRGBa.TRANSPARENT
                                 drawer.stroke = facultyColors[i]
                                 drawer.roundedRectangle(box.toRounded(999.0))
 
-                                drawer.fill = if(i in activeFaculties) ColorRGBa.BLACK else facultyColors[i]
+                                drawer.fill = if(activeFaculties.size != faculties.size && i in activeFaculties) ColorRGBa.BLACK else facultyColors[i]
                                 drawer.text(item.facultyAbbreviation(), box.corner + Vector2(box.width / 2.0, box.height / 2.0))
 
                                 drawer.fill = ColorRGBa.WHITE.opacify(0.8)

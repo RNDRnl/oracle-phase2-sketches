@@ -127,7 +127,7 @@ fun Program.pc05(data: DataModel) {
                         val size = if(data.filtered[point] != null) 6 else 2
 
                         this.fill = article.faculty.facultyColor().opacify(opacity)
-                        this.rectangle(Rectangle.fromCenter(point, 0.45 * size, 0.85 * size))
+                        this.rectangle(Rectangle.fromCenter(point, 0.25 * size, 0.45 * size))
                     }
                 }
 

@@ -67,8 +67,8 @@ open class Filter: Animatable() {
         drawer.lineSegment(Vector2.ZERO, Vector2(bounds.width, 0.0))
 
         icon.root.transform = buildTransform {
-            translate(50.0, 40.0)
-            scale(0.65)
+            translate(40.0, 40.0)
+            scale(0.5)
             translate(-icon.root.bounds.center)
         }
         drawer.composition(icon)
@@ -76,10 +76,10 @@ open class Filter: Animatable() {
         drawer.fill = ColorRGBa.WHITE.opacify(0.8)
         drawer.stroke = null
         drawer.fontMap = titleFm
-        drawer.text(title, 110.0, 40.0)
+        drawer.text(title, 80.0, 40.0)
 
         drawer.fontMap = subtitleFm
-        drawer.text(subtitle, 110.0, 45.0 + titleFm.height)
+        drawer.text(subtitle, 80.0, 45.0 + titleFm.height)
 /*
         drawer.stroke = ColorRGBa.RED
         drawer.fill = null
