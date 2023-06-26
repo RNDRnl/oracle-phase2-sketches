@@ -24,7 +24,7 @@ fun main() = application {
             AppMode.Prototype -> { // used for testing at RNDR
                 width = 1920 * 3
                 height = 1080 * 2
-                position = IntVector2(-300, -1800)
+                position = IntVector2(-1920, -1080)
                 hideWindowDecorations = true
                 windowAlwaysOnTop = true
             }
