@@ -7,16 +7,14 @@ import org.openrndr.events.listen
 import org.openrndr.extra.compositor.compose
 import org.openrndr.extra.compositor.draw
 import org.openrndr.extra.compositor.layer
-import org.openrndr.extra.compositor.post
 import org.openrndr.extra.fx.blur.GaussianBlur
-import org.openrndr.extra.gui.GUI
 import org.openrndr.extra.noise.uniform
 import org.openrndr.math.*
 import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
-import org.openrndr.shape.bounds
 import v04.checkNullOr
+import v05.filters.FilterMenu
 
 
 fun Program.pc05(data: DataModel) {
@@ -24,7 +22,7 @@ fun Program.pc05(data: DataModel) {
     val camera = Camera2D()
 
     val slider = Slider(Vector2(width / 2.0, height - 60.0))
-    val filter = FilterSearch(data, drawer.bounds.offsetEdges(-20.0), mouse)
+    val filter = FilterMenu(data, drawer.bounds.offsetEdges(-20.0), mouse)
     val carousel = Carousel(data)
 
     filter.filterChanged.listen { filters ->
@@ -42,7 +40,7 @@ fun Program.pc05(data: DataModel) {
     val obstacles = listOf(slider.bounds)
 
     listOf(mouse.buttonDown, mouse.buttonUp).listen {
-        if(slider.visible && !filter.visible) {
+        if(slider.visible) {
             val obst = obstacles.firstOrNull { o -> it.position in o.offsetEdges(5.0) }
             camera.inUiElement = obst != null
         }
@@ -50,26 +48,20 @@ fun Program.pc05(data: DataModel) {
     }
 
     mouse.buttonDown.listen {
-        filter.buttonDown(it)
+        //filter.buttonDown(it)
     }
 
     mouse.buttonUp.listen {
-        filter.buttonUp(it)
+        //filter.buttonUp(it)
         data.changed.trigger(Unit)
     }
 
     mouse.scrolled.listen {
-        if(!filter.visible) {
-            camera.scrolled(it)
-        }
+        camera.scrolled(it)
     }
 
     mouse.dragged.listen {
-        if(!filter.visible) {
-            camera.dragged(it)
-        } else {
-            filter.dragged(it)
-        }
+        camera.dragged(it)
         slider.dragged(it, mouse)
     }
 
@@ -87,15 +79,22 @@ fun Program.pc05(data: DataModel) {
         camera.setNormalizedScale(it)
     }
 
-    val g = GUI()
-
     val c = compose {
         layer {
-            val circles = v05.facultyColors.map {
-               it.shade(0.2) to Circle(Vector2.uniform(drawer.bounds), Double.uniform(80.0, 200.0))
+            val poisson = PoissonFill()
+            val blur = GaussianBlur().apply {
+                sigma = 25.0
+                spread = 4.0
+                window = 25
             }
 
-            draw {
+            val mul = 2
+            val bg = drawImage(width * mul, height * mul) {
+
+                val circles = facultyColors.map {
+                    it.shade(0.2) to Circle(Vector2.uniform(drawer.bounds), Double.uniform(80.0, 200.0))
+                }
+
                 drawer.stroke = null
                 circles.forEach {
                     drawer.fill = it.first
@@ -104,11 +103,12 @@ fun Program.pc05(data: DataModel) {
                 drawer.fill = ColorRGBa.BLACK
                 drawer.circle(drawer.bounds.center, 400.0)
             }
-            post(PoissonFill())
-            post(GaussianBlur()) {
-                sigma = 25.0
-                spread = 4.0
-                window = 25
+            poisson.apply(bg, bg)
+            blur.apply(bg, bg)
+
+            draw {
+                drawer.translate(-bg.width / (mul * 2.0), -bg.height / (mul * 2.0))
+                drawer.image(bg)
             }
         }
         layer {
@@ -117,58 +117,18 @@ fun Program.pc05(data: DataModel) {
             val titleFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 40.0)
 
             draw {
-                val tr = Vector2(filter.timeline.pcx * filter.visibleSlider * width, filter.timeline.pcy * filter.visibleSlider * width)
-
-                drawer.translate(data.points.bounds.center + tr)
-                drawer.scale(1.0 - (filter.timeline.pcscale * filter.visibleSlider))
-                drawer.translate(-data.points.bounds.center)
-
                 drawer.strokeWeight = 0.05
                 drawer.rectangles {
                     for ((point, article) in data.pointsToArticles) {
                         val opacity = if(data.filtered[point] != null) 1.0 else 0.2
-                        this.stroke = if (data.activePoints[point] != null && !filter.visible) ColorRGBa.YELLOW else null
+                        this.stroke = if (data.activePoints[point] != null) ColorRGBa.YELLOW else null
 
-                        val size = if(filter.visible && filter.timelineSlider > 1.0 && data.filtered[point] != null) 6 else 2
+                        val size = if(data.filtered[point] != null) 6 else 2
 
                         this.fill = article.faculty.facultyColor().opacify(opacity)
-                        this.rectangle(Rectangle.fromCenter(point, 0.65 * size, 1.0 * size))
+                        this.rectangle(Rectangle.fromCenter(point, 0.45 * size, 0.85 * size))
                     }
                 }
-
-                /*if(filter.visible) {
-                    if(filter.timelineSlider in 0.0..2.99) {
-                        carousel.draw(drawer)
-                    } else if(filter.timelineSlider in 3.0..3.99) {
-                        drawer.fill = null
-                        drawer.stroke = ColorRGBa.WHITE
-                        drawer.contours(data.fakeTriangulation.map { it.first })
-
-                        for((c, text) in data.fakeTriangulation) {
-                            val points = c.segments.map { it.start }
-                            val triangle = Triangle(points[0],points[1],points[2])
-
-                            if(filter.topicsBox.current == text) {
-                                drawer.fill = null
-                                drawer.stroke = filter.facultyBox.currentFaculty.facultyColor()
-                                drawer.strokeWeight = 3.0
-                                drawer.contour(triangle.contour)
-                            }
-
-                            drawer.fill = ColorRGBa.WHITE
-                            drawer.stroke = null
-                            drawer.text(text,triangle.centroid - Vector2(fm.textWidth(text) / 2.0, 0.0))
-                        }
-                    } else {
-                        drawer.stroke = null
-                        drawer.fill = ColorRGBa.WHITE
-                        for((p, a) in data.filtered) {
-                            drawer.circle(p, 20.0)
-                        }
-                    }
-
-                }*/
-
 
                 drawer.defaults()
 
@@ -182,11 +142,9 @@ fun Program.pc05(data: DataModel) {
                     }
                 }
 
-                if(!filter.visible) {
-                    drawer.fill = null
-                    drawer.stroke = ColorRGBa.WHITE
-                    drawer.circle(data.lookAt, 40.0)
-                }
+                drawer.fill = null
+                drawer.stroke = ColorRGBa.WHITE
+                drawer.circle(data.lookAt, 40.0)
 
 
                 drawer.fontMap = titleFm
@@ -195,31 +153,19 @@ fun Program.pc05(data: DataModel) {
 
                 slider.draw(drawer)
             }
-            if(filter.visible) {
-                post(GaussianBlur()) {
-                    this.sigma = 5.0
-                    this.spread = 20.0
-                    this.window = 12
+
+            layer {
+                draw {
+                    filter.draw(drawer)
                 }
             }
-
-        }
-        layer {
-            draw {
-                filter.draw(drawer)
-            }
         }
     }
 
-    extend(camera) {
-        enabled = !filter.visible
-    }
-    //extend(g)
+    extend(camera)
     extend {
 
-        slider.visible = !filter.visible
         c.draw(drawer)
-        //searchBar.draw(drawer)
 
     }
 

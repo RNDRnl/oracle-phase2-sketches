@@ -1,4 +1,4 @@
-package v05
+package v05.filters
 
 import org.openrndr.animatable.Animatable
 import org.openrndr.color.ColorRGBa
@@ -9,6 +9,9 @@ import org.openrndr.extra.shapes.RoundedRectangle
 import org.openrndr.extra.shapes.roundedRectangle
 import org.openrndr.math.smoothstep
 import org.openrndr.shape.Rectangle
+import v05.facultyColor
+import v05.facultyNames
+import v05.libs.mix
 import kotlin.math.abs
 import kotlin.math.sin
 
