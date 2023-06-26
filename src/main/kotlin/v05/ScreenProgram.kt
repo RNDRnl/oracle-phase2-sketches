@@ -35,8 +35,8 @@ fun Program.screenProgram(i: Int, rect: Rectangle) {
 
     val state = ScreenState()
 
-    val zoomLevels = listOf(::Zoom0, ::Zoom1, ::Zoom2).map { it(i, rect, drawer) }
-    val idleMode = IdleMode(drawer)
+    val zoomLevels = listOf(::Zoom0, ::Zoom1, ::Zoom2).map { it(i, rect) }
+    val idleMode = IdleMode()
 
 
     var update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int)->Unit by this.userProperties
@@ -64,11 +64,9 @@ fun Program.screenProgram(i: Int, rect: Rectangle) {
         drawer.defaults()
         drawer.isolated {
             when (state.mode) {
-                IDLE -> idleMode.draw(circle)
-                NAVIGATE -> zoomLevels[state.zoomLevel].draw(circle)
+                IDLE -> idleMode.draw(drawer, circle)
+                NAVIGATE -> zoomLevels[state.zoomLevel].draw(drawer, circle)
             }
         }
-
-
     }
 }
