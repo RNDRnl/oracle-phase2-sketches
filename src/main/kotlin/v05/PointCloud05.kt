@@ -21,7 +21,7 @@ fun main() = application {
     }
     program {
 
-        val ipAddress = "192.168.1.62"
+        val ipAddress = System.getProperty("screenIP") ?: "192.168.1.158"
 
         val data = DataModel(Rectangle.fromCenter(drawer.bounds.center, height * 1.0, height * 1.0))
         val pc = viewBox(drawer.bounds) { pc05(data) }
