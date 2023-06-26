@@ -47,21 +47,21 @@ fun main() = application {
         keyboard.character.listen {
             if (it.character == '1') {
                 receiver.stateReceived.trigger(
-                    EventObject(ScreenMode.NAVIGATE,
+                    EventObject(NAVIGATE,
                         data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 0.1
                     )
                 )
             }
             if (it.character == '2') {
                 receiver.stateReceived.trigger(
-                    EventObject(ScreenMode.NAVIGATE,
+                    EventObject(NAVIGATE,
                         data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 0.34
                     )
                 )
             }
             if (it.character == '3') {
                 receiver.stateReceived.trigger(
-                    EventObject(ScreenMode.NAVIGATE,
+                    EventObject(NAVIGATE,
                         data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 1.0
                     )
                 )

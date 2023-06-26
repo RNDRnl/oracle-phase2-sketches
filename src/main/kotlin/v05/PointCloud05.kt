@@ -12,12 +12,10 @@ import java.net.InetAddress
 import java.net.InetSocketAddress
 import kotlin.concurrent.thread
 
-enum class ScreenMode : Serializable {
-    IDLE,
-    NAVIGATE
-}
 
-data class EventObject(val screenMode: ScreenMode, val articleIndexes: List<Int>, val zoom: Double) : Serializable
+const val IDLE = 1
+const val NAVIGATE = 2
+data class EventObject(val screenMode: Int, val articleIndexes: List<Int>, val zoom: Double) : Serializable
 
 fun main() = application {
     configure {
@@ -45,9 +43,9 @@ fun main() = application {
             }
 
             data.changed.listen {
-                println("sending")
+                println("sending to ${ipAddress}:9002")
                 val indices = data.activePoints.map { data.articles.indexOf(it.value) }
-                send(EventObject(ScreenMode.NAVIGATE, indices, data.zoom))
+                send(EventObject(NAVIGATE, indices, data.zoom))
             }
         }
 
