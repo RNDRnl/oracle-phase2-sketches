@@ -4,10 +4,15 @@ import org.openrndr.Program
 import org.openrndr.animatable.Animatable
 import org.openrndr.animatable.easing.Easing
 import org.openrndr.color.ColorRGBa
+import org.openrndr.draw.isolated
 import org.openrndr.draw.shadeStyle
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import origin
+import v05.screens.IdleMode
+
+
+class ScreenState(var mode: Int = IDLE, var zoomLevel: Int = 0)
 
 fun Program.screenProgram(i: Int, rect: Rectangle) {
 
@@ -25,27 +30,31 @@ fun Program.screenProgram(i: Int, rect: Rectangle) {
             ::showTimer.cancel()
             ::showTimer.animate(1.0, 3200L, Easing.SineOut)
         }
-
     }
     val controller = Controller()
 
+    val state = ScreenState()
+
     val zoomLevels = listOf(::Zoom0, ::Zoom1, ::Zoom2).map { it(i, rect, drawer) }
-    var currentZoom = 1
+    val idleMode = IdleMode(drawer)
 
 
-    var update: (articlesToColors: MutableList<Article>, zoomLevel: Int)->Unit by this.userProperties
-    update = { newArticles, zoomlv ->
-
+    var update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int)->Unit by this.userProperties
+    update = { mode, newArticles, zoomLevel ->
+        println("setting mode to ${mode} (from ${state.mode}")
+        state.mode = mode
         controller.fadeIn()
-        currentZoom = zoomlv
-        zoomLevels[currentZoom].populate(newArticles)
-
+        state.zoomLevel = zoomLevel
+        zoomLevels[zoomLevel].populate(newArticles)
         articles = newArticles
     }
 
     extend {
         controller.updateAnimation()
-        zoomLevels[currentZoom].update()
+
+        if (state.mode != IDLE) {
+            zoomLevels[state.zoomLevel].update()
+        }
 
         drawer.clear(ColorRGBa.BLACK.shade(0.35))
 
@@ -70,7 +79,13 @@ fun Program.screenProgram(i: Int, rect: Rectangle) {
         drawer.shadeStyle = null
 
         drawer.defaults()
-        zoomLevels[currentZoom].draw(circle)
+        drawer.isolated {
+            when (state.mode) {
+                IDLE -> idleMode.draw(circle)
+                NAVIGATE -> zoomLevels[state.zoomLevel].draw(circle)
+            }
+        }
+
 
     }
 }
