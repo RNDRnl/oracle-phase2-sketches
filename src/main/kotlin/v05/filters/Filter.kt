@@ -51,6 +51,12 @@ open class Filter: Animatable() {
     val titleFm = loadFont("data/fonts/Roboto-Regular.ttf", 28.0)
     val subtitleFm = loadFont("data/fonts/Roboto-Regular.ttf", 12.0)
 
+    open var lastPos = Vector2.ZERO
+
+    open fun dragged(e: MouseEvent) {
+
+    }
+
     open fun buttonUp(e: MouseEvent) {
 
     }

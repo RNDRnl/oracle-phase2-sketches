@@ -3,6 +3,7 @@ package v05
 import org.openrndr.application
 import org.openrndr.extra.viewbox.viewBox
 import org.openrndr.shape.Rectangle
+import v05.filters.FilterSet
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
@@ -15,7 +16,7 @@ import kotlin.concurrent.thread
 
 const val IDLE = 1
 const val NAVIGATE = 2
-data class EventObject(val screenMode: Int, val articleIndexes: List<Int>, val zoom: Double) : Serializable
+data class EventObject(val screenMode: Int, val articleIndexes: List<Int>, val zoom: Double, val filterSet: FilterSet = FilterSet.EMPTY) : Serializable
 val appMode = AppMode.Debug
 
 fun main() = application {
@@ -59,7 +60,7 @@ fun main() = application {
             data.changed.listen {
                 println("sending to ${ipAddress}:9002")
                 val indices = data.activePoints.map { data.articles.indexOf(it.value) }
-                send(EventObject(NAVIGATE, indices, data.zoom))
+                send(EventObject(NAVIGATE, indices, data.zoom, data.filterSet))
             }
         }
 

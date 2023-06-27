@@ -12,6 +12,7 @@ import org.openrndr.math.Vector2
 import org.openrndr.shape.Rectangle
 import org.openrndr.shape.bounds
 import org.openrndr.shape.map
+import v05.filters.FilterSet
 import java.io.Serializable
 import java.math.BigDecimal
 
@@ -87,6 +88,21 @@ class DataModel(val frame: Rectangle) {
     }
 
     var activePoints = findActivePoints(frame.center, radius)
+
+    var filterSet = FilterSet.EMPTY
+        set(value) {
+            field = value
+            val new = value
+            if (new == FilterSet.EMPTY) {
+                filtered = pointsToArticles
+            } else {
+                filtered = pointsToArticles.filter {
+                    it.value.faculty in new.faculties &&
+                    it.value.topic in new.topics &&
+                    it.value.year.takeLast(4).toInt() in new.dates.first..new.dates.second
+                }
+            }
+        }
 }
 
 data class Article(

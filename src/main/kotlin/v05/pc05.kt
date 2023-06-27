@@ -13,7 +13,6 @@ import org.openrndr.math.*
 import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
-import v04.checkNullOr
 import v05.filters.FilterMenu
 
 
@@ -25,16 +24,9 @@ fun Program.pc05(data: DataModel) {
     val filterMenu = FilterMenu(data, drawer.bounds.offsetEdges(-20.0), mouse)
     val carousel = Carousel(data)
 
-    filterMenu.filterChanged.listen { filters ->
-        if(filters.all { it == null }) {
-            data.filtered = data.pointsToArticles
-        } else {
-            data.filtered = data.pointsToArticles.filter { a ->
-                filters[0] checkNullOr { a.value.faculty == filters[0] } &&
-                        filters[1] checkNullOr { a.value.topic == filters[1] } &&
-                        filters[2] checkNullOr { a.value.title + " | " + a.value.author == filters[2] }
-            }
-        }
+    filterMenu.filtersChanged.listen { fe ->
+        data.filterSet = fe
+        filterMenu.discover.articles = data.filtered.values.toList()
     }
 
     val obstacles = listOf(slider.bounds)
@@ -53,8 +45,11 @@ fun Program.pc05(data: DataModel) {
 
     mouse.buttonUp.listen {
         //filter.buttonUp(it)
-        filterMenu.buttonUpDown(it)
-        data.changed.trigger(Unit)
+        if(it.position in filterMenu.bounds) {
+            filterMenu.buttonUpDown(it)
+        } else {
+            data.changed.trigger(Unit)
+        }
     }
 
     mouse.scrolled.listen {
@@ -62,8 +57,12 @@ fun Program.pc05(data: DataModel) {
     }
 
     mouse.dragged.listen {
-        camera.dragged(it)
-        slider.dragged(it, mouse)
+        if(filterMenu.opened && it.position in filterMenu.bounds) {
+            filterMenu.dragged(it)
+        } else {
+            camera.dragged(it)
+            slider.dragged(it, mouse)
+        }
     }
 
     camera.changed.listen {
@@ -147,17 +146,20 @@ fun Program.pc05(data: DataModel) {
                 drawer.stroke = ColorRGBa.WHITE
                 drawer.circle(data.lookAt, 40.0)
 
-
-                drawer.fontMap = titleFm
-                drawer.fill = ColorRGBa.WHITE
-                drawer.text("ORACLE", 25.0, 50.0)
-
                 slider.draw(drawer)
             }
 
             layer {
                 draw {
                     filterMenu.draw(drawer)
+                }
+            }
+            layer {
+                draw {
+
+                    drawer.fontMap = titleFm
+                    drawer.fill = ColorRGBa.WHITE
+                    drawer.text("ORACLE", 25.0, 50.0)
                 }
             }
         }
