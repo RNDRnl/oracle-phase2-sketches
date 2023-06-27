@@ -48,7 +48,7 @@ fun main() = application {
             .slice(setOf(0, 1, 4, 5, 6, 7, 8, 9))
 
         var screens = frames.mapIndexed { i, r ->
-            val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenProgram(i, r) }
+            val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenProgram(i, r, data) }
             val update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
             vb to update
         }
@@ -63,12 +63,13 @@ fun main() = application {
                     .slice(setOf(0, 1, 2, 4))
 
                 screens = frames.mapIndexed { i, r ->
-                    val vb = viewBox(Rectangle(0.0, 0.0, 1920.0, 1080.0)) { screenProgram(i, r) }
+                    val vb = viewBox(Rectangle(0.0, 0.0, 1920.0, 1080.0)) { screenProgram(i, r, data) }
                     val update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
                     vb to update
                 }
             }
             AppMode.Production -> {
+
             }
         }
 

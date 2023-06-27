@@ -37,10 +37,14 @@ class Camera2D : Extension, ChangeEvents {
 
     override val changed = Event<Unit>()
 
+    fun quantize(x: Double): Double {
+        return round(x * 1000.0) / 1000.0
+    }
+
     fun Matrix44.scale(): Double = (this * Vector4(1.0, 1.0, 0.0, 0.0).normalized).xy.length
 
     fun toNormalizedScale(scale: Double): Double {
-        return ln(scale).map(ln(minZoom), ln(maxZoom), 0.0, 1.0, clamp = true)
+        return quantize(ln(scale).map(ln(minZoom), ln(maxZoom), 0.0, 1.0, clamp = true))
     }
 
     fun toExpScale(scale: Double): Double {
@@ -49,9 +53,9 @@ class Camera2D : Extension, ChangeEvents {
     }
 
     fun setNormalizedScale(targetScaleNormalized: Double) {
-        val targetScale = toExpScale(targetScaleNormalized)
+        val targetScale = toExpScale(quantize(targetScaleNormalized))
         val currentScale = view.scale()
-        val factor = targetScale/currentScale
+        val factor = targetScale / currentScale
         zoomPosition = program.drawer.bounds.center
         view = buildTransform {
             translate(zoomPosition)
@@ -74,8 +78,26 @@ class Camera2D : Extension, ChangeEvents {
         get() = dirty
 
 
+    private var lastMousePosition = Vector2(0.0, 0.0)
+    private var velocity = Vector2(0.0, 0.0)
+
+    fun buttonDown(mouse: MouseEvent) {
+        if (!inUiElement) {
+            lastMousePosition = mouse.position
+        }
+    }
+    fun buttonUp(mouse: MouseEvent) {
+        if (!inUiElement) {
+            velocity += mouse.position - lastMousePosition
+            view = buildTransform {
+                translate(velocity)
+            } * view
+        }
+    }
+
     fun dragged(mouse: MouseEvent) {
-        if(!inUiElement) {
+        if (!inUiElement) {
+            lastMousePosition = mouse.position
             view = buildTransform {
                 translate(mouse.dragDisplacement)
             } * view
@@ -99,7 +121,16 @@ class Camera2D : Extension, ChangeEvents {
     override fun setup(program: Program) {
         this.program = program
     }
+
     override fun beforeDraw(drawer: Drawer, program: Program) {
+        view = buildTransform {
+            translate(velocity)
+        } * view
+
+        velocity *= 0.9
+        if (velocity.length < 0.01) {
+            velocity = Vector2.ZERO
+        }
         drawer.pushTransforms()
         drawer.ortho(RenderTarget.active)
         drawer.view = view

@@ -4,6 +4,7 @@ import orbox.matrix44
 import orbox.polygonShape
 import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.*
+import org.openrndr.Clock
 import org.openrndr.animatable.Animatable
 import org.openrndr.animatable.easing.Easing
 import org.openrndr.color.ColorRGBa
@@ -25,7 +26,7 @@ class ArticleBody(val frame: Rectangle, val body: Body)
 
 interface ScreenDrawer {
     fun update()
-    fun draw(drawer: Drawer, circle: Circle)
+    fun draw(clock: Clock, drawer: Drawer, circle: Circle)
 }
 
 
@@ -81,7 +82,7 @@ class Zoom0(i: Int, rect: Rectangle) : ZoomLevel(i, rect) {
         }
     }
 
-    override fun draw(drawer: Drawer, circle: Circle) {
+    override fun draw(clock: Clock, drawer: Drawer, circle: Circle) {
         drawer.isolated {
             fill = ColorRGBa.BLUE
             for(rect in rects.take((animations.fade * rects.size).toInt())) {
@@ -177,7 +178,7 @@ class Zoom1(i: Int, bounds: Rectangle) : ZoomLevel(i, bounds) {
 
     }
 
-    override fun draw(drawer: Drawer, circle: Circle) {
+    override fun draw(clock: Clock, drawer: Drawer, circle: Circle) {
         drawer.isolated {
 
             world.gravity = Vec2(0.0f, 900.81f)
@@ -232,7 +233,7 @@ class Zoom2(i: Int, rect: Rectangle) : ZoomLevel(i, rect) {
         }
     }
 
-    override fun draw(drawer: Drawer, circle: Circle) {
+    override fun draw(clock: Clock, drawer: Drawer, circle: Circle) {
         drawer.isolated {
             if(currentArticle != null) {
                 val article = currentArticle!!

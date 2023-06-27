@@ -40,6 +40,7 @@ fun Program.pc05(data: DataModel) {
     }
 
     mouse.buttonDown.listen {
+        camera.buttonDown(it)
         //filter.buttonDown(it)
     }
 
@@ -50,10 +51,11 @@ fun Program.pc05(data: DataModel) {
         } else {
             data.changed.trigger(Unit)
         }
+        camera.buttonUp(it)
     }
 
     mouse.scrolled.listen {
-        camera.scrolled(it)
+        //camera.scrolled(it)
     }
 
     mouse.dragged.listen {
