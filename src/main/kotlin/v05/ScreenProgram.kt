@@ -14,7 +14,7 @@ import v05.screens.IdleMode
 
 class ScreenState(var mode: Int = IDLE, var zoomLevel: Int = 0)
 
-fun Program.screenProgram(i: Int, rect: Rectangle) {
+fun Program.screenProgram(i: Int, rect: Rectangle, dataModel: DataModel) {
 
     var articles = listOf<Article>()
 
@@ -36,7 +36,7 @@ fun Program.screenProgram(i: Int, rect: Rectangle) {
     val state = ScreenState()
 
     val zoomLevels = listOf(::Zoom0, ::Zoom1, ::Zoom2).map { it(i, rect) }
-    val idleMode = IdleMode()
+    val idleMode = IdleMode(dataModel.articles)
 
 
     var update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int)->Unit by this.userProperties
@@ -64,8 +64,8 @@ fun Program.screenProgram(i: Int, rect: Rectangle) {
         drawer.defaults()
         drawer.isolated {
             when (state.mode) {
-                IDLE -> idleMode.draw(drawer, circle)
-                NAVIGATE -> zoomLevels[state.zoomLevel].draw(drawer, circle)
+                IDLE -> idleMode.draw(this@screenProgram, drawer, circle)
+                NAVIGATE -> zoomLevels[state.zoomLevel].draw(this@screenProgram, drawer, circle)
             }
         }
     }

@@ -37,6 +37,8 @@ val facultyAbbreviations = listOf(
     "??"
 )
 
+val facultyToAbbreviation = (facultyNames zip facultyAbbreviations).toMap()
+
 val facultyColors = listOf(
     ColorRGBa.fromHex("2D5BFF"),
     ColorRGBa.fromHex("FF9254"),
@@ -52,3 +54,4 @@ val facultyColors = listOf(
 val facultyToColor = (facultyNames zip facultyColors).toMap()
 
 fun String.facultyColor(): ColorRGBa = facultyToColor[this] ?: facultyColors.last()
+fun String.facultyAbbreviation(): String = facultyToAbbreviation[this] ?: facultyAbbreviations.last()
