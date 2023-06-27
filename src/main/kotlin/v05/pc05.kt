@@ -18,9 +18,7 @@ import v05.filters.FilterMenu
 
 
 fun Program.pc05(data: DataModel) {
-
     val camera = Camera2D()
-
     val slider = Slider(Vector2(width / 2.0, height - 60.0))
     val filterMenu = FilterMenu(data, drawer.bounds.offsetEdges(-20.0), mouse)
     val carousel = Carousel(data)
@@ -48,17 +46,19 @@ fun Program.pc05(data: DataModel) {
     }
 
     mouse.buttonDown.listen {
+        camera.buttonDown(it)
         //filter.buttonDown(it)
     }
 
     mouse.buttonUp.listen {
         //filter.buttonUp(it)
+        camera.buttonUp(it)
         filterMenu.buttonUpDown(it)
         data.changed.trigger(Unit)
     }
 
     mouse.scrolled.listen {
-        camera.scrolled(it)
+        //camera.scrolled(it)
     }
 
     mouse.dragged.listen {
