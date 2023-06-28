@@ -92,7 +92,7 @@ fun Program.pc05(data: DataModel) {
 
             val mul = 2
             val bg = drawImage(width * mul, height * mul) {
-
+                drawer.clear(ColorRGBa.TRANSPARENT)
                 val circles = facultyColors.map {
                     it.shade(0.2) to Circle(Vector2.uniform(drawer.bounds), Double.uniform(80.0, 200.0))
                 }
