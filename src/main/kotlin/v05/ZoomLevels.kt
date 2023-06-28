@@ -73,13 +73,13 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     var color = ColorRGBa.GRAY
     val slots = mutableListOf<Vector2>()
     var rColors = mutableListOf<ColorRGBa>()
-    var articlesSorted = dataModel.articles.sortedBy { it.uuid }
+    var articlesSorted = dataModel.articles.sortedBy { it.faculty }.sortedBy { -it.year.toInt() }
     var highlighted = mutableListOf<Article>()
 
     init {
-        for (j in 0..((rect.height).toInt() - 20)/20) {
-            for (i in 0..(rect.width.toInt() - 20)/20) {
-                slots.add(Vector2(i * 20.0, j * 20.0).plus(Vector2(5.0, 2.0)))
+        for (j in 0..((rect.height).toInt() - 20)/42) {
+            for (i in 0..(rect.width.toInt() - 20)/10) {
+                slots.add(Vector2(i * 10.0, j * 42.0).plus(Vector2(5.0, 2.0)))
                 rColors.add(ColorRGBa(Math.random(), Math.random(), Math.random()))
             }
         }
@@ -92,7 +92,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
             it.faculty
         }
 
-        val before = articlesSorted.slice(0 .. pStart-1)
+        val before = articlesSorted.slice(0 until pStart)
         val after =  articlesSorted.slice((pStart + 5) until articlesSorted.size)
         val newSet = before.plus(sortedSubset).plus(after)
 
@@ -112,10 +112,10 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     }
 
     override fun draw(clock: Clock, drawer: Drawer, circle: Circle) {
-        val sortingSpeed = 50
-        for(i in 0 until sortingSpeed) {
-            sortingStep()
-        }
+//        val sortingSpeed = 1
+//        for(i in 0 until sortingSpeed) {
+//            sortingStep()
+//        }
         drawer.isolated {
             drawer.rectangles {
                 articlesSorted.forEachIndexed { index, article ->
@@ -124,43 +124,45 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
 
                         val highlighted = highlighted.contains(article)
                         if(highlighted) {
-                            this.fill = article.faculty.facultyColor()
+                            this.fill = articlesSorted[cIndex].faculty.facultyColor()
+                            this.stroke = ColorRGBa.YELLOW
                         } else {
-                            this.fill = article.faculty.facultyColor().shade(0.5)
+                            this.fill = articlesSorted[cIndex].faculty.facultyColor().shade(0.55)
+                            this.stroke = null
                         }
-
-
-
-//                        this.fill = articlesSorted[cIndex].faculty.facultyColor()
-//                        if(article.faculty.equals("Unknown Faculty")) {
-//                            this.fill = ColorRGBa.WHITE.shade(0.1)
-//                        }
-
-                        this.stroke = null
                         val position = slots[index]
-                        this.rectangle(Rectangle(position, 20.0 * 0.45, 20.0 * 0.85))
+                        this.rectangle(Rectangle(position, 10.0 * 0.45, 42.0 * 0.85))
                     }
                 }
             }
         }
 
-        drawer.isolated {
-            drawer.rectangles {
-                articlesSorted.forEachIndexed { index, article ->
-                    val cIndex = (index + (i * slots.size))
-                    if(cIndex < articlesSorted.size && index < slots.size) { //
-                        val highlighted = highlighted.contains(article)
-                        if(highlighted) {
-                            drawer.fill = ColorRGBa.WHITE
-                            drawer.fontMap = fs
-                            val position = slots[index]
-                            drawer.text(article.title, position.x +15.0, position.y+16.0)
-                        }
-                    }
-                }
-            }
-        }
-
+//        drawer.isolated { // to be improved
+//            drawer.rectangles {
+//                var listOfYears = mutableListOf<String>()
+//                articlesSorted.forEachIndexed { index, article ->
+//                    val cIndex = (index + (i * slots.size))
+//                    if(cIndex < articlesSorted.size && index < slots.size) {
+//                        this.fill = ColorRGBa.WHITE
+//                        this.stroke = null
+//                        drawer.fontMap = fs
+//                        val position = slots[index]
+//
+//                        if(!listOfYears.contains(articlesSorted[cIndex].year)) {
+//                            this.rectangle(Rectangle(position, 2.0, 45.0 * 0.85))
+//                            drawer.isolated {
+//
+//                                drawer.translate(position.x + 20.0, position.y + 24.0)
+//                                drawer.rotate(45.0)
+//                                drawer.text(articlesSorted[cIndex].year, 0.0, 0.0)
+//                            }
+//                        }
+//
+//                        listOfYears.add(articlesSorted[cIndex].year)
+//                    }
+//                }
+//            }
+//        }
 
     }
 }
