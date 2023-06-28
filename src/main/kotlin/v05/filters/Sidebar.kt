@@ -23,6 +23,7 @@ class FilterSet(val faculties: List<String>, val topics: List<String>, val dates
 class Sidebar(val data: DataModel, val state: State, val frame: Rectangle, val mouse: MouseEvents): Animatable() {
 
     val filtersChanged = Event<FilterSet>()
+    var currentArticle: Article? = null
 
     val discover = Discover(data.articles)
     val showcases = Showcases(data.articles)
@@ -53,7 +54,7 @@ class Sidebar(val data: DataModel, val state: State, val frame: Rectangle, val m
             filterMenu.filters.map { filter ->
                 filter.changed.listen {
                     if(filterMenu == discover) {
-                        val dateFilterList = discover.dateFilter.activeList.values.toList()
+                        currentArticle = discover.articleFilter.currentArticle
 
                         filtersChanged.trigger(FilterSet(
                             discover.facultyFilter.activeList.values.toList(),
@@ -63,11 +64,13 @@ class Sidebar(val data: DataModel, val state: State, val frame: Rectangle, val m
 
                         discover.articleFilter.articles = state.filtered.values.toList()
                     } else {
+                        //currentArticle = showcases.articleFilter.currentArticle
                         filtersChanged.trigger(FilterSet(
                             showcases.facultyFilter.list,
                             topicNames,
                             1900 to 2023
                         ))
+
                     }
                 }
             }

@@ -55,6 +55,7 @@ open class FilterMenu(articles: List<Article>): Animatable() {
     val subtitleFm = loadFont("data/fonts/Roboto-Regular.ttf", 12.0)
 
     open fun dragged(e: MouseEvent) {
+        println("dragged + ${this::class.simpleName}")
         e.cancelPropagation()
 
             if(e.position in dateFilter.headerBox.movedBy(bounds.corner)) {
@@ -67,6 +68,7 @@ open class FilterMenu(articles: List<Article>): Animatable() {
     }
 
     open fun buttonDown(e: MouseEvent) {
+        println("down + ${this::class.simpleName}")
         if(e.position in dateFilter.headerBox.movedBy(bounds.corner)) {
             e.cancelPropagation()
 
@@ -76,6 +78,7 @@ open class FilterMenu(articles: List<Article>): Animatable() {
     }
 
     open fun buttonUp(e: MouseEvent) {
+        println("up + ${this::class.simpleName}")
         val target = filters.firstOrNull { e.position in it.headerBox.movedBy(bounds.corner) }
 
         if(target != null) {
@@ -84,7 +87,7 @@ open class FilterMenu(articles: List<Article>): Animatable() {
                 filters.minus(setOf(target, dateFilter)).onEach { it.isActive = false }
             }
         } else {
-            filters.firstOrNull { it.isActive }?.lastPos = e.position
+            filters.minus(dateFilter).firstOrNull { it.isActive }?.lastPos = e.position
         }
     }
 

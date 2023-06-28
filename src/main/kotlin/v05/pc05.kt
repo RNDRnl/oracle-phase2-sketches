@@ -37,6 +37,10 @@ fun Program.pc05(data: DataModel, state: State) {
 
     sidebar.filtersChanged.listen { fe ->
         state.filterSet = fe
+        if(sidebar.currentArticle != null) {
+            val v = data.articlesToPoints[sidebar.currentArticle]
+            v?.let { camera.centerAt(it) }
+        }
     }
 
     val obstacles = listOf(slider.bounds)

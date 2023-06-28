@@ -52,6 +52,14 @@ class Camera2D : Extension, ChangeEvents {
         return exp(lnScale)
     }
 
+    fun centerAt(targetPosition: Vector2) {
+        val w = RenderTarget.active.width
+        val h = RenderTarget.active.height
+        view = buildTransform {
+            translate(-targetPosition + Vector2(w/2.0, h/2.0))
+        }
+    }
+
     fun setNormalizedScale(targetScaleNormalized: Double) {
         val targetScale = toExpScale(quantize(targetScaleNormalized))
         val currentScale = view.scale()

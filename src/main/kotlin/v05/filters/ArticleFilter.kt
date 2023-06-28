@@ -16,14 +16,12 @@ import kotlin.math.sin
 
 class ArticleFilter(map: List<String>, articles: List<Article>): Filter(map, articles) {
 
-    var articleSelected = Event<Article>()
-
     override var title = "PUBLICATIONS"
     var currentArticle: Article? = null
         set(value) {
             field = value
             if(value != null) {
-                articleSelected.trigger(value)
+                changed.trigger(Unit)
             }
         }
 
