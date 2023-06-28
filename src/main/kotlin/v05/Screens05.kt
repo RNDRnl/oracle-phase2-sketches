@@ -7,6 +7,7 @@ import org.openrndr.extra.viewbox.viewBox
 import org.openrndr.launch
 import org.openrndr.math.*
 import org.openrndr.shape.Rectangle
+import v05.filters.FilterSet
 import kotlin.concurrent.thread
 
 
@@ -84,7 +85,12 @@ fun main() = application {
                 receiver.stateReceived.trigger(
                     EventObject(
                         NAVIGATE,
-                        data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 0.1
+                        data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 0.1,
+                        FilterSet(
+                            facultyNames.shuffled().take(2),
+                            listOf(""),
+                            Pair(1900, 2023)
+                        )
                     )
                 )
             }
@@ -92,7 +98,12 @@ fun main() = application {
                 receiver.stateReceived.trigger(
                     EventObject(
                         NAVIGATE,
-                        data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 0.34
+                        data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 0.34,
+                        FilterSet(
+                            facultyNames.shuffled().take(2),
+                            listOf(""),
+                            Pair(1900, 2023)
+                        )
                     )
                 )
             }
@@ -100,7 +111,12 @@ fun main() = application {
                 receiver.stateReceived.trigger(
                     EventObject(
                         NAVIGATE,
-                        data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 1.0
+                        data.articles.shuffled().take(100).map { data.articles.indexOf(it) }, 1.0,
+                        FilterSet(
+                            facultyNames.shuffled().take(2),
+                            listOf(""),
+                            Pair(1900, 2023)
+                        )
                     )
                 )
             }
