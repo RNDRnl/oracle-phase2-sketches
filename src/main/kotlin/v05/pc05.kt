@@ -13,6 +13,7 @@ import org.openrndr.math.*
 import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
+import v05.extensions.IdleDetector
 import v05.filters.FilterMenu
 
 
@@ -23,6 +24,12 @@ fun Program.pc05(data: DataModel) {
     val slider = Slider(Vector2(width / 2.0, height - 60.0))
     val filterMenu = FilterMenu(data, drawer.bounds.offsetEdges(-20.0), mouse)
     val carousel = Carousel(data)
+
+    val idleDetector = extend(IdleDetector())
+
+    idleDetector.idleDetected.listen {
+
+    }
 
     filterMenu.filtersChanged.listen { fe ->
         data.filterSet = fe
@@ -40,11 +47,15 @@ fun Program.pc05(data: DataModel) {
     }
 
     mouse.buttonDown.listen {
+        slider.buttonDown(it)
         camera.buttonDown(it)
         //filter.buttonDown(it)
     }
 
     mouse.buttonUp.listen {
+
+        slider.buttonUp(it)
+
         //filter.buttonUp(it)
         if(it.position in filterMenu.bounds) {
             filterMenu.buttonUpDown(it)
@@ -63,7 +74,7 @@ fun Program.pc05(data: DataModel) {
             filterMenu.dragged(it)
         } else {
             camera.dragged(it)
-            slider.dragged(it, mouse)
+            slider.dragged(it)
         }
     }
 

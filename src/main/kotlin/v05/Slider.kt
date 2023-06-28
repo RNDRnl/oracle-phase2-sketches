@@ -49,20 +49,39 @@ class Slider(val pos: Vector2): Animatable() {
             }
         }
 
-    fun dragged(it: MouseEvent, mouse: MouseEvents) {
-        if(visible && it.position in bounds.offsetEdges(65.0, 0.0)) {
-            val old = current
 
+    var acceptDragging = false
+    fun buttonDown(it: MouseEvent) {
+        if(visible && it.position in bounds.offsetEdges(65.0, 0.0)) {
+            acceptDragging = true
             current = map(
                 bounds.x,
                 bounds.x + bounds.width,
                 0.0,
                 1.1,
                 it.position.x.coerceIn(bounds.x, bounds.x + bounds.width))
+        } else {
+            acceptDragging = false
+        }
+    }
 
-//            mouse.scrolled.trigger(
-//                MouseEvent(bounds.center,Vector2.UNIT_Y * (old - current), Vector2.ZERO, MouseEventType.SCROLLED, MouseButton.NONE, setOf())
-//            )
+    fun buttonUp(it: MouseEvent) {
+        acceptDragging = false
+    }
+
+
+    fun dragged(it: MouseEvent) {
+        if (!it.propagationCancelled) {
+            if (visible && acceptDragging) {
+                it.cancelPropagation()
+                current = map(
+                    bounds.x,
+                    bounds.x + bounds.width,
+                    0.0,
+                    1.1,
+                    it.position.x.coerceIn(bounds.x, bounds.x + bounds.width)
+                )
+            }
         }
     }
 
