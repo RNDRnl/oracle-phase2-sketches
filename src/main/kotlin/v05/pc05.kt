@@ -13,6 +13,7 @@ import org.openrndr.math.*
 import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
+import v05.extensions.IdleDetector
 import v05.filters.Sidebar
 
 
@@ -22,6 +23,12 @@ fun Program.pc05(data: DataModel, state: State) {
 
     val slider = Slider(Vector2(width / 2.0, height - 60.0))
     val sidebar = Sidebar(data, state, drawer.bounds.offsetEdges(-20.0), mouse)
+
+    val idleDetector = extend(IdleDetector())
+
+    idleDetector.idleDetected.listen {
+
+    }
 
     sidebar.filtersChanged.listen { fe ->
         state.filterSet = fe
@@ -39,11 +46,15 @@ fun Program.pc05(data: DataModel, state: State) {
     }
 
     mouse.buttonDown.listen {
+        slider.buttonDown(it)
         camera.buttonDown(it)
         //filter.buttonDown(it)
     }
 
     mouse.buttonUp.listen {
+
+        slider.buttonUp(it)
+
         //filter.buttonUp(it)
         if(it.position in sidebar.bounds) {
             sidebar.buttonUpDown(it)
@@ -62,7 +73,7 @@ fun Program.pc05(data: DataModel, state: State) {
             sidebar.dragged(it)
         } else {
             camera.dragged(it)
-            slider.dragged(it, mouse)
+            slider.dragged(it)
         }
     }
 
@@ -91,7 +102,7 @@ fun Program.pc05(data: DataModel, state: State) {
 
             val mul = 2
             val bg = drawImage(width * mul, height * mul) {
-
+                drawer.clear(ColorRGBa.TRANSPARENT)
                 val circles = facultyColors.map {
                     it.shade(0.2) to Circle(Vector2.uniform(drawer.bounds), Double.uniform(80.0, 200.0))
                 }

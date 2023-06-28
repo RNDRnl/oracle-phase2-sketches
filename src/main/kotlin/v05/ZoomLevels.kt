@@ -14,6 +14,7 @@ import org.openrndr.draw.loadFont
 import org.openrndr.draw.writer
 import org.openrndr.extra.noise.uniform
 import org.openrndr.extra.shapes.grid
+import org.openrndr.ktessellation.arraycopy
 import org.openrndr.math.Vector2
 import org.openrndr.math.map
 import org.openrndr.shape.Circle
@@ -30,7 +31,7 @@ interface ScreenDrawer {
 }
 
 
-abstract class ZoomLevel(val i: Int, val bounds: Rectangle) : ScreenDrawer {
+abstract class ZoomLevel(val i: Int, val bounds: Rectangle, val dataModel: DataModel) : ScreenDrawer {
 
     open fun populate(articles: List<Article>) { }
 
@@ -58,6 +59,7 @@ abstract class ZoomLevel(val i: Int, val bounds: Rectangle) : ScreenDrawer {
         animations.updateAnimation()
     }
 
+    val fs = loadFont("data/fonts/Roboto-Regular.ttf", 30.0, contentScale = 1.0)
     val fm = loadFont("data/fonts/Roboto-Regular.ttf", 60.0, contentScale = 1.0)
     val tfm = loadFont("data/fonts/RobotoCondensed-Bold.ttf", 200.0, contentScale = 1.0)
     val stfm = loadFont("data/fonts/default.otf", 80.0, contentScale = 1.0)
@@ -65,13 +67,40 @@ abstract class ZoomLevel(val i: Int, val bounds: Rectangle) : ScreenDrawer {
 
 }
 
-class Zoom0(i: Int, rect: Rectangle) : ZoomLevel(i, rect) {
+class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, dataModel) {
 
     var rects = listOf<Rectangle>()
     var color = ColorRGBa.GRAY
+    val slots = mutableListOf<Vector2>()
+    var rColors = mutableListOf<ColorRGBa>()
+    var articlesSorted = dataModel.articles.sortedBy { it.uuid }
+    var highlighted = mutableListOf<Article>()
+
+    init {
+        for (j in 0..((rect.height).toInt() - 20)/20) {
+            for (i in 0..(rect.width.toInt() - 20)/20) {
+                slots.add(Vector2(i * 20.0, j * 20.0).plus(Vector2(5.0, 2.0)))
+                rColors.add(ColorRGBa(Math.random(), Math.random(), Math.random()))
+            }
+        }
+    }
+
+    private fun sortingStep() {
+        val pStart = ((articlesSorted.size - 10)*Math.random()).toInt()
+        val subset = articlesSorted.subList(pStart, pStart + 5)
+        val sortedSubset = subset.sortedBy {
+            it.faculty
+        }
+
+        val before = articlesSorted.slice(0 .. pStart-1)
+        val after =  articlesSorted.slice((pStart + 5) until articlesSorted.size)
+        val newSet = before.plus(sortedSubset).plus(after)
+
+        articlesSorted = newSet
+    }
 
     override fun populate(articles: List<Article>) {
-
+        highlighted = articles.toMutableList()
         if (articles.isNotEmpty()) {
 
             color = articles[0].faculty.facultyColor()
@@ -83,17 +112,60 @@ class Zoom0(i: Int, rect: Rectangle) : ZoomLevel(i, rect) {
     }
 
     override fun draw(clock: Clock, drawer: Drawer, circle: Circle) {
+        val sortingSpeed = 50
+        for(i in 0 until sortingSpeed) {
+            sortingStep()
+        }
         drawer.isolated {
-            fill = ColorRGBa.BLUE
-            for(rect in rects.take((animations.fade * rects.size).toInt())) {
-                drawer.fill = color
-                drawer.rectangle(rect)
+            drawer.rectangles {
+                articlesSorted.forEachIndexed { index, article ->
+                    val cIndex = (index + (i * slots.size))
+                    if(cIndex < articlesSorted.size && index < slots.size) { //
+
+                        val highlighted = highlighted.contains(article)
+                        if(highlighted) {
+                            this.fill = article.faculty.facultyColor()
+                        } else {
+                            this.fill = article.faculty.facultyColor().shade(0.5)
+                        }
+
+
+
+//                        this.fill = articlesSorted[cIndex].faculty.facultyColor()
+//                        if(article.faculty.equals("Unknown Faculty")) {
+//                            this.fill = ColorRGBa.WHITE.shade(0.1)
+//                        }
+
+                        this.stroke = null
+                        val position = slots[index]
+                        this.rectangle(Rectangle(position, 20.0 * 0.45, 20.0 * 0.85))
+                    }
+                }
             }
         }
+
+        drawer.isolated {
+            drawer.rectangles {
+                articlesSorted.forEachIndexed { index, article ->
+                    val cIndex = (index + (i * slots.size))
+                    if(cIndex < articlesSorted.size && index < slots.size) { //
+                        val highlighted = highlighted.contains(article)
+                        if(highlighted) {
+                            drawer.fill = ColorRGBa.WHITE
+                            drawer.fontMap = fs
+                            val position = slots[index]
+                            drawer.text(article.title, position.x +15.0, position.y+16.0)
+                        }
+                    }
+                }
+            }
+        }
+
+
     }
 }
 
-class Zoom1(i: Int, bounds: Rectangle) : ZoomLevel(i, bounds) {
+class Zoom1(i: Int, bounds: Rectangle, dataModel: DataModel) : ZoomLevel(i, bounds, dataModel) {
 
     val world = World(Vec2(0.0f, .81f))
     val articleBodies = mutableMapOf<Article, ArticleBody>()
@@ -214,7 +286,7 @@ class Zoom1(i: Int, bounds: Rectangle) : ZoomLevel(i, bounds) {
 
 }
 
-class Zoom2(i: Int, rect: Rectangle) : ZoomLevel(i, rect) {
+class Zoom2(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, dataModel) {
 
     var currentArticle: Article? = null
     var sameFaculty = listOf<Article>()

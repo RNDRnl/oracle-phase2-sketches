@@ -33,9 +33,9 @@ fun Program.screenProgram(i: Int, rect: Rectangle, dataModel: DataModel) {
     }
     val controller = Controller()
 
-    val state = ScreenState()
+    val state = ScreenState(NAVIGATE, 0)
 
-    val zoomLevels = listOf(::Zoom0, ::Zoom1, ::Zoom2).map { it(i, rect) }
+    val zoomLevels = listOf(::Zoom0, ::Zoom1, ::Zoom2).map { it(i, rect, dataModel) }
     val idleMode = IdleMode(dataModel.articles)
 
 
