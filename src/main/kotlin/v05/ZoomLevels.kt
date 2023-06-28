@@ -82,14 +82,14 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     }
 
     private fun sortingStep() {
-        val pStart = ((articlesSorted.size - 55)*Math.random()).toInt()
-        val subset = articlesSorted.subList(pStart, pStart + 50)
+        val pStart = ((articlesSorted.size - 10)*Math.random()).toInt()
+        val subset = articlesSorted.subList(pStart, pStart + 5)
         val sortedSubset = subset.sortedBy {
             it.faculty
         }
 
         val before = articlesSorted.slice(0 .. pStart-1)
-        val after =  articlesSorted.slice((pStart + 50) until articlesSorted.size)
+        val after =  articlesSorted.slice((pStart + 5) until articlesSorted.size)
         val newSet = before.plus(sortedSubset).plus(after)
 
         articlesSorted = newSet
@@ -106,7 +106,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     }
 
     override fun draw(clock: Clock, drawer: Drawer, circle: Circle) {
-        val sortingSpeed = Math.abs((Math.sin(clock.seconds)*20)).toInt()
+        val sortingSpeed = 250
         for(i in 0 until sortingSpeed) {
             sortingStep()
         }
@@ -116,6 +116,9 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
                     val cIndex = (index + (i * slots.size))
                     if(cIndex < articlesSorted.size && index < slots.size) {
                         this.fill = article.faculty.facultyColor()
+                        if(article.faculty.equals("Unknown Faculty")) {
+                            this.fill = ColorRGBa.WHITE.shade(0.1)
+                        }
                         this.stroke = null
                         val position = slots[index]
                         this.rectangle(Rectangle(position, 20.0 * 0.45, 20.0 * 0.85))
