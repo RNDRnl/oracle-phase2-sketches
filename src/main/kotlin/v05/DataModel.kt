@@ -103,7 +103,6 @@ class State(val model: DataModel) {
 
     var filterSet = FilterSet.EMPTY
         set(value) {
-            println(value.faculties)
             field = value
             val new = value
             if (new == FilterSet.EMPTY) {
@@ -115,6 +114,7 @@ class State(val model: DataModel) {
                             it.value.year.takeLast(4).toInt() in new.dates.first..new.dates.second
                 }
             }
+            changed.trigger(Unit)
         }
 }
 

@@ -15,8 +15,6 @@ class Showcases(articles: List<Article>): FilterMenu(articles) {
         subtitle = "170+ Top graduates dissertations"
     }
 
-    val facultyFilter = FacultyFilter(facultyNames)
-
     override fun draw(drawer: Drawer) {
 
         updateAnimation()

@@ -58,8 +58,10 @@ class Sidebar(val data: DataModel, val state: State, val frame: Rectangle, val m
                         filtersChanged.trigger(FilterSet(
                             discover.facultyFilter.activeList.values.toList(),
                             discover.topicFilter.activeList.values.toList(),
-                            dateFilterList.min().toInt() to dateFilterList.max().toInt()
+                            discover.dateFilter.selectors.minBy { it.year }.year.toInt() to discover.dateFilter.selectors.maxBy { it.year }.year.toInt()
                         ))
+
+                        discover.articleFilter.articles = state.filtered.values.toList()
                     } else {
                         filtersChanged.trigger(FilterSet(
                             showcases.facultyFilter.list,
@@ -72,8 +74,15 @@ class Sidebar(val data: DataModel, val state: State, val frame: Rectangle, val m
         }
     }
 
+    fun buttonDown(e: MouseEvent) {
+        val target = filterMenus.lastOrNull {
+            e.position in it.bounds
+        }
 
-    fun buttonUpDown(e: MouseEvent) {
+        target?.buttonDown(e)
+    }
+
+    fun buttonUp(e: MouseEvent){
         val target = filterMenus.lastOrNull {
             e.position in it.bounds
         }
@@ -111,6 +120,7 @@ class Sidebar(val data: DataModel, val state: State, val frame: Rectangle, val m
 
         opened = filterMenus.any { it.visible }
     }
+
 
     fun dragged(e: MouseEvent) {
         val scrollable = filterMenus.take(2).firstOrNull { e.position in it.bounds }

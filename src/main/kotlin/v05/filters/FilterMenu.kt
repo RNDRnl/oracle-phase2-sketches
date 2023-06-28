@@ -8,17 +8,22 @@ import org.openrndr.draw.Drawer
 import org.openrndr.draw.loadFont
 import org.openrndr.events.Event
 import org.openrndr.math.Vector2
+import org.openrndr.math.map
 import org.openrndr.math.transforms.buildTransform
 import org.openrndr.shape.Rectangle
 import org.openrndr.svg.loadSVG
 import v05.Article
 import v05.DataModel
+import v05.facultyNames
 
 open class FilterMenu(articles: List<Article>): Animatable() {
 
     val changed = Event<Unit>()
 
-    open val filters = listOf<Filter>()
+
+    val facultyFilter = FacultyFilter(facultyNames)
+    val dateFilter = DateFilter((1900..2023).map { it.toString() })
+    open val filters = listOf(facultyFilter, dateFilter)
 
     var visible = false
     var expanded = false
@@ -50,11 +55,37 @@ open class FilterMenu(articles: List<Article>): Animatable() {
     val subtitleFm = loadFont("data/fonts/Roboto-Regular.ttf", 12.0)
 
     open fun dragged(e: MouseEvent) {
+        e.cancelPropagation()
+
+            if(e.position in dateFilter.headerBox.movedBy(bounds.corner)) {
+                e.cancelPropagation()
+
+                val mappedPosition = map(dateFilter.boundingBox.x, dateFilter.boundingBox.x + dateFilter.boundingBox.width, 0.0, 1.0, e.position.x)
+                dateFilter.closestSelector?.pos = mappedPosition.coerceIn(0.0, 1.0)
+            }
+
+    }
+
+    open fun buttonDown(e: MouseEvent) {
+        if(e.position in dateFilter.headerBox.movedBy(bounds.corner)) {
+            e.cancelPropagation()
+
+            dateFilter.closestSelector = dateFilter.selectors.minBy { dateFilter.boundingBox.position(it.pos, dateFilter.boundingBox.center.y).distanceTo(e.position)}
+        }
 
     }
 
     open fun buttonUp(e: MouseEvent) {
+        val target = filters.firstOrNull { e.position in it.headerBox.movedBy(bounds.corner) }
 
+        if(target != null) {
+            if(!target.isActive) {
+                target.isActive = true
+                filters.minus(setOf(target, dateFilter)).onEach { it.isActive = false }
+            }
+        } else {
+            filters.first { it.isActive }.lastPos = e.position
+        }
     }
 
     fun drawBasics(drawer: Drawer) {
@@ -82,11 +113,7 @@ open class FilterMenu(articles: List<Article>): Animatable() {
 
         drawer.fontMap = subtitleFm
         drawer.text(subtitle, 80.0, 45.0 + titleFm.height)
-/*
-        drawer.stroke = ColorRGBa.RED
-        drawer.fill = null
 
-        drawer.rectangle(0.0, 0.0, bounds.width, bounds.height)*/
     }
 
     open fun draw(drawer: Drawer) {}

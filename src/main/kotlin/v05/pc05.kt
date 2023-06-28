@@ -37,7 +37,6 @@ fun Program.pc05(data: DataModel, state: State) {
 
     sidebar.filtersChanged.listen { fe ->
         state.filterSet = fe
-        //sidebar.discover.articles = data.filtered.values.toList()
     }
 
     val obstacles = listOf(slider.bounds)
@@ -53,6 +52,7 @@ fun Program.pc05(data: DataModel, state: State) {
     mouse.buttonDown.listen {
         slider.buttonDown(it)
         camera.buttonDown(it)
+        sidebar.buttonDown(it)
         //filter.buttonDown(it)
     }
 
@@ -62,7 +62,7 @@ fun Program.pc05(data: DataModel, state: State) {
 
         //filter.buttonUp(it)
         if(it.position in sidebar.bounds) {
-            sidebar.buttonUpDown(it)
+            sidebar.buttonUp(it)
         } else {
             state.changed.trigger(Unit)
         }

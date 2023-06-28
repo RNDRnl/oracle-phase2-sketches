@@ -11,7 +11,7 @@ import org.openrndr.math.Vector2
 import org.openrndr.shape.Rectangle
 import v05.Article
 
-open class Filter(val list: List<String>, val articles: List<Article>? = null): Animatable() {
+open class Filter(val list: List<String>, var articles: List<Article>? = null): Animatable() {
 
     val changed = Event<Unit>()
     open var isActive = false
@@ -20,11 +20,11 @@ open class Filter(val list: List<String>, val articles: List<Article>? = null): 
 
     var entriesInView = mapOf<Vector2, Int>()
 
-    var bounds = Rectangle(0.0,0.0, 100.0, 100.0)
+    open var boundingBox = Rectangle(0.0,0.0, 100.0, 100.0)
     open var headerBox = Rectangle(0.0,0.0, 100.0, 100.0)
     open val title = ""
 
-    var lastPos = Vector2.ZERO
+    open var lastPos = Vector2.ZERO
         set(value) {
             field = value
             if(isActive) {
@@ -53,7 +53,13 @@ open class Filter(val list: List<String>, val articles: List<Article>? = null): 
             }
         }
 
-    fun buttonUp(e: MouseEvent) {
+
+
+    open fun buttonDown(e: MouseEvent) {
+
+    }
+
+    open fun buttonUp(e: MouseEvent) {
 
     }
 
@@ -67,10 +73,11 @@ open class Filter(val list: List<String>, val articles: List<Article>? = null): 
 
     fun beforeDraw(drawer: Drawer, b: Rectangle) {
         updateAnimation()
-        bounds = b
+        boundingBox = b
 
-        drawer.stroke = ColorRGBa.WHITE
-        drawer.fill = if(isActive) ColorRGBa.WHITE else null
+        val c = if(isActive && boundingBox != headerBox) ColorRGBa.WHITE else null
+        drawer.stroke = c
+        drawer.fill = c
         drawer.rectangle(headerBox)
 
         drawer.fontMap = selectorBoxesFm
