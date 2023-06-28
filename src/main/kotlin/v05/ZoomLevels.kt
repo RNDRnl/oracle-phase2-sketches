@@ -70,7 +70,8 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     var color = ColorRGBa.GRAY
     val slots = mutableListOf<Vector2>()
     var rColors = mutableListOf<ColorRGBa>()
-    var articlesSorted = dataModel.articles.sortedBy { it.uuid }
+    var articlesSorted = dataModel.articles.sortedBy { it.faculty }
+    var highlighted = mutableListOf<Article>()
 
     init {
         for (j in 0..((rect.height).toInt() - 20)/20) {
@@ -96,6 +97,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     }
 
     override fun populate(articles: List<Article>) {
+        highlighted = articles.toMutableList()
         if (articles.isNotEmpty()) {
             color = articles[0].faculty.facultyColor()
             rects = Rectangle(0.0, 0.0, bounds.width, bounds.height).grid(articles.size, 1).flatten()
@@ -106,26 +108,61 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     }
 
     override fun draw(clock: Clock, drawer: Drawer, circle: Circle) {
-        val sortingSpeed = 250
-        for(i in 0 until sortingSpeed) {
-            sortingStep()
-        }
+//        val sortingSpeed = 250
+//        for(i in 0 until sortingSpeed) {
+//            sortingStep()
+//        }
         drawer.isolated {
             drawer.rectangles {
                 articlesSorted.forEachIndexed { index, article ->
                     val cIndex = (index + (i * slots.size))
-                    if(cIndex < articlesSorted.size && index < slots.size) {
-                        this.fill = article.faculty.facultyColor()
-                        if(article.faculty.equals("Unknown Faculty")) {
-                            this.fill = ColorRGBa.WHITE.shade(0.1)
+                    if(cIndex < articlesSorted.size && index < slots.size) { //
+
+                        val highlighted = highlighted.contains(article)
+                        if(highlighted) {
+                            this.fill = article.faculty.facultyColor()
+                        } else {
+                            this.fill = article.faculty.facultyColor().shade(0.5)
                         }
+
+//                        this.fill = articlesSorted[cIndex].faculty.facultyColor()
+//                        if(article.faculty.equals("Unknown Faculty")) {
+//                            this.fill = ColorRGBa.WHITE.shade(0.1)
+//                        }
+
                         this.stroke = null
                         val position = slots[index]
+
                         this.rectangle(Rectangle(position, 20.0 * 0.45, 20.0 * 0.85))
+
+
                     }
                 }
             }
         }
+
+        drawer.isolated {
+            drawer.rectangles {
+                articlesSorted.forEachIndexed { index, article ->
+                    val cIndex = (index + (i * slots.size))
+                    if(cIndex < articlesSorted.size && index < slots.size) { //
+                        val highlighted = highlighted.contains(article)
+                        if(highlighted) {
+                            drawer.fill = ColorRGBa.WHITE
+                            drawer.fontMap = fm
+                            val position = slots[index]
+                            drawer.text(article.title, position.x +15.0, position.y+24.0)
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+
+
+
     }
 }
 
