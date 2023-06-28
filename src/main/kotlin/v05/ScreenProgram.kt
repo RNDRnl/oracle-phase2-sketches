@@ -9,12 +9,13 @@ import org.openrndr.draw.shadeStyle
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import origin
+import v05.filters.FilterSet
 import v05.screens.IdleMode
 
 
 class ScreenState(var mode: Int = IDLE, var zoomLevel: Int = 0)
 
-class ScreenMessage(val mode:Int, articles:List<Article>, zoomLevel: Int)
+class ScreenMessage(val mode:Int, val articles:List<Article>, val zoomLevel: Int, val filters: FilterSet)
 
 fun Program.screenProgram(i: Int, rect: Rectangle, dataModel: DataModel) {
 
@@ -41,14 +42,14 @@ fun Program.screenProgram(i: Int, rect: Rectangle, dataModel: DataModel) {
     val idleMode = IdleMode(dataModel.articles)
 
 
-    var update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int)->Unit by this.userProperties
-    update = { mode, newArticles, zoomLevel ->
-        println("setting mode to ${mode} (from ${state.mode}")
-        state.mode = mode
+    var update: (message: ScreenMessage)->Unit by this.userProperties
+    update = { m ->
+        println("setting mode to ${m.mode} (from ${state.mode}")
+        state.mode = m.mode
         controller.fadeIn()
-        state.zoomLevel = zoomLevel
-        zoomLevels[zoomLevel].populate(newArticles)
-        articles = newArticles
+        state.zoomLevel = m.zoomLevel
+        zoomLevels[m.zoomLevel].populate(m.articles)
+        articles = m.articles
     }
 
     extend {

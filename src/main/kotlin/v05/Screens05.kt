@@ -53,7 +53,7 @@ fun main() = application {
 
         var screens = frames.mapIndexed { i, r ->
             val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenProgram(i, r, data) }
-            val update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
+            val update: (msg: ScreenMessage) -> Unit by vb.userProperties
             vb to update
         }
 
@@ -68,7 +68,7 @@ fun main() = application {
 
                 screens = frames.mapIndexed { i, r ->
                     val vb = viewBox(Rectangle(0.0, 0.0, 1920.0, 1080.0)) { screenProgram(i, r, data) }
-                    val update: (mode: Int, articles: MutableList<Article>, zoomLevel: Int) -> Unit by vb.userProperties
+                    val update: (msg : ScreenMessage) -> Unit by vb.userProperties
                     vb to update
                 }
             }
@@ -146,28 +146,29 @@ fun main() = application {
                             currentScreen = if (currentScreen == 7) 0 else currentScreen + 1
                         }
 
+
                         for (screen in screens) {
-                            screen.second(e.screenMode, emptyList<Article>().toMutableList(), zoomLevel)
+                            val msg = ScreenMessage(e.screenMode, emptyList(), zoomLevel, e.filterSet)
+                            screen.second(msg)
                         }
 
                         for (chunk in chunks) {
-                            val updateFunc = screens[chunk.key].second
-                            updateFunc(e.screenMode, chunk.value, zoomLevel)
+                            val msg = ScreenMessage(e.screenMode, chunk.value, zoomLevel, e.filterSet)
+                            screens[chunk.key].second(msg)
                         }
                     } else {
                         for ((_, updateFunc) in screens) {
-                            updateFunc(e.screenMode, newArticles.toMutableList(), zoomLevel)
+                            val msg = ScreenMessage(e.screenMode,newArticles, zoomLevel, e.filterSet)
+                            updateFunc(msg)
                         }
                     }
                 } else if (e.screenMode == IDLE) {
                     for ((_, updateFunc) in screens) {
-                        updateFunc(e.screenMode, newArticles, 0)
+                        val msg = ScreenMessage(e.screenMode, newArticles, zoomLevel, e.filterSet)
+                        updateFunc(msg)
                     }
                 }
-
-
             }
-
         }
 
 
