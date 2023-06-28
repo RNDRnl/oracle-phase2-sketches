@@ -84,7 +84,7 @@ open class FilterMenu(articles: List<Article>): Animatable() {
                 filters.minus(setOf(target, dateFilter)).onEach { it.isActive = false }
             }
         } else {
-            filters.first { it.isActive }.lastPos = e.position
+            filters.firstOrNull { it.isActive }?.lastPos = e.position
         }
     }
 
