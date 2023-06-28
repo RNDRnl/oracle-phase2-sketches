@@ -59,6 +59,7 @@ abstract class ZoomLevel(val i: Int, val bounds: Rectangle, val dataModel: DataM
         animations.updateAnimation()
     }
 
+    val fs = loadFont("data/fonts/Roboto-Regular.ttf", 30.0, contentScale = 1.0)
     val fm = loadFont("data/fonts/Roboto-Regular.ttf", 60.0, contentScale = 1.0)
     val tfm = loadFont("data/fonts/RobotoCondensed-Bold.ttf", 200.0, contentScale = 1.0)
     val stfm = loadFont("data/fonts/default.otf", 80.0, contentScale = 1.0)
@@ -70,7 +71,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     var color = ColorRGBa.GRAY
     val slots = mutableListOf<Vector2>()
     var rColors = mutableListOf<ColorRGBa>()
-    var articlesSorted = dataModel.articles.sortedBy { it.faculty }
+    var articlesSorted = dataModel.articles.sortedBy { it.uuid }
     var highlighted = mutableListOf<Article>()
 
     init {
@@ -108,10 +109,10 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     }
 
     override fun draw(clock: Clock, drawer: Drawer, circle: Circle) {
-//        val sortingSpeed = 250
-//        for(i in 0 until sortingSpeed) {
-//            sortingStep()
-//        }
+        val sortingSpeed = 50
+        for(i in 0 until sortingSpeed) {
+            sortingStep()
+        }
         drawer.isolated {
             drawer.rectangles {
                 articlesSorted.forEachIndexed { index, article ->
@@ -125,6 +126,8 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
                             this.fill = article.faculty.facultyColor().shade(0.5)
                         }
 
+
+
 //                        this.fill = articlesSorted[cIndex].faculty.facultyColor()
 //                        if(article.faculty.equals("Unknown Faculty")) {
 //                            this.fill = ColorRGBa.WHITE.shade(0.1)
@@ -132,10 +135,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
 
                         this.stroke = null
                         val position = slots[index]
-
                         this.rectangle(Rectangle(position, 20.0 * 0.45, 20.0 * 0.85))
-
-
                     }
                 }
             }
@@ -149,18 +149,14 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
                         val highlighted = highlighted.contains(article)
                         if(highlighted) {
                             drawer.fill = ColorRGBa.WHITE
-                            drawer.fontMap = fm
+                            drawer.fontMap = fs
                             val position = slots[index]
-                            drawer.text(article.title, position.x +15.0, position.y+24.0)
+                            drawer.text(article.title, position.x +15.0, position.y+16.0)
                         }
                     }
                 }
             }
         }
-
-
-
-
 
 
     }
