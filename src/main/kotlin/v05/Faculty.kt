@@ -4,6 +4,7 @@ import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.read
 import org.openrndr.color.ColorRGBa
+import org.openrndr.color.rgb
 
 val facultyNames = listOf(
     "Architecture and The Built Environment",
@@ -40,14 +41,14 @@ val facultyAbbreviations = listOf(
 val facultyToAbbreviation = (facultyNames zip facultyAbbreviations).toMap()
 
 val facultyColors = listOf(
-    ColorRGBa.fromHex("2D5BFF"),
-    ColorRGBa.fromHex("FF9254"),
-    ColorRGBa.fromHex("C197FB"),
-    ColorRGBa.fromHex("E1A400"),
-    ColorRGBa.fromHex("19CC78"),
-    ColorRGBa.fromHex("00A8B4"),
-    ColorRGBa.fromHex("E54949"),
-    ColorRGBa.fromHex("FFAD8F"),
+    rgb("2D5BFF"),
+    rgb("FF9254"),
+    rgb("C197FB"),
+    rgb("E1A400"),
+    rgb("19CC78"),
+    rgb("00A8B4"),
+    rgb("E54949"),
+    rgb("FFAD8F"),
     ColorRGBa.GRAY.mix(ColorRGBa.WHITE, 0.5)
 )
 
