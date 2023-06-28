@@ -13,27 +13,19 @@ import org.openrndr.math.*
 import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
-import v05.extensions.IdleDetector
-import v05.filters.FilterMenu
+import v05.filters.Sidebar
 
 
-fun Program.pc05(data: DataModel) {
+fun Program.pc05(data: DataModel, state: State) {
 
     val camera = Camera2D()
 
     val slider = Slider(Vector2(width / 2.0, height - 60.0))
-    val filterMenu = FilterMenu(data, drawer.bounds.offsetEdges(-20.0), mouse)
-    val carousel = Carousel(data)
+    val sidebar = Sidebar(data, state, drawer.bounds.offsetEdges(-20.0), mouse)
 
-    val idleDetector = extend(IdleDetector())
-
-    idleDetector.idleDetected.listen {
-
-    }
-
-    filterMenu.filtersChanged.listen { fe ->
-        data.filterSet = fe
-        filterMenu.discover.articles = data.filtered.values.toList()
+    sidebar.filtersChanged.listen { fe ->
+        state.filterSet = fe
+        //sidebar.discover.articles = data.filtered.values.toList()
     }
 
     val obstacles = listOf(slider.bounds)
@@ -47,20 +39,16 @@ fun Program.pc05(data: DataModel) {
     }
 
     mouse.buttonDown.listen {
-        slider.buttonDown(it)
         camera.buttonDown(it)
         //filter.buttonDown(it)
     }
 
     mouse.buttonUp.listen {
-
-        slider.buttonUp(it)
-
         //filter.buttonUp(it)
-        if(it.position in filterMenu.bounds) {
-            filterMenu.buttonUpDown(it)
+        if(it.position in sidebar.bounds) {
+            sidebar.buttonUpDown(it)
         } else {
-            data.changed.trigger(Unit)
+            state.changed.trigger(Unit)
         }
         camera.buttonUp(it)
     }
@@ -70,18 +58,18 @@ fun Program.pc05(data: DataModel) {
     }
 
     mouse.dragged.listen {
-        if(filterMenu.opened && it.position in filterMenu.bounds) {
-            filterMenu.dragged(it)
+        if(sidebar.opened && it.position in sidebar.bounds) {
+            sidebar.dragged(it)
         } else {
             camera.dragged(it)
-            slider.dragged(it)
+            slider.dragged(it, mouse)
         }
     }
 
     camera.changed.listen {
         slider.current = camera.mappedZoom
 
-        data.apply {
+        state.apply {
             zoom = camera.mappedZoom
             radius = 40.0 / camera.view.c0r0
             lookAt = (camera.view.inversed * drawer.bounds.center.xy01).xy
@@ -103,7 +91,7 @@ fun Program.pc05(data: DataModel) {
 
             val mul = 2
             val bg = drawImage(width * mul, height * mul) {
-                drawer.clear(ColorRGBa.TRANSPARENT)
+
                 val circles = facultyColors.map {
                     it.shade(0.2) to Circle(Vector2.uniform(drawer.bounds), Double.uniform(80.0, 200.0))
                 }
@@ -133,10 +121,10 @@ fun Program.pc05(data: DataModel) {
                 drawer.strokeWeight = 0.05
                 drawer.rectangles {
                     for ((point, article) in data.pointsToArticles) {
-                        val opacity = if(data.filtered[point] != null) 1.0 else 0.2
-                        this.stroke = if (data.activePoints[point] != null) ColorRGBa.YELLOW else null
+                        val opacity = if(state.filtered[point] != null) 1.0 else 0.2
+                        this.stroke = if (state.activePoints[point] != null) ColorRGBa.YELLOW else null
 
-                        val size = if(data.filtered[point] != null) 6 else 2
+                        val size = if(state.filtered[point] != null) 6 else 2
 
                         this.fill = article.faculty.facultyColor().opacify(opacity)
                         this.rectangle(Rectangle.fromCenter(point, 0.25 * size, 0.45 * size))
@@ -149,7 +137,7 @@ fun Program.pc05(data: DataModel) {
                 drawer.fill = ColorRGBa.WHITE
                 when(slider.current) {
                     in 0.8..1.0 -> {
-                        for((p, a) in data.activePoints) {
+                        for((p, a) in state.activePoints) {
                             drawer.text(a.title, p.transform(camera.view))
                         }
                     }
@@ -157,14 +145,14 @@ fun Program.pc05(data: DataModel) {
 
                 drawer.fill = null
                 drawer.stroke = ColorRGBa.WHITE
-                drawer.circle(data.lookAt, 40.0)
+                drawer.circle(state.lookAt, 40.0)
 
                 slider.draw(drawer)
             }
 
             layer {
                 draw {
-                    filterMenu.draw(drawer)
+                    sidebar.draw(drawer)
                 }
             }
             layer {

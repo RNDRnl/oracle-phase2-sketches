@@ -17,14 +17,9 @@ import kotlin.concurrent.thread
 const val IDLE = 1
 const val NAVIGATE = 2
 data class EventObject(val screenMode: Int, val articleIndexes: List<Int>, val zoom: Double, val filterSet: FilterSet = FilterSet.EMPTY) : Serializable
-
+val appMode = AppMode.Debug
 
 fun main() = application {
-    val appMode = when (val mode=System.getProperty("appMode")) {
-        "production" -> AppMode.Production
-        "prototype" -> AppMode.Prototype
-        else -> AppMode.Debug
-    }
     configure {
         when (appMode) {
             AppMode.Debug -> {
@@ -43,9 +38,12 @@ fun main() = application {
         height = 1024
     }
     program {
+
         val ipAddress = System.getProperty("screenIP") ?: "192.168.1.158"
+
         val data = DataModel(Rectangle.fromCenter(drawer.bounds.center, height * 1.0, height * 1.0))
-        val pc = viewBox(drawer.bounds) { pc05(data) }
+        val state = State(data)
+        val pc = viewBox(drawer.bounds) { pc05(data, state) }
 
         thread {
             val socket = DatagramSocket()
@@ -60,10 +58,10 @@ fun main() = application {
                 socket.send(p)
             }
 
-            data.changed.listen {
+            state.changed.listen {
                 println("sending to ${ipAddress}:9002")
-                val indices = data.activePoints.map { data.articles.indexOf(it.value) }
-                send(EventObject(NAVIGATE, indices, data.zoom, data.filterSet))
+                val indices = state.activePoints.map { data.articles.indexOf(it.value) }
+                send(EventObject(NAVIGATE, indices, state.zoom, state.filterSet))
             }
         }
 

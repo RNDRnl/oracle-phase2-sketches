@@ -2,97 +2,93 @@ package v05.filters
 
 import org.openrndr.MouseEvent
 import org.openrndr.animatable.Animatable
-import org.openrndr.animatable.easing.Easing
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
 import org.openrndr.draw.loadFont
+import org.openrndr.draw.writer
 import org.openrndr.events.Event
 import org.openrndr.math.Vector2
-import org.openrndr.math.transforms.buildTransform
 import org.openrndr.shape.Rectangle
-import org.openrndr.svg.loadSVG
+import v05.Article
 
-open class Filter: Animatable() {
+open class Filter(val list: List<String>, val articles: List<Article>? = null): Animatable() {
 
     val changed = Event<Unit>()
-    var list: List<String> = listOf()
+    open var isActive = false
+
+    var activeList = reset()
+
+    var entriesInView = mapOf<Vector2, Int>()
+
+    var bounds = Rectangle(0.0,0.0, 100.0, 100.0)
+    open var headerBox = Rectangle(0.0,0.0, 100.0, 100.0)
+    open val title = ""
+
+    var lastPos = Vector2.ZERO
         set(value) {
-            field = value.sorted()
-        }
-
-    var current: String? = null
-
-    var visible = false
-    var expanded = false
-        set(value) {
-            cancel()
-            if (!field && value) expand() else if (field && !value) compress()
-
             field = value
+            if(isActive) {
+                val selected = entriesInView.minByOrNull { it.key.distanceTo(field) }
+
+                selected?.value.let { index ->
+                    val i = index!!
+
+                    if(activeList.size == list.size) {
+                        activeList.clear()
+                        activeList[i] = list[i]
+                    } else {
+                        if(activeList[i].isNullOrBlank()) {
+                            activeList[i] = list[i]
+                        } else {
+                            activeList.remove(i)
+                            if(activeList.isEmpty()) {
+                                activeList = reset()
+                            }
+                        }
+                    }
+
+                }
+                println(activeList)
+                changed.trigger(Unit)
+            }
         }
-    var expandT = 0.0
 
-    private fun expand() {
-        ::expandT.animate(1.0, 1000, Easing.CubicInOut)
+    fun buttonUp(e: MouseEvent) {
+
     }
-
-    private fun compress() {
-        ::expandT.animate(0.0, 1000, Easing.CubicInOut)
-    }
-
-    val boundsWidth = 460.0
-    val boundsHeight = 80.0
-    var bounds = Rectangle(0.0, 0.0, boundsWidth, boundsHeight)
-
-    var icon = loadSVG("<svg></svg>")
-    var title = ""
-    var subtitle = ""
-
-    val titleFm = loadFont("data/fonts/Roboto-Regular.ttf", 28.0)
-    val subtitleFm = loadFont("data/fonts/Roboto-Regular.ttf", 12.0)
-
-    open var lastPos = Vector2.ZERO
 
     open fun dragged(e: MouseEvent) {
 
     }
 
-    open fun buttonUp(e: MouseEvent) {
-
+    fun reset(): MutableMap<Int, String> {
+        return list.withIndex().associate { it.index to it.value }.toMutableMap()
     }
 
-    fun drawBasics(drawer: Drawer) {
+    fun beforeDraw(drawer: Drawer, b: Rectangle) {
+        updateAnimation()
+        bounds = b
 
-        drawer.stroke = ColorRGBa.RED
-        drawer.fill = null
+        drawer.stroke = ColorRGBa.WHITE
+        drawer.fill = if(isActive) ColorRGBa.WHITE else null
+        drawer.rectangle(headerBox)
 
-        drawer.translate(bounds.corner)
-
-        drawer.stroke = ColorRGBa.WHITE.opacify(0.4)
-        drawer.fill = null
-        drawer.lineSegment(Vector2.ZERO, Vector2(bounds.width, 0.0))
-
-        icon.root.transform = buildTransform {
-            translate(40.0, 40.0)
-            scale(0.5)
-            translate(-icon.root.bounds.center)
+        drawer.fontMap = selectorBoxesFm
+        drawer.fill = if(isActive) ColorRGBa.BLACK else ColorRGBa.WHITE
+        drawer.writer {
+            box = headerBox
+            cursor.x = headerBox.center.x - textWidth(title) / 2.0
+            cursor.y = headerBox.center.y + selectorBoxesFm.height / 2.0
+            text(title)
         }
-        drawer.composition(icon)
-
-        drawer.fill = ColorRGBa.WHITE.opacify(0.8)
-        drawer.stroke = null
-        drawer.fontMap = titleFm
-        drawer.text(title, 80.0, 40.0)
-
-        drawer.fontMap = subtitleFm
-        drawer.text(subtitle, 80.0, 45.0 + titleFm.height)
-/*
-        drawer.stroke = ColorRGBa.RED
-        drawer.fill = null
-
-        drawer.rectangle(0.0, 0.0, bounds.width, bounds.height)*/
     }
 
-    open fun draw(drawer: Drawer) {}
+    val origin = Vector2(80.0, 160.0)
+    val selectorBoxesFm = loadFont("data/fonts/default.otf", 22.0)
 
+    var initialT = System.currentTimeMillis()
+
+    open fun draw(drawer: Drawer, bounds: Rectangle) {
+        beforeDraw(drawer, bounds)
+    }
 }

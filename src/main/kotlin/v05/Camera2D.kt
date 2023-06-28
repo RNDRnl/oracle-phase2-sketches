@@ -38,7 +38,7 @@ class Camera2D : Extension, ChangeEvents {
     override val changed = Event<Unit>()
 
     fun quantize(x: Double): Double {
-        return floor(x * 1000.0) / 1000.0
+        return round(x * 1000.0) / 1000.0
     }
 
     fun Matrix44.scale(): Double = (this * Vector4(1.0, 1.0, 0.0, 0.0).normalized).xy.length
@@ -80,17 +80,15 @@ class Camera2D : Extension, ChangeEvents {
 
     private var lastMousePosition = Vector2(0.0, 0.0)
     private var velocity = Vector2(0.0, 0.0)
-    private var potentialVelocity = Vector2(0.0, 0.0)
 
     fun buttonDown(mouse: MouseEvent) {
         if (!inUiElement) {
             lastMousePosition = mouse.position
         }
-        potentialVelocity = Vector2.ZERO
     }
     fun buttonUp(mouse: MouseEvent) {
         if (!inUiElement) {
-            velocity = potentialVelocity
+            velocity += mouse.position - lastMousePosition
             view = buildTransform {
                 translate(velocity)
             } * view
@@ -98,14 +96,18 @@ class Camera2D : Extension, ChangeEvents {
     }
 
     fun dragged(mouse: MouseEvent) {
+        /*if (!mouse.propagationCancelled) {
+
+        }*/
+
         if (!inUiElement) {
-            potentialVelocity =mouse.position - lastMousePosition
             lastMousePosition = mouse.position
             view = buildTransform {
                 translate(mouse.dragDisplacement)
             } * view
             dirty = true
         }
+
     }
 
     fun scrolled(mouse: MouseEvent) { // this
