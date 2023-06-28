@@ -29,17 +29,15 @@ class Discover(articles: List<Article>): FilterMenu(articles) {
     override val filters = listOf(facultyFilter, topicFilter, dateFilter, articleFilter)
 
     override fun dragged(e: MouseEvent) {
-        println("dragged")
-        /*if(currentBox == 2) {
-            yOffset += e.dragDisplacement.y
-        }*/
+        if(articleFilter.isActive) {
+            articleFilter.dragged(e)
+        }
     }
 
     override fun buttonUp(e: MouseEvent) {
         val target = filters.firstOrNull { e.position in it.headerBox.movedBy(bounds.corner) }
 
         if(target != null) {
-            println(target::class.simpleName)
             if(!target.isActive) {
                 target.isActive = true
                 filters.minus(target).onEach { it.isActive = false }

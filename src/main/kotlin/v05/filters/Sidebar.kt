@@ -114,7 +114,6 @@ class Sidebar(val data: DataModel, val state: State, val frame: Rectangle, val m
 
     fun dragged(e: MouseEvent) {
         val scrollable = filterMenus.take(2).firstOrNull { e.position in it.bounds }
-
         scrollable?.dragged(e)
     }
 
