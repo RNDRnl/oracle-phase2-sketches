@@ -48,7 +48,7 @@ fun Program.screenProgram(i: Int, rect: Rectangle, dataModel: DataModel) {
         state.mode = m.mode
         controller.fadeIn()
         state.zoomLevel = m.zoomLevel
-        zoomLevels[m.zoomLevel].populate(m.articles)
+        zoomLevels[m.zoomLevel].processMessage(m)
         articles = m.articles
     }
 

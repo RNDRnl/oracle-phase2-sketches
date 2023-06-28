@@ -27,13 +27,15 @@ class ArticleBody(val frame: Rectangle, val body: Body)
 
 interface ScreenDrawer {
     fun update()
+
+    fun processMessage(message: ScreenMessage)
+
     fun draw(clock: Clock, drawer: Drawer, circle: Circle)
 }
 
 
 abstract class ZoomLevel(val i: Int, val bounds: Rectangle, val dataModel: DataModel) : ScreenDrawer {
 
-    open fun populate(articles: List<Article>) { }
 
     open fun clear() { animations.fadeOut() }
 
@@ -99,15 +101,14 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
         articlesSorted = newSet
     }
 
-    override fun populate(articles: List<Article>) {
-        highlighted = articles.toMutableList()
-        if (articles.isNotEmpty()) {
-
-            color = articles[0].faculty.facultyColor()
-            rects = Rectangle(0.0, 0.0, bounds.width, bounds.height).grid(articles.size, 1).flatten()
+    override fun processMessage(message: ScreenMessage) {
+        highlighted = message.articles.toMutableList()
+        if (message.articles.isNotEmpty()) {
+            color = message.articles[0].faculty.facultyColor()
+            rects = Rectangle(0.0, 0.0, bounds.width, bounds.height).grid(message.articles.size, 1).flatten()
             animations.fadeIn()
         } else {
-            println("error: asked to be populated from an empty list ${articles}")
+            println("error: asked to be populated from an empty list ${message.articles}")
         }
     }
 
@@ -219,7 +220,7 @@ class Zoom1(i: Int, bounds: Rectangle, dataModel: DataModel) : ZoomLevel(i, boun
         return body
     }
 
-    override fun populate(articles: List<Article>) {
+    override fun processMessage(message: ScreenMessage) {
         animations.fadeOut()
         for(body in articleBodies.map { it.value.body }) {
             world.destroyBody(body)
@@ -229,7 +230,7 @@ class Zoom1(i: Int, bounds: Rectangle, dataModel: DataModel) : ZoomLevel(i, boun
 
         var previousX = 0.0
 
-        for((index, article) in articles.withIndex()) {
+        for((index, article) in message.articles.withIndex()) {
             val boxWidth = article.title.length.toDouble().map(0.0, 300.0, bounds.width / 50.0, bounds.width / 12.0)
             val boxHeight = bounds.height * Double.uniform(0.75, 0.85)
 
@@ -298,12 +299,12 @@ class Zoom2(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
         animations.fadeOut()
     }
 
-    override fun populate(articles: List<Article>) {
+    override fun processMessage(message: ScreenMessage) {
         animations.fadeIn()
-        currentArticle = if(articles.isNotEmpty()) articles.first() else null
+        currentArticle = if(message.articles.isNotEmpty()) message.articles.first() else null
         if(currentArticle != null) {
-            sameFaculty = List(10) { articles.filter { it.faculty == currentArticle!!.faculty }.random() }
-            sameTopic = List(10) { articles.random() }
+            sameFaculty = List(10) { message.articles.filter { it.faculty == currentArticle!!.faculty }.random() }
+            sameTopic = List(10) { message.articles.random() }
         }
     }
 

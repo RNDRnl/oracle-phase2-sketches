@@ -12,6 +12,7 @@ import org.openrndr.math.smoothstep
 import org.openrndr.shape.Circle
 import v05.Article
 import v05.ScreenDrawer
+import v05.ScreenMessage
 import kotlin.math.cos
 import kotlin.math.round
 import kotlin.math.sin
@@ -20,6 +21,10 @@ class IdleMode(val allArticles: List<Article>) : ScreenDrawer {
     var points = emptyList<Vector2>()
 
     override fun update() {
+
+    }
+
+    override fun processMessage(message: ScreenMessage) {
 
     }
 
