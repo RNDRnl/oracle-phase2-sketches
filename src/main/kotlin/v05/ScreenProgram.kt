@@ -14,6 +14,8 @@ import v05.screens.IdleMode
 
 class ScreenState(var mode: Int = IDLE, var zoomLevel: Int = 0)
 
+class ScreenMessage(val mode:Int, articles:List<Article>, zoomLevel: Int)
+
 fun Program.screenProgram(i: Int, rect: Rectangle, dataModel: DataModel) {
 
     var articles = listOf<Article>()

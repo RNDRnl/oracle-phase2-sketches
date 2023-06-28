@@ -61,7 +61,16 @@ class State(val model: DataModel) {
 
     val changed = Event<Unit>()
 
+
     val kdtree = model.points.kdTree()
+
+    var idle = true
+        set(value) {
+            if (field != value) {
+                field = value
+                changed.trigger(Unit)
+            }
+        }
 
     var zoom = 0.0
     var radius = 40.0

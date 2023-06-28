@@ -26,9 +26,14 @@ fun Program.pc05(data: DataModel, state: State) {
 
     val idleDetector = extend(IdleDetector())
 
-    idleDetector.idleDetected.listen {
-
+    idleDetector.idleStarted.listen {
+        state.idle = true
     }
+
+    idleDetector.idleEnded.listen {
+        state.idle = false
+    }
+
 
     sidebar.filtersChanged.listen { fe ->
         state.filterSet = fe

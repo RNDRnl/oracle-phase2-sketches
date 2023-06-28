@@ -66,7 +66,7 @@ fun main() = application {
             state.changed.listen {
                 println("sending to ${ipAddress}:9002")
                 val indices = state.activePoints.map { data.articles.indexOf(it.value) }
-                send(EventObject(NAVIGATE, indices, state.zoom, state.filterSet))
+                send(EventObject(if (state.idle) IDLE else NAVIGATE, indices, state.zoom, state.filterSet))
             }
         }
 
