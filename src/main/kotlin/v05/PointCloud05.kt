@@ -17,9 +17,14 @@ import kotlin.concurrent.thread
 const val IDLE = 1
 const val NAVIGATE = 2
 data class EventObject(val screenMode: Int, val articleIndexes: List<Int>, val zoom: Double, val filterSet: FilterSet = FilterSet.EMPTY) : Serializable
-val appMode = AppMode.Debug
+
 
 fun main() = application {
+    val appMode = when (val mode=System.getProperty("appMode")) {
+        "production" -> AppMode.Production
+        "prototype" -> AppMode.Prototype
+        else -> AppMode.Debug
+    }
     configure {
         when (appMode) {
             AppMode.Debug -> {
