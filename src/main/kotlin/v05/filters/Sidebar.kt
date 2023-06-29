@@ -55,6 +55,9 @@ class Sidebar(val data: DataModel, val state: State, val frame: Rectangle, val m
                 filter.changed.listen {
                     if(filterMenu == discover) {
                         currentArticle = discover.articleFilter.currentArticle
+                        if(currentArticle != null) {
+                            discover.articleFilter.isVisible = false
+                        }
 
                         filtersChanged.trigger(FilterSet(
                             discover.facultyFilter.activeList.values.toList(),
@@ -87,7 +90,9 @@ class Sidebar(val data: DataModel, val state: State, val frame: Rectangle, val m
 
     fun buttonUp(e: MouseEvent){
         val target = filterMenus.lastOrNull {
-            e.position in it.bounds
+            val r = if(discover.articlesOpened) it.bounds.copy(width = it.boundsWidth * 2.0) else it.bounds
+            println(r)
+            e.position in r
         }
 
         if(target != null) {

@@ -6,61 +6,92 @@ import org.openrndr.draw.loadFont
 import org.openrndr.draw.writer
 import org.openrndr.extra.shapes.roundedRectangle
 import org.openrndr.extra.shapes.toRounded
-import org.openrndr.math.Vector2
 import org.openrndr.shape.Rectangle
-import v05.facultyAbbreviation
-import v05.facultyColors
-import kotlin.math.sin
+import v05.*
 
-class FacultyFilter(list: List<String>): Filter(list) {
+class FacultyFilterModel: FilterModel() {
 
-    override var isActive = true
+    override val list = facultyNames
+    override val states = list.map { ToggleFilterState() }
+    val filteredList: List<String>
+        get() = filter()
+
+    fun filter(): List<String> {
+        return list.filterIndexed { i, _ -> states[i].visible  }
+    }
+
+    init {
+        states.forEach {
+            it.stateChanged.listen {
+                if (states.none { it.visible }) {
+                    states.forEach {
+                        it.visible = true
+                    }
+                }
+                filterChanged.trigger(Unit)
+            }
+        }
+    }
+
+    fun reset() {
+        states.forEach { it.visible = true }
+    }
+
+}
+
+class FacultyFilterNew(val drawer: Drawer, val model: FacultyFilterModel): FilterNew() {
+
+    var isMinimized = false
     override var title = "FACULTIES"
+
+    override var headerBox = Rectangle(80.0, 90.0, 460.0 * 0.3, 32.0)
+    override val bounds = Rectangle(80.0, 90.0 + 32.0, 460.0, 600.0)
 
     val facultyAbbrFm = loadFont("data/fonts/Roboto-Regular.ttf", 18.0)
     val facultyFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 16.0)
 
-    override fun draw(drawer: Drawer, bounds: Rectangle) {
-        headerBox = Rectangle(80.0, 90.0, (bounds.width - 80.0) * 0.3, 32.0)
-        beforeDraw(drawer, bounds)
+    override fun draw() {
 
-        if(isActive) {
-            entriesInView = list.withIndex().associate { (i, item) ->
-                var bbox = Rectangle(origin, 0.0, 0.0)
+        val offsetX = if(isMinimized) 30.0 else 0.0
+
+        drawer.stroke = ColorRGBa.WHITE
+        drawer.fill = if(isCurrent) ColorRGBa.WHITE else null
+        drawer.rectangle(headerBox)
+
+        if(isVisible) {
+            model.states.forEachIndexed { i, state ->
+
+                val item = model.list[i]
+                val itemBox = Rectangle(
+                    bounds.x - (offsetX * 2.1),
+                    i * 30.0 + (25.0 * i) + bounds.y,
+                    80.0 - offsetX,
+                    30.0
+                )
 
                 drawer.writer {
                     gaplessNewLine()
-                    bbox = Rectangle(
-                        origin.x,
-                        i * 30.0 + (25.0 * i) + origin.y,
-                        80.0,
-                        30.0
-                    )
 
-                    if(bbox.y < bounds.height && bbox.y > 80.0) {
+                    drawer.fontMap = facultyAbbrFm
+                    drawer.fill = if (state.visible) facultyColors[i] else ColorRGBa.TRANSPARENT
+                    drawer.stroke = facultyColors[i]
+                    drawer.roundedRectangle(itemBox.toRounded(999.0))
 
+                    val t0 = item.facultyAbbreviation()
+                    drawer.fill =  if (state.visible) ColorRGBa.BLACK else facultyColors[i]
+                    cursor.x = itemBox.center.x - textWidth(t0) / 2.0
+                    cursor.y = itemBox.center.y + facultyAbbrFm.height / 2.0
+                    text(t0)
 
-                        drawer.fontMap = facultyAbbrFm
-                        drawer.fill = if (activeList.contains(i)) facultyColors[i] else ColorRGBa.TRANSPARENT
-                        drawer.stroke = facultyColors[i]
-                        drawer.roundedRectangle(bbox.toRounded(999.0))
-
-                        val t0 = item.facultyAbbreviation()
-                        drawer.fill =
-                            if (activeList.contains(i)) ColorRGBa.BLACK else facultyColors[i]
-                        cursor.x = bbox.center.x - textWidth(t0) / 2.0
-                        cursor.y = bbox.center.y + facultyAbbrFm.height / 2.0
-                        text(t0)
-
+                    if(!isMinimized) {
                         drawer.fontMap = facultyFm
                         drawer.fill = ColorRGBa.WHITE.opacify(0.8)
-                        cursor.x = bbox.corner.x + bbox.width + 5.0
+                        cursor.x = itemBox.corner.x + itemBox.width + 5.0
                         text(item.uppercase())
                     }
 
                 }
 
-                (bbox.center + bounds.corner) to i
             }
         }
 

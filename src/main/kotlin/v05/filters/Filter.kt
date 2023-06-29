@@ -14,7 +14,8 @@ import v05.Article
 open class Filter(val list: List<String>, var articles: List<Article>? = null): Animatable() {
 
     val changed = Event<Unit>()
-    open var isActive = false
+    open var isCurrent = false
+    open var isVisible = false
 
     var activeList = reset()
 
@@ -27,7 +28,7 @@ open class Filter(val list: List<String>, var articles: List<Article>? = null): 
     open var lastPos = Vector2.ZERO
         set(value) {
             field = value
-            if(isActive) {
+            if(isVisible) {
                 val selected = entriesInView.minByOrNull { it.key.distanceTo(field) }
 
                 selected?.value.let { index ->
@@ -75,13 +76,8 @@ open class Filter(val list: List<String>, var articles: List<Article>? = null): 
         updateAnimation()
         boundingBox = b
 
-        val c = if(isActive && boundingBox != headerBox) ColorRGBa.WHITE else null
-        drawer.stroke = c
-        drawer.fill = c
-        drawer.rectangle(headerBox)
-
         drawer.fontMap = selectorBoxesFm
-        drawer.fill = if(isActive) ColorRGBa.BLACK else ColorRGBa.WHITE
+        drawer.fill = if(isCurrent) ColorRGBa.BLACK else ColorRGBa.WHITE
         drawer.writer {
             box = headerBox
             cursor.x = headerBox.center.x - textWidth(title) / 2.0

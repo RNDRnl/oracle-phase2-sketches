@@ -3,39 +3,61 @@ package v05.filters
 import org.openrndr.MouseEvent
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
-import org.openrndr.draw.isolated
 import org.openrndr.math.map
+import org.openrndr.math.max
 import org.openrndr.shape.LineSegment
 import org.openrndr.shape.Rectangle
 
-class DateFilter (list: List<String>): Filter(list) {
 
-    override var isActive = true
+class DateFilterModel: FilterModel() {
 
-    inner class Selector(var year: String) {
+    override val list = listOf(1900, 2000)
+    override val states = list.map { DateFilterState(it) }
+    val filteredList: List<Int>
+        get() = filter()
+
+    fun filter(): List<Int> {
+        val low = minOf(states[0].year, states[1].year).toInt()
+        val high = maxOf(states[0].year, states[1].year).toInt()
+        return listOf(low, high)
+    }
+
+    init {
+        states.forEachIndexed { i, it ->
+            it.stateChanged.listen {
+                filterChanged.trigger(Unit)
+            }
+        }
+    }
+}
+
+class DateFilterNew(val drawer: Drawer, val model: DateFilterModel): FilterNew() {
+
+    override var isVisible = true
+
+    inner class Selector(var state: DateFilterState) {
         var pos: Double
             get() {
-                return year.toDouble().map(list.first().toDouble(), list.last().toDouble(), 0.0, 1.0)
+                return state.year.map(1900.0, 2020.0, 0.0, 1.0)
             }
             set(value) {
-                year = value.map(0.0, 1.0, 1880.0, 2020.0).toInt().toString()
-                changed.trigger(Unit)
+                state.year = value.map(0.0, 1.0, 1880.0, 2020.0)
             }
     }
 
-    val selectors = listOf(Selector(list.first()), Selector(list.last()))
+    val selectors = model.states.map { Selector(it) }
     var closestSelector: Selector? = null
 
-    override fun buttonUp(e: MouseEvent) {
+    override val bounds = Rectangle(80.0, 90.0 + 32.0, 460.0, 32.0)
+    override var headerBox = Rectangle(bounds.x, (bounds.height - 125.0), bounds.width, 120.0).offsetEdges(-20.0)
+
+    fun buttonUp(e: MouseEvent) {
         closestSelector = null
     }
 
-    override fun draw(drawer: Drawer, bounds: Rectangle) {
-        val r = Rectangle(bounds.x, (bounds.height - 125.0), bounds.width, 120.0).offsetEdges(-20.0)
-        headerBox = r
-        beforeDraw(drawer, r)
+    override fun draw() {
 
-        val rail = LineSegment(boundingBox.x, boundingBox.center.y, boundingBox.width, boundingBox.center.y)
+        val rail = LineSegment(bounds.x, bounds.center.y, bounds.width, bounds.center.y)
 
         drawer.stroke = ColorRGBa.WHITE
         drawer.lineSegment(rail)
@@ -44,9 +66,9 @@ class DateFilter (list: List<String>): Filter(list) {
             val center = rail.position(it.pos)
             drawer.stroke = null
             drawer.fill = ColorRGBa.WHITE
-            drawer.text(it.year, center.x - 15.0, center.y - 25.0)
+            drawer.text(it.state.year.toString(), center.x - 15.0, center.y - 25.0)
             drawer.circle(center, 15.0)
         }
     }
-
 }
+

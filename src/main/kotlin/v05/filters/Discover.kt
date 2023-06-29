@@ -3,15 +3,10 @@ package v05.filters
 import org.openrndr.MouseEvent
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
-import org.openrndr.draw.writer
-import org.openrndr.extra.shapes.roundedRectangle
-import org.openrndr.extra.shapes.toRounded
-import org.openrndr.math.Vector2
 import org.openrndr.shape.Rectangle
 import org.openrndr.svg.loadSVG
 import v05.*
 import java.io.File
-import kotlin.math.sin
 
 class Discover(articles: List<Article>): FilterMenu(articles) {
 
@@ -28,11 +23,48 @@ class Discover(articles: List<Article>): FilterMenu(articles) {
 
     override fun dragged(e: MouseEvent) {
         super.dragged(e)
-        if(articleFilter.isActive) {
+        if(articleFilter.isVisible) {
             articleFilter.dragged(e)
         }
     }
 
+    var articlesOpened = false
+
+    override fun buttonUp(e: MouseEvent) {
+
+        val target = filters.firstOrNull { e.position in it.headerBox.movedBy(bounds.corner) }
+        target?.let {
+            target.isCurrent = true
+            filters.minus(setOf(target, dateFilter)).onEach { it.isCurrent = false }
+        }
+
+        when(target) {
+            facultyFilter -> {
+                facultyFilter.isVisible = true
+                facultyFilter.isMinimized = false
+                filters.minus(setOf(target, dateFilter)).onEach { it.isVisible = false }
+                articlesOpened = false
+            }
+            topicFilter -> {
+                topicFilter.isVisible = true
+                facultyFilter.isMinimized = true
+                articleFilter.isVisible = false
+                articlesOpened = false
+            }
+            articleFilter -> {
+                topicFilter.isVisible = true
+                articleFilter.isVisible = true
+                facultyFilter.isMinimized = true
+                articlesOpened = true
+            }
+            null -> {
+                val newTarget = filters.minus(dateFilter).firstOrNull { it.isVisible && e.position in it.boundingBox }
+                newTarget?.let {
+                    it.lastPos = e.position
+                }
+            }
+        }
+    }
 
     override fun draw(drawer: Drawer) {
 
@@ -53,8 +85,6 @@ class Discover(articles: List<Article>): FilterMenu(articles) {
                 it.draw(drawer, bounds)
             }
         }
-
-        drawer.drawStyle.clip = null
     }
 
 }

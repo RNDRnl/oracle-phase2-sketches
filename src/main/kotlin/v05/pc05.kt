@@ -14,7 +14,7 @@ import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import v05.extensions.IdleDetector
-import v05.filters.Sidebar
+import v05.filters.*
 
 
 fun Program.pc05(data: DataModel, state: State) {
@@ -22,6 +22,36 @@ fun Program.pc05(data: DataModel, state: State) {
     val camera = Camera2D()
 
     val slider = Slider(Vector2(width / 2.0, height - 60.0))
+
+
+    // filters
+
+    val facultyFilterModel = FacultyFilterModel(state)
+    val facultyFilter = FacultyFilterNew(drawer, facultyFilterModel)
+
+    val topicFilterModel = TopicFilterModel(state)
+    val topicFilter = TopicFilterNew(drawer, topicFilterModel)
+
+    val dateFilterModel = DateFilterModel(state)
+    val dateFilter = DateFilterNew(drawer, dateFilterModel)
+
+    state.facultyFilter = facultyFilterModel
+    state.topicFilter = topicFilterModel
+    state.dateFilter = dateFilterModel
+
+    facultyFilterModel.filterChanged.listen {
+        state.filterChanged()
+    }
+
+    topicFilterModel.filterChanged.listen {
+        state.filterChanged()
+    }
+
+    dateFilterModel.filterChanged.listen {
+        state.filterChanged()
+    }
+
+
     val sidebar = Sidebar(data, state, drawer.bounds.offsetEdges(-20.0), mouse)
 
     val idleDetector = extend(IdleDetector())

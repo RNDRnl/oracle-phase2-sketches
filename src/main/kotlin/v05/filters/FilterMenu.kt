@@ -13,7 +13,6 @@ import org.openrndr.math.transforms.buildTransform
 import org.openrndr.shape.Rectangle
 import org.openrndr.svg.loadSVG
 import v05.Article
-import v05.DataModel
 import v05.facultyNames
 
 open class FilterMenu(articles: List<Article>): Animatable() {
@@ -55,7 +54,6 @@ open class FilterMenu(articles: List<Article>): Animatable() {
     val subtitleFm = loadFont("data/fonts/Roboto-Regular.ttf", 12.0)
 
     open fun dragged(e: MouseEvent) {
-        println("dragged + ${this::class.simpleName}")
         e.cancelPropagation()
 
             if(e.position in dateFilter.headerBox.movedBy(bounds.corner)) {
@@ -68,7 +66,6 @@ open class FilterMenu(articles: List<Article>): Animatable() {
     }
 
     open fun buttonDown(e: MouseEvent) {
-        println("down + ${this::class.simpleName}")
         if(e.position in dateFilter.headerBox.movedBy(bounds.corner)) {
             e.cancelPropagation()
 
@@ -78,16 +75,15 @@ open class FilterMenu(articles: List<Article>): Animatable() {
     }
 
     open fun buttonUp(e: MouseEvent) {
-        println("up + ${this::class.simpleName}")
         val target = filters.firstOrNull { e.position in it.headerBox.movedBy(bounds.corner) }
 
         if(target != null) {
-            if(!target.isActive) {
-                target.isActive = true
-                filters.minus(setOf(target, dateFilter)).onEach { it.isActive = false }
+            if(!target.isVisible) {
+                target.isVisible = true
+                filters.minus(setOf(target, dateFilter)).onEach { it.isVisible = false }
             }
         } else {
-            filters.minus(dateFilter).firstOrNull { it.isActive }?.lastPos = e.position
+            filters.minus(dateFilter).firstOrNull { it.isVisible }?.lastPos = e.position
         }
     }
 

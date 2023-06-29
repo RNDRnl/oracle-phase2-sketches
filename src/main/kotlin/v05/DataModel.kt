@@ -12,9 +12,12 @@ import org.openrndr.math.Vector2
 import org.openrndr.shape.Rectangle
 import org.openrndr.shape.bounds
 import org.openrndr.shape.map
+import v05.filters.DateFilterModel
+import v05.filters.FacultyFilterModel
 import v05.filters.FilterSet
 import v05.libs.brackets
 import v05.libs.histogramOf
+import v05.filters.TopicFilterModel
 import java.io.Serializable
 import java.math.BigDecimal
 
@@ -64,8 +67,18 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
 
 class State(val model: DataModel) {
 
-    val changed = Event<Unit>()
+    lateinit var facultyFilter: FacultyFilterModel
+    lateinit var topicFilter: TopicFilterModel
+    lateinit var dateFilter: DateFilterModel
 
+    fun filterChanged() {
+        val filteredFaculties = facultyFilter.filteredList
+        val filteredTopics = topicFilter.filteredList
+        val filteredDates = dateFilter.filteredList[0] to dateFilter.filteredList[1]
+        filterSet = FilterSet(filteredFaculties, filteredTopics, filteredDates)
+    }
+
+    val changed = Event<Unit>()
 
     val kdtree = model.points.kdTree()
 
