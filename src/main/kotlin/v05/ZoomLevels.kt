@@ -35,7 +35,7 @@ interface ScreenDrawer {
 }
 
 
-abstract class ZoomLevel(val i: Int, val bounds: Rectangle, val dataModel: DataModel) : ScreenDrawer {
+abstract class ZoomLevel(val screenId: Int, val bounds: Rectangle, val dataModel: DataModel) : ScreenDrawer {
 
 
     open fun clear() { animations.fadeOut() }
@@ -137,7 +137,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
         drawer.isolated {
             drawer.rectangles {
                 articlesSorted.forEachIndexed { index, article ->
-                    val cIndex = (index + (i * slots.size))
+                    val cIndex = (index + (screenId * slots.size))
                     if(cIndex < articlesSorted.size && index < slots.size) {
                         val highlighted = highlightedFaculties.contains(articlesSorted[cIndex].faculty) && highlightedYears.contains(articlesSorted[cIndex].year.toInt())
                         this.stroke = null
@@ -323,13 +323,13 @@ class Zoom2(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
             if(currentArticle != null) {
                 val article = currentArticle!!
 
-                drawer.fill = when(i) { 0, 2, 6 -> article.faculty.facultyColor()
+                drawer.fill = when(screenId) { 0, 2, 6 -> article.faculty.facultyColor()
                     else -> ColorRGBa.BLACK }.opacify(animations.fade)
                 drawer.stroke = null
                 drawer.rectangle(bounds)
 
                 drawer.fill = ColorRGBa.WHITE
-                when(i) {
+                when(screenId) {
                     0 -> singleColumnText(drawer, article.title)
                     1 -> infoText(drawer, article)
                     2 -> singleColumnText(drawer, article.department)
