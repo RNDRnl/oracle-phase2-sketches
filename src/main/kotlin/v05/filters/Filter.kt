@@ -1,97 +1,32 @@
 package v05.filters
 
-import org.openrndr.MouseEvent
-import org.openrndr.animatable.Animatable
-import org.openrndr.color.ColorRGBa
-import org.openrndr.draw.Drawer
-import org.openrndr.draw.loadFont
-import org.openrndr.draw.writer
 import org.openrndr.events.Event
-import org.openrndr.math.Vector2
-import org.openrndr.shape.Rectangle
-import v05.Article
+import v05.libs.UIElementImpl
 
-open class Filter(val list: List<String>, var articles: List<Article>? = null): Animatable() {
 
-    val changed = Event<Unit>()
+abstract class Filter: UIElementImpl() {
+
     open var isCurrent = false
-    open var isVisible = false
 
-    var activeList = reset()
-
-    var entriesInView = mapOf<Vector2, Int>()
-
-    open var boundingBox = Rectangle(0.0,0.0, 100.0, 100.0)
-    open var headerBox = Rectangle(0.0,0.0, 100.0, 100.0)
     open val title = ""
 
-    open var lastPos = Vector2.ZERO
-        set(value) {
-            field = value
-            if(isVisible) {
-                val selected = entriesInView.minByOrNull { it.key.distanceTo(field) }
+    open fun draw() {
 
-                selected?.value.let { index ->
-                    val i = index!!
 
-                    if(activeList.size == list.size) {
-                        activeList.clear()
-                        activeList[i] = list[i]
-                    } else {
-                        if(activeList[i].isNullOrBlank()) {
-                            activeList[i] = list[i]
-                        } else {
-                            activeList.remove(i)
-                            if(activeList.isEmpty()) {
-                                activeList = reset()
-                            }
-                        }
-                    }
+    }
+}
 
-                }
-                println(activeList)
-                changed.trigger(Unit)
-            }
+abstract class FilterModel {
+
+    val filterChanged = Event<Unit>()
+
+    open val list = listOf<Any>()
+    open val states = listOf<FilterState>()
+
+
+    fun update() {
+        for (state in states) {
+            state.updateAnimation()
         }
-
-
-
-    open fun buttonDown(e: MouseEvent) {
-
-    }
-
-    open fun buttonUp(e: MouseEvent) {
-
-    }
-
-    open fun dragged(e: MouseEvent) {
-
-    }
-
-    fun reset(): MutableMap<Int, String> {
-        return list.withIndex().associate { it.index to it.value }.toMutableMap()
-    }
-
-    fun beforeDraw(drawer: Drawer, b: Rectangle) {
-        updateAnimation()
-        boundingBox = b
-
-        drawer.fontMap = selectorBoxesFm
-        drawer.fill = if(isCurrent) ColorRGBa.BLACK else ColorRGBa.WHITE
-        drawer.writer {
-            box = headerBox
-            cursor.x = headerBox.center.x - textWidth(title) / 2.0
-            cursor.y = headerBox.center.y + selectorBoxesFm.height / 2.0
-            text(title)
-        }
-    }
-
-    val origin = Vector2(80.0, 160.0)
-    val selectorBoxesFm = loadFont("data/fonts/default.otf", 22.0)
-
-    var initialT = System.currentTimeMillis()
-
-    open fun draw(drawer: Drawer, bounds: Rectangle) {
-        beforeDraw(drawer, bounds)
     }
 }

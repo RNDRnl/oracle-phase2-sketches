@@ -1,3 +1,4 @@
+
 package v05.filters
 
 import org.openrndr.MouseEvent
@@ -8,20 +9,28 @@ import org.openrndr.svg.loadSVG
 import v05.*
 import java.io.File
 
-class Discover(articles: List<Article>): FilterMenu(articles) {
+
+class Discover: FilterMenu() {
 
     init {
         icon = loadSVG(File("data/icons/discoverIcon.svg"))
         title = "DISCOVER & FILTER"
         subtitle = "FACULTIES, TOPICS, TITLES & AUTHORS"
+
+        actionBounds = Rectangle(10.0, 0.0, boundsWidth, boundsHeight)
+
+        buttonDown.listen {
+            it.cancelPropagation()
+        }
+
+        buttonUp.listen {
+            if (it.position in actionBounds.copy(height =  80.0)) {
+                expanded = !expanded
+            }
+        }
     }
 
-    val topicFilter = TopicFilter(topicNames)
-    val articleFilter = ArticleFilter(articles.map { it.title + " | " + it.author }, articles)
-
-    override val filters = listOf(facultyFilter, topicFilter, dateFilter, articleFilter)
-
-    override fun dragged(e: MouseEvent) {
+    /*override fun dragged(e: MouseEvent) {
         super.dragged(e)
         if(articleFilter.isVisible) {
             articleFilter.dragged(e)
@@ -64,27 +73,20 @@ class Discover(articles: List<Article>): FilterMenu(articles) {
                 }
             }
         }
-    }
+    }*/
 
     override fun draw(drawer: Drawer) {
 
-        updateAnimation()
-        drawer.drawStyle.clip = bounds
-
-        val expandedY = drawer.height * 0.75 * expandT
-        bounds = Rectangle(
+        val expandedY = drawer.height * 0.75 * animations.expandT
+        actionBounds = Rectangle(
             10.0,
-            (drawer.height - boundsHeight * 2 - 10.0) - expandedY,
+            (drawer.height - boundsHeight * 2) - drawer.height * 0.75 * animations.expandT,
             boundsWidth,
             boundsHeight + expandedY)
 
         drawBasics(drawer)
 
-        if(visible) {
-            filters.forEach {
-                it.draw(drawer, bounds)
-            }
-        }
     }
 
 }
+

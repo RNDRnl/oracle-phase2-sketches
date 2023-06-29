@@ -4,36 +4,13 @@ import org.openrndr.MouseEvent
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
 import org.openrndr.math.map
-import org.openrndr.math.max
 import org.openrndr.shape.LineSegment
 import org.openrndr.shape.Rectangle
 
 
-class DateFilterModel: FilterModel() {
+class DateFilter(val drawer: Drawer, val model: DateFilterModel): Filter() {
 
-    override val list = listOf(1900, 2000)
-    override val states = list.map { DateFilterState(it) }
-    val filteredList: List<Int>
-        get() = filter()
-
-    fun filter(): List<Int> {
-        val low = minOf(states[0].year, states[1].year).toInt()
-        val high = maxOf(states[0].year, states[1].year).toInt()
-        return listOf(low, high)
-    }
-
-    init {
-        states.forEachIndexed { i, it ->
-            it.stateChanged.listen {
-                filterChanged.trigger(Unit)
-            }
-        }
-    }
-}
-
-class DateFilterNew(val drawer: Drawer, val model: DateFilterModel): FilterNew() {
-
-    override var isVisible = true
+    override var visible = true
 
     inner class Selector(var state: DateFilterState) {
         var pos: Double
@@ -48,16 +25,28 @@ class DateFilterNew(val drawer: Drawer, val model: DateFilterModel): FilterNew()
     val selectors = model.states.map { Selector(it) }
     var closestSelector: Selector? = null
 
-    override val bounds = Rectangle(80.0, 90.0 + 32.0, 460.0, 32.0)
-    override var headerBox = Rectangle(bounds.x, (bounds.height - 125.0), bounds.width, 120.0).offsetEdges(-20.0)
+    init {
+        actionBounds = Rectangle(80.0, 90.0 + 32.0 + 600.0, 460.0, 150.0)
+        buttonDown.listen {
+            it.cancelPropagation()
+        }
+
+        dragged.listen {
+            val mappedPosition = map(actionBounds.x, actionBounds.x + actionBounds.width, 0.0, 1.0, it.position.x)
+            closestSelector?.pos = mappedPosition.coerceIn(0.0, 1.0)
+        }
+
+        buttonUp.listen {
+            closestSelector = null
+        }
+    }
 
     fun buttonUp(e: MouseEvent) {
         closestSelector = null
     }
 
     override fun draw() {
-
-        val rail = LineSegment(bounds.x, bounds.center.y, bounds.width, bounds.center.y)
+        val rail = LineSegment(actionBounds.x, actionBounds.center.y, actionBounds.width, actionBounds.center.y)
 
         drawer.stroke = ColorRGBa.WHITE
         drawer.lineSegment(rail)

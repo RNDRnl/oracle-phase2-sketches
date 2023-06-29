@@ -9,65 +9,47 @@ import org.openrndr.extra.shapes.toRounded
 import org.openrndr.shape.Rectangle
 import v05.*
 
-class FacultyFilterModel: FilterModel() {
+class FacultyFilter(val drawer: Drawer, val model: FacultyFilterModel): Filter() {
 
-    override val list = facultyNames
-    override val states = list.map { ToggleFilterState() }
-    val filteredList: List<String>
-        get() = filter()
-
-    fun filter(): List<String> {
-        return list.filterIndexed { i, _ -> states[i].visible  }
-    }
+    override var visible = true
+    override var isCurrent = true
+    var isMinimized = false
+    override var title = "FACULTIES"
 
     init {
-        states.forEach {
-            it.stateChanged.listen {
-                if (states.none { it.visible }) {
-                    states.forEach {
-                        it.visible = true
-                    }
+        actionBounds = Rectangle(10.0, 0.0, 460.0, 600.0)
+
+        buttonDown.listen {
+            it.cancelPropagation()
+            for (i in model.states.indices) {
+                if (it.position in itemBox(i)) {
+                    model.states[i].visible = !model.states[i].visible
                 }
-                filterChanged.trigger(Unit)
             }
         }
     }
 
-    fun reset() {
-        states.forEach { it.visible = true }
+    fun itemBox(i: Int): Rectangle {
+        val offsetX = if(isMinimized) 30.0 else 0.0
+
+        return Rectangle(
+            actionBounds.x - (offsetX * 2.1),
+            i * 30.0 + (25.0 * i) + actionBounds.y,
+            80.0 - offsetX,
+            30.0
+        )
     }
-
-}
-
-class FacultyFilterNew(val drawer: Drawer, val model: FacultyFilterModel): FilterNew() {
-
-    var isMinimized = false
-    override var title = "FACULTIES"
-
-    override var headerBox = Rectangle(80.0, 90.0, 460.0 * 0.3, 32.0)
-    override val bounds = Rectangle(80.0, 90.0 + 32.0, 460.0, 600.0)
 
     val facultyAbbrFm = loadFont("data/fonts/Roboto-Regular.ttf", 18.0)
     val facultyFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 16.0)
 
     override fun draw() {
 
-        val offsetX = if(isMinimized) 30.0 else 0.0
-
-        drawer.stroke = ColorRGBa.WHITE
-        drawer.fill = if(isCurrent) ColorRGBa.WHITE else null
-        drawer.rectangle(headerBox)
-
-        if(isVisible) {
+        if(visible) {
             model.states.forEachIndexed { i, state ->
 
                 val item = model.list[i]
-                val itemBox = Rectangle(
-                    bounds.x - (offsetX * 2.1),
-                    i * 30.0 + (25.0 * i) + bounds.y,
-                    80.0 - offsetX,
-                    30.0
-                )
+                val itemBox = itemBox(i)
 
                 drawer.writer {
                     gaplessNewLine()

@@ -3,7 +3,6 @@ package v05
 import org.openrndr.*
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.*
-import org.openrndr.events.listen
 import org.openrndr.extra.compositor.compose
 import org.openrndr.extra.compositor.draw
 import org.openrndr.extra.compositor.layer
@@ -15,6 +14,7 @@ import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import v05.extensions.IdleDetector
 import v05.filters.*
+import v05.libs.UIManager
 
 
 fun Program.pc05(data: DataModel, state: State) {
@@ -22,37 +22,30 @@ fun Program.pc05(data: DataModel, state: State) {
     val camera = Camera2D()
 
     val slider = Slider(Vector2(width / 2.0, height - 60.0))
+    val discover = Discover()
+    val selectorBoxes = SelectorBoxes()
 
+    val facultyFilterModel = FacultyFilterModel()
+    val facultyFilter = FacultyFilter(drawer, facultyFilterModel)
 
-    // filters
+    val topicFilterModel = TopicFilterModel()
+    val topicFilter = TopicFilter(drawer, topicFilterModel).apply { visible = false }
 
-    val facultyFilterModel = FacultyFilterModel(state)
-    val facultyFilter = FacultyFilterNew(drawer, facultyFilterModel)
+    val dateFilterModel = DateFilterModel()
+    val dateFilter = DateFilter(drawer, dateFilterModel).apply { visible = false }
 
-    val topicFilterModel = TopicFilterModel(state)
-    val topicFilter = TopicFilterNew(drawer, topicFilterModel)
-
-    val dateFilterModel = DateFilterModel(state)
-    val dateFilter = DateFilterNew(drawer, dateFilterModel)
+    val articleFilter = ArticleFilter(drawer, data.articles)
 
     state.facultyFilter = facultyFilterModel
     state.topicFilter = topicFilterModel
     state.dateFilter = dateFilterModel
 
-    facultyFilterModel.filterChanged.listen {
-        state.filterChanged()
+    val uiManager = UIManager(mouse)
+    val uiElements = listOf(camera, slider, discover, selectorBoxes, facultyFilter, topicFilter, dateFilter, articleFilter)
+
+    uiElements.forEach {
+        uiManager.elements.add(it)
     }
-
-    topicFilterModel.filterChanged.listen {
-        state.filterChanged()
-    }
-
-    dateFilterModel.filterChanged.listen {
-        state.filterChanged()
-    }
-
-
-    val sidebar = Sidebar(data, state, drawer.bounds.offsetEdges(-20.0), mouse)
 
     val idleDetector = extend(IdleDetector())
 
@@ -65,55 +58,24 @@ fun Program.pc05(data: DataModel, state: State) {
     }
 
 
-    sidebar.filtersChanged.listen { fe ->
+/*    sidebar.filtersChanged.listen { fe ->
         state.filterSet = fe
         if(sidebar.currentArticle != null) {
             val v = data.articlesToPoints[sidebar.currentArticle]
             v?.let { camera.centerAt(it) }
         }
+    }*/
+
+    facultyFilterModel.filterChanged.listen {
+        state.filterChanged()
     }
 
-    val obstacles = listOf(slider.bounds)
-
-    listOf(mouse.buttonDown, mouse.buttonUp).listen {
-        if(slider.visible) {
-            val obst = obstacles.firstOrNull { o -> it.position in o.offsetEdges(5.0) }
-            camera.inUiElement = obst != null
-        }
-        // val e = EventObject(it.type, data.activePoints, camera.mappedZoom)
+    topicFilterModel.filterChanged.listen {
+        state.filterChanged()
     }
 
-    mouse.buttonDown.listen {
-        slider.buttonDown(it)
-        camera.buttonDown(it)
-        sidebar.buttonDown(it)
-        //filter.buttonDown(it)
-    }
-
-    mouse.buttonUp.listen {
-
-        slider.buttonUp(it)
-
-        //filter.buttonUp(it)
-        if(it.position in sidebar.bounds) {
-            sidebar.buttonUp(it)
-        } else {
-            state.changed.trigger(Unit)
-        }
-        camera.buttonUp(it)
-    }
-
-    mouse.scrolled.listen {
-        //camera.scrolled(it)
-    }
-
-    mouse.dragged.listen {
-        if(sidebar.opened && it.position in sidebar.bounds) {
-            sidebar.dragged(it)
-        } else {
-            camera.dragged(it)
-            slider.dragged(it)
-        }
+    dateFilterModel.filterChanged.listen {
+        state.filterChanged()
     }
 
     camera.changed.listen {
@@ -197,12 +159,48 @@ fun Program.pc05(data: DataModel, state: State) {
                 drawer.stroke = ColorRGBa.WHITE
                 drawer.circle(state.lookAt, 40.0)
 
-                slider.draw(drawer)
             }
 
             layer {
                 draw {
-                    sidebar.draw(drawer)
+
+                    val filters = listOf(facultyFilter, topicFilter, dateFilter, articleFilter)
+
+                    discover.draw(drawer)
+
+                    facultyFilter.actionBounds = Rectangle(discover.actionBounds.x + 50.0, discover.actionBounds.y + 140.0, discover.actionBounds.width - 50.0, discover.actionBounds.height - 180.0 - 150.0 )
+                    topicFilter.actionBounds = facultyFilter.actionBounds
+                    dateFilter.actionBounds = Rectangle(facultyFilter.actionBounds.x, facultyFilter.actionBounds.y + facultyFilter.actionBounds.height, facultyFilter.actionBounds.width, 150.0)
+                    articleFilter.actionBounds = facultyFilter.actionBounds.movedBy(Vector2(facultyFilter.actionBounds.width, 0.0))
+
+                    selectorBoxes.draw(drawer, discover.actionBounds)
+
+                    when(selectorBoxes.current) {
+                        0 -> {
+                            facultyFilter.isMinimized = false
+                            facultyFilter.visible = true
+                            topicFilter.visible = false
+                            articleFilter.visible = false
+                        }
+                        1 -> {
+                            facultyFilter.visible = true
+                            facultyFilter.isMinimized = true
+                            topicFilter.visible = true
+                            articleFilter.visible = false
+                        }
+                        2 -> {
+                            facultyFilter.isMinimized = true
+                            facultyFilter.visible = true
+                            topicFilter.visible = true
+                            articleFilter.visible = true
+                        }
+                    }
+
+                    filters.forEachIndexed { i, it ->
+                        it.draw()
+                    }
+
+                    slider.draw(drawer)
                 }
             }
             layer {
@@ -220,6 +218,7 @@ fun Program.pc05(data: DataModel, state: State) {
     extend {
 
         c.draw(drawer)
+       // uiManager.drawDebugBoxes(drawer)
 
     }
 

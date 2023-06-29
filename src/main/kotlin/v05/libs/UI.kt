@@ -2,9 +2,16 @@ package v05.libs
 
 import org.openrndr.MouseEvent
 import org.openrndr.MouseEvents
+import org.openrndr.animatable.Animatable
+import org.openrndr.color.ColorRGBa
+import org.openrndr.draw.Drawer
+import org.openrndr.draw.isolated
 import org.openrndr.events.Event
+import org.openrndr.extra.noise.uniformRing
 import org.openrndr.math.Vector2
+import org.openrndr.math.Vector3
 import org.openrndr.shape.Rectangle
+import kotlin.random.Random
 
 interface UIElement: MouseEvents {
     val zOrder: Int
@@ -59,5 +66,31 @@ class UIManager(mouseEvents: MouseEvents) {
         }
     }
     val elements = mutableListOf<UIElement>()
+
+    fun drawDebugBoxes(drawer: Drawer) {
+        drawer.isolated {
+            drawer.defaults()
+            drawer.fill = null
+            drawer.rectangles {
+                elements.mapIndexed { i, it ->
+                    val v = Vector3.uniformRing(0.0, 1.0, Random(i))
+                    this.stroke = ColorRGBa.fromVector(v)
+                    this.rectangle(it.actionBounds)
+                }
+            }
+
+            drawer.fill = ColorRGBa.GREEN
+            for(e in elements) {
+                val rect = e.actionBounds
+                e::class.simpleName?.let { drawer.text(it, rect.center) }
+            }
+
+            if (dragElement != null) {
+                drawer.fill = ColorRGBa.WHITE.opacify(0.2)
+                drawer.rectangle(dragElement!!.actionBounds)
+            }
+        }
+
+    }
 }
 

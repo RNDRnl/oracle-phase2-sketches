@@ -14,37 +14,34 @@ import org.openrndr.shape.Rectangle
 import org.openrndr.svg.loadSVG
 import v05.Article
 import v05.facultyNames
+import v05.libs.UIElementImpl
 
-open class FilterMenu(articles: List<Article>): Animatable() {
+open class FilterMenu: UIElementImpl() {
 
-    val changed = Event<Unit>()
+    inner class Animations: Animatable() {
+        var expandT = 0.0
 
+        fun expand() {
+            ::expandT.animate(1.0, 1000, Easing.CubicInOut)
+        }
 
-    val facultyFilter = FacultyFilter(facultyNames)
-    val dateFilter = DateFilter((1900..2023).map { it.toString() })
-    open val filters = listOf(facultyFilter, dateFilter)
+        fun compress() {
+            ::expandT.animate(0.0, 1000, Easing.CubicInOut)
+        }
+    }
+    val animations = Animations()
 
-    var visible = false
     var expanded = false
         set(value) {
-            cancel()
-            if (!field && value) expand() else if (field && !value) compress()
+            animations.cancel()
+            if (!field && value) animations.expand() else if (field && !value) animations.compress()
 
             field = value
         }
-    var expandT = 0.0
 
-    private fun expand() {
-        ::expandT.animate(1.0, 1000, Easing.CubicInOut)
-    }
-
-    private fun compress() {
-        ::expandT.animate(0.0, 1000, Easing.CubicInOut)
-    }
 
     val boundsWidth = 460.0
     val boundsHeight = 80.0
-    var bounds = Rectangle(0.0, 0.0, boundsWidth, boundsHeight)
 
     var icon = loadSVG("<svg></svg>")
     var title = ""
@@ -52,7 +49,7 @@ open class FilterMenu(articles: List<Article>): Animatable() {
 
     val titleFm = loadFont("data/fonts/Roboto-Regular.ttf", 28.0)
     val subtitleFm = loadFont("data/fonts/Roboto-Regular.ttf", 12.0)
-
+/*
     open fun dragged(e: MouseEvent) {
         e.cancelPropagation()
 
@@ -85,33 +82,32 @@ open class FilterMenu(articles: List<Article>): Animatable() {
         } else {
             filters.minus(dateFilter).firstOrNull { it.isVisible }?.lastPos = e.position
         }
-    }
+    }*/
 
     fun drawBasics(drawer: Drawer) {
+
+        animations.updateAnimation()
 
         drawer.stroke = ColorRGBa.RED
         drawer.fill = null
 
-        drawer.translate(bounds.corner)
-
         drawer.stroke = ColorRGBa.WHITE.opacify(0.4)
         drawer.fill = null
-        drawer.lineSegment(Vector2.ZERO, Vector2(bounds.width, 0.0))
+        drawer.lineSegment(actionBounds.corner, Vector2(actionBounds.corner.x + actionBounds.width, actionBounds.corner.y))
 
         icon.root.transform = buildTransform {
-            translate(40.0, 40.0)
+            translate(actionBounds.corner + (icon.bounds.dimensions / 4.0))
             scale(0.5)
-            translate(-icon.root.bounds.center)
         }
         drawer.composition(icon)
 
         drawer.fill = ColorRGBa.WHITE.opacify(0.8)
         drawer.stroke = null
         drawer.fontMap = titleFm
-        drawer.text(title, 80.0, 40.0)
+        drawer.text(title, actionBounds.corner + Vector2(80.0, 40.0))
 
         drawer.fontMap = subtitleFm
-        drawer.text(subtitle, 80.0, 45.0 + titleFm.height)
+        drawer.text(subtitle, actionBounds.corner + Vector2(80.0,  45.0 + titleFm.height))
 
     }
 

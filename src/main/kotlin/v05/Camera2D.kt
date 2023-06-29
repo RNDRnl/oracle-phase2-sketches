@@ -10,9 +10,11 @@ import org.openrndr.math.Vector2
 import org.openrndr.math.Vector4
 import org.openrndr.math.map
 import org.openrndr.math.transforms.buildTransform
+import org.openrndr.shape.Rectangle
+import v05.libs.UIElementImpl
 import kotlin.math.*
 
-class Camera2D : Extension, ChangeEvents {
+class Camera2D : Extension, ChangeEvents, UIElementImpl() {
     override var enabled = true
 
     val zoomSpeed = 0.1
@@ -90,31 +92,30 @@ class Camera2D : Extension, ChangeEvents {
     private var velocity = Vector2(0.0, 0.0)
     private var potentialVelocity = Vector2(0.0, 0.0)
 
-    fun buttonDown(mouse: MouseEvent) {
-        if (!inUiElement) {
-            lastMousePosition = mouse.position
+    init {
+        val w = RenderTarget.active.width.toDouble()
+        val h = RenderTarget.active.height.toDouble()
+        actionBounds = Rectangle(0.0, 0.0, w, h)
+
+
+        buttonDown.listen {
+            it.cancelPropagation()
+            lastMousePosition = it.position
+            potentialVelocity = Vector2.ZERO
         }
-        potentialVelocity = Vector2.ZERO
-    }
-    fun buttonUp(mouse: MouseEvent) {
-        if (!inUiElement) {
+
+        buttonUp.listen {
             velocity = potentialVelocity
             view = buildTransform {
                 translate(velocity)
             } * view
         }
-    }
 
-    fun dragged(mouse: MouseEvent) {
-        /*if (!mouse.propagationCancelled) {
-
-        }*/
-
-        if (!inUiElement) {
-            potentialVelocity =mouse.position - lastMousePosition
-            lastMousePosition = mouse.position
+        dragged.listen {
+            potentialVelocity = it.position - lastMousePosition
+            lastMousePosition = it.position
             view = buildTransform {
-                translate(mouse.dragDisplacement)
+                translate(it.dragDisplacement)
             } * view
             dirty = true
         }
