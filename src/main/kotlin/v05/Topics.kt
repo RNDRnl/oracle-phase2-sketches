@@ -1,7 +1,5 @@
 package v05
 
-import org.openrndr.color.ColorRGBa
-
 val topicNames = listOf(
     "general sciences", "mathematics",
     "computer science", "physics", "electrical engineering",

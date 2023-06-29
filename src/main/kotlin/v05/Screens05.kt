@@ -8,6 +8,7 @@ import org.openrndr.launch
 import org.openrndr.math.*
 import org.openrndr.shape.Rectangle
 import v05.filters.FilterSet
+import v05.model.FilteredDataModel
 import kotlin.concurrent.thread
 
 
@@ -47,13 +48,15 @@ fun main() = application {
     program {
 
         val data = DataModel(Rectangle(Vector2.ZERO, 1920.0, 1080.0))
+        val filteredDataModel = FilteredDataModel(data.articles)
+
         var frames = Rectangle(0.0, 0.0, 2560 * 4.0, 1080.0 * 3)
             .grid(4, 3)
             .flatten()
             .slice(setOf(0, 1, 4, 5, 6, 7, 8, 9))
 
         var screens = frames.mapIndexed { i, r ->
-            val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenProgram(i, r, data) }
+            val vb = viewBox(Rectangle(0.0, 0.0, 2560.0, 1080.0)) { screenProgram(i, r, data, filteredDataModel) }
             val update: (msg: ScreenMessage) -> Unit by vb.userProperties
             vb to update
         }
@@ -68,7 +71,7 @@ fun main() = application {
                     .slice(setOf(0, 1, 2, 4))
 
                 screens = frames.mapIndexed { i, r ->
-                    val vb = viewBox(Rectangle(0.0, 0.0, 1920.0, 1080.0)) { screenProgram(i, r, data) }
+                    val vb = viewBox(Rectangle(0.0, 0.0, 1920.0, 1080.0)) { screenProgram(i, r, data, filteredDataModel) }
                     val update: (msg : ScreenMessage) -> Unit by vb.userProperties
                     vb to update
                 }
@@ -147,6 +150,8 @@ fun main() = application {
             println("number of articles: ${newArticles.size}")
 
             launch {
+                filteredDataModel.filter = e.filterSet
+
                 if (e.screenMode == NAVIGATE) {
                     if (zoomLevel < 2) {
                         val chunks = HashMap<Int, MutableList<Article>>(8)

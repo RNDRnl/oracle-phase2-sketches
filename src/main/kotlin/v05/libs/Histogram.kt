@@ -4,6 +4,9 @@ import org.openrndr.extra.noise.uniform
 import kotlin.math.abs
 
 fun <T> List<T>.histogramOf(m: (T) -> Int?): Map<Int, Int> {
+    if (this.isEmpty()) {
+        return emptyMap()
+    }
     val result = mutableMapOf<Int, Int>()
 
     for (i in this) {
@@ -29,6 +32,11 @@ fun List<Int>.cumsum() : List<Int> {
 data class Bracket(val start:Int, val endInclusive: Int, val count: Int)
 
 fun Map<Int, Int>.brackets() : List<Bracket> {
+
+    if (this.isEmpty()) {
+        return emptyList()
+    }
+
     val minkey = this.keys.min()
     val maxkey = this.keys.max()
 
@@ -56,7 +64,7 @@ fun List<Pair<Int, Int>>.balancedSplit() : List<List<Pair<Int,Int>>> {
     var split = 1
     var minDiff = Int.MAX_VALUE
 
-    if (this.size == 1) {
+    if (this.size <= 1) {
         return listOf(this)
     }
 

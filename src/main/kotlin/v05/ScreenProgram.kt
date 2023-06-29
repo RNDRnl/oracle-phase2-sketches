@@ -10,6 +10,7 @@ import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import origin
 import v05.filters.FilterSet
+import v05.model.FilteredDataModel
 import v05.screens.IdleMode
 
 
@@ -17,7 +18,7 @@ class ScreenState(var mode: Int = IDLE, var zoomLevel: Int = 0)
 
 class ScreenMessage(val mode:Int, val articles:List<Article>, val zoomLevel: Int, val filters: FilterSet)
 
-fun Program.screenProgram(i: Int, rect: Rectangle, dataModel: DataModel) {
+fun Program.screenProgram(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: FilteredDataModel) {
 
     var articles = listOf<Article>()
 
@@ -38,7 +39,7 @@ fun Program.screenProgram(i: Int, rect: Rectangle, dataModel: DataModel) {
 
     val state = ScreenState(NAVIGATE, 0)
 
-    val zoomLevels = listOf(::Zoom0, ::Zoom1, ::Zoom2).map { it(i, rect, dataModel) }
+    val zoomLevels = listOf(::Zoom0, ::Zoom1, ::Zoom2).map { it(i, rect, dataModel, filteredDataModel) }
     val idleMode = IdleMode(dataModel.articles)
 
 
