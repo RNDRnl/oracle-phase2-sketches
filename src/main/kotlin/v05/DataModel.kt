@@ -13,11 +13,12 @@ import org.openrndr.shape.Rectangle
 import org.openrndr.shape.bounds
 import org.openrndr.shape.map
 import v05.filters.FilterSet
+import v05.libs.brackets
+import v05.libs.histogramOf
 import java.io.Serializable
 import java.math.BigDecimal
 
 class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
-
     private val topicsDf = DataFrame.readCSV("offline-data/zeroshot-all-data-v3.csv")
         .add("topic") {
             val r = getRow(index()).toMap().values
@@ -26,7 +27,6 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
         }
         .move { pathOf("topic") }.toLeft()
         .merge { colsOf<Number>()  }.into("scores")
-
 
     private val articlesDf = DataFrame.read("offline-data/all-data-v3.csv")
         .select{ cols(0..7) }
@@ -55,7 +55,12 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
     val pointsToArticles = (points zip articles).toMap()
     val articlesToPoints = pointsToArticles.entries.associateBy({ it.value }) { it.key }
 
+    val yearBrackets = articles.histogramOf { it.year.toIntOrNull() }.brackets().also {
+        println(it)
+    }
 }
+
+
 
 class State(val model: DataModel) {
 
