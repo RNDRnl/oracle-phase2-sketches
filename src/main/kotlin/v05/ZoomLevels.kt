@@ -15,7 +15,6 @@ import org.openrndr.draw.loadFont
 import org.openrndr.draw.writer
 import org.openrndr.extra.noise.uniform
 import org.openrndr.extra.shapes.grid
-import org.openrndr.ktessellation.arraycopy
 import org.openrndr.math.Vector2
 import org.openrndr.math.map
 import org.openrndr.shape.Circle
@@ -69,43 +68,58 @@ abstract class ZoomLevel(val i: Int, val bounds: Rectangle, val dataModel: DataM
     val stfm = loadFont("data/fonts/default.otf", 80.0, contentScale = 1.0)
 }
 
+class LabelRef(val label: String, val position: Vector2)
+
 class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, dataModel) {
 
-    var rects = listOf<Rectangle>()
-    var color = ColorRGBa.GRAY
-    val slots = mutableListOf<Vector2>()
-    var rColors = mutableListOf<ColorRGBa>()
-    var articlesSorted = dataModel.articles.sortedBy { it.faculty }
-    var highlighted = mutableListOf<Article>()
-    var highlightedFaculties = mutableListOf<String>()
+    private var rects = listOf<Rectangle>()
+    private var color = ColorRGBa.GRAY
+    private val slots = mutableListOf<Vector2>()
+    private var articlesSorted = dataModel.articles.sortedBy { it.faculty }.sortedBy { -it.year.toInt() } //.sortedBy { it.faculty }
+    private var highlighted = mutableListOf<Article>()
+    private var highlightedFaculties = mutableListOf<String>()
+    private var highlightedYears = mutableListOf<Int>()
+    private val listOfLabels = mutableListOf<LabelRef>() // should be place higher up
 
     init {
-        for (j in 0..((rect.height).toInt() - 20)/42) {
-            for (i in 0..(rect.width.toInt() - 20)/10) {
-                slots.add(Vector2(i * 10.0, j * 42.0).plus(Vector2(5.0, 2.0)))
-                rColors.add(ColorRGBa(Math.random(), Math.random(), Math.random()))
+            for (x in 0..(rect.width.toInt() - 20)/10) {
+                for (y in 0..((rect.height).toInt() - 20)/42) {
+                    slots.add(Vector2(x * 10.0, y * 42.0).plus(Vector2(5.0, 2.0)))
+                }
             }
-        }
+
+            articlesSorted.forEachIndexed { index, article ->
+                val cIndex = (index + (i * slots.size))
+                if(cIndex < articlesSorted.size && index < slots.size) {
+                    val label = articlesSorted[cIndex].year
+                    if(listOfLabels.filter { it.label == label }.isEmpty() && label.toInt() > 1990) {
+                        val position = slots[index]
+                        listOfLabels.add(LabelRef(label, position))
+                    }
+                }
+            }
     }
 
-    private fun sortingStep() {
-        val pStart = ((articlesSorted.size - 10)*Math.random()).toInt()
-        val subset = articlesSorted.subList(pStart, pStart + 5)
-        val sortedSubset = subset.sortedBy {
-            it.faculty
-        }
-
-        val before = articlesSorted.slice(0 until pStart)
-        val after =  articlesSorted.slice((pStart + 5) until articlesSorted.size)
-        val newSet = before.plus(sortedSubset).plus(after)
-
-        articlesSorted = newSet
-    }
+//    private fun sortingStep() {
+//        val pStart = ((articlesSorted.size - 10)*Math.random()).toInt()
+//        val subset = articlesSorted.subList(pStart, pStart + 5)
+//        val sortedSubset = subset.sortedBy {
+//            it.faculty
+//        }
+//
+//        val before = articlesSorted.slice(0 until pStart)
+//        val after =  articlesSorted.slice((pStart + 5) until articlesSorted.size)
+//        val newSet = before.plus(sortedSubset).plus(after)
+//
+//        articlesSorted = newSet
+//    }
 
     override fun processMessage(message: ScreenMessage) {
-
         highlighted = message.articles.toMutableList()
         highlightedFaculties = message.filters.faculties.toMutableList()
+        for(y in message.filters.dates.first until message.filters.dates.second) {
+            highlightedYears.add(y)
+        }
         if (message.articles.isNotEmpty()) {
             color = message.articles[0].faculty.facultyColor()
             rects = Rectangle(0.0, 0.0, bounds.width, bounds.height).grid(message.articles.size, 1).flatten()
@@ -116,7 +130,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     }
 
     override fun draw(clock: Clock, drawer: Drawer, circle: Circle) {
-//        val sortingSpeed = 1
+//        val sortingSpeed = 10
 //        for(i in 0 until sortingSpeed) {
 //            sortingStep()
 //        }
@@ -124,47 +138,43 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
             drawer.rectangles {
                 articlesSorted.forEachIndexed { index, article ->
                     val cIndex = (index + (i * slots.size))
-                    if(cIndex < articlesSorted.size && index < slots.size) { //
-
-                        val highlighted = highlightedFaculties.contains(articlesSorted[cIndex].faculty)
+                    if(cIndex < articlesSorted.size && index < slots.size) {
+                        val highlighted = highlightedFaculties.contains(articlesSorted[cIndex].faculty) && highlightedYears.contains(articlesSorted[cIndex].year.toInt())
+                        this.stroke = null
                         if(highlighted) {
                             this.fill = articlesSorted[cIndex].faculty.facultyColor()
                         } else {
                             this.fill = articlesSorted[cIndex].faculty.facultyColor().shade(0.25)
-                            this.stroke = null
                         }
                         val position = slots[index]
-                        this.rectangle(Rectangle(position, 10.0 * 0.45, 42.0 * 0.85))
+                        if(highlighted) {
+                            this.rectangle(Rectangle(position, 10.0 * 0.45, 42.0 * 0.85))
+                        } else {
+                            this.rectangle(Rectangle(position, 10.0, 42.0))
+                        }
                     }
                 }
             }
         }
 
-        drawer.isolated { // to be improved
+        drawer.isolated {
             drawer.rectangles {
-                val listOfLabels = mutableListOf<String>()
-                articlesSorted.forEachIndexed { index, article ->
-                    val cIndex = (index + (i * slots.size))
-                    if(cIndex < articlesSorted.size && index < slots.size) {
-                        this.fill = ColorRGBa.WHITE
-                        this.stroke = null
-                        drawer.fontMap = fs
-                        val position = slots[index]
-
-                        if(!listOfLabels.contains(articlesSorted[cIndex].faculty)) {
-                            this.rectangle(Rectangle(position, 2.0, 45.0 * 0.85))
-                            drawer.isolated {
-                                drawer.translate(position.x + 20.0, position.y + 24.0)
-                                drawer.text(articlesSorted[cIndex].faculty, 0.0, 0.0)
-                            }
-                        }
-
-                        listOfLabels.add(articlesSorted[cIndex].faculty)
-                    }
+                listOfLabels.forEach { labelRef ->
+                    this.fill = ColorRGBa.WHITE
+                    this.stroke = null
+                    this.rectangle(Rectangle(labelRef.position.x, 0.0, 4.0, bounds.height))
+                }
+            }
+            listOfLabels.forEach { labelRef ->
+                drawer.isolated {
+                    drawer.fill = ColorRGBa.WHITE
+                    drawer.fontMap = stfm
+                    drawer.translate(labelRef.position.x, (bounds.height) - 0.0)
+                    drawer.rotate(-90.0)
+                    drawer.text(labelRef.label, 0.0, 55.0)
                 }
             }
         }
-
     }
 }
 
