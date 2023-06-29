@@ -20,6 +20,7 @@ import org.openrndr.math.Vector2
 import org.openrndr.math.map
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
+import org.openrndr.shape.bounds
 import v01.simScale
 import v01.toVec2
 import kotlin.random.Random
@@ -395,59 +396,79 @@ class Zoom2(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
     }
 
     private fun multiColumnText(drawer: Drawer, title: String, text: String, cols: Int = 2) {
-        drawer.fontMap = stfm
-        drawer.text(title, drawer.bounds.corner + Vector2(60.0, 120.0))
+        val area = drawer.bounds.grid(1, 1, 40.0, 40.0).flatten().first()
 
-        val rects = Rectangle(50.0, 200.0, drawer.width - 100.0, drawer.height - 200.0)
-            .grid(cols, 1,
-                20.0,
-                30.0,
-                100.0).flatten()
-        var currentRect = 0
+        val rows = area.grid(1, 5, 0.0, 0.0, 100.0, 30.0).flatten()
+        val header = rows[0]
+        val body = rows.drop(1).bounds.grid(3, 1, 0.0, 0.0, 90.0, 0.0).flatten()
+
+        drawer.isolated {
+            drawer.fill = null
+            drawer.rectangles(rows)
+            drawer.rectangles(body)
+        }
+
+        drawer.fontMap = stfm
+        drawer.writer {
+            box = header
+            newLine()
+            text(title)
+        }
 
         drawer.fontMap = fs
-
         drawer.cwriter {
-            boxes = rects
+            boxes = body
             newLine()
             text(text)
         }
     }
 
     private fun singleColumnText(drawer: Drawer, text: String) {
+        val area = drawer.bounds.grid(1, 1, 40.0, 40.0).flatten().first()
         drawer.fontMap = tfm
         drawer.writer {
-            box = drawer.bounds.offsetEdges(-20.0)
+            box = area
             newLine()
             text(text.take((animations.textFade * text.length).toInt()))
         }
     }
 
     private fun books(drawer: Drawer, bookList: List<Article>, text: String = "") {
+        val area = drawer.bounds.grid(1, 1, 40.0, 40.0).flatten().first()
+        val rows = area.grid(1, 5, 0.0, 0.0, 100.0, 30.0).flatten()
+        val header = rows[0]
+        val body = rows.drop(1).bounds.grid(3, 1, 0.0, 0.0, 90.0, 0.0).flatten()
+
         drawer.stroke = null
 
         drawer.fontMap = stfm
-        drawer.text(text, drawer.bounds.corner + Vector2(60.0, 120.0))
+        drawer.writer {
+            box = header
+            newLine()
+            text(text)
+        }
 
         var acc = 0.0
-        drawer.translate(60.0, 0.0)
+        drawer.translate(area.x, area.position(Vector2.ONE).y - 380.0)
         drawer.fontMap = fm
         for((i, sf) in bookList.take((bookList.size * animations.fade).toInt()).withIndex()) {
             val w = Double.uniform(80.0, 160.0, Random(i))
-            val r = Rectangle(acc, drawer.height - 480.0, w,380.0)
+            val r = Rectangle(acc, 0.0, w,380.0)
             drawer.fill = sf.faculty.facultyColor()
             drawer.rectangle(r)
 
             drawer.fill = ColorRGBa.BLACK
 
-            drawer.pushTransforms()
-            drawer.translate(r.x + 50.0, r.y + r.height - 20.0)
-            drawer.rotate(-90.0)
-            drawer.translate(-r.x, -(r.y + r.height))
-            drawer.text(sf.title.uppercase().take(
-                (r.width / fm.characterWidth('"')).toInt()
-            ), r.x, r.y + r.height)
-            drawer.popTransforms()
+            drawer.isolated {
+                drawer.translate(r.x + 50.0, r.y + r.height - 20.0)
+                drawer.rotate(-90.0)
+                drawer.translate(-r.x, -(r.y + r.height))
+                drawer.text(
+                    sf.title.uppercase().take(
+                        (r.width / fm.characterWidth('"')).toInt()
+                    ), r.x, r.y + r.height
+                )
+            }
 
             acc += w + 10.0
         }
