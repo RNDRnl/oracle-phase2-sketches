@@ -1,5 +1,6 @@
 package v05
 
+import lib.cwriter
 import orbox.matrix44
 import orbox.polygonShape
 import org.jbox2d.common.Vec2
@@ -404,16 +405,12 @@ class Zoom2(i: Int, rect: Rectangle, dataModel: DataModel) : ZoomLevel(i, rect, 
                 100.0).flatten()
         var currentRect = 0
 
-        drawer.fontMap = fm
-        drawer.writer {
-            box = rects[currentRect]
-            for(char in text.take((animations.textFade * text.length).toInt())) {
-                if(cursor.y > rects[currentRect].height - 20.0 && currentRect < rects.size - 1) {
-                    currentRect++
-                    box = rects[currentRect]
-                }
-                text(char.toString())
-            }
+        drawer.fontMap = fs
+
+        drawer.cwriter {
+            boxes = rects
+            newLine()
+            text(text)
         }
     }
 
