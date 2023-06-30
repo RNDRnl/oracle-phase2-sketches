@@ -1,5 +1,6 @@
 package v05
 
+import kotlinx.coroutines.yield
 import org.openrndr.*
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.*
@@ -41,7 +42,7 @@ fun Program.pc05(data: DataModel, state: State) {
     state.topicFilter = topicFilterModel
     state.dateFilter = dateFilterModel
 
-    val uiManager = UIManager(mouse)
+    val uiManager = UIManager(window, mouse)
     val uiElements = listOf(camera, slider, discover, selectorBoxes, facultyFilter, topicFilter, dateFilter, articleFilter)
 
     uiElements.forEach {
@@ -235,10 +236,18 @@ fun Program.pc05(data: DataModel, state: State) {
             }
         }
     }
+    launch {
+        while (true) {
+            uiManager.update()
+            yield()
+        }
+    }
+
+    window.presentationMode = PresentationMode.MANUAL
 
     extend(camera)
     extend {
-        uiManager.update()
+
         c.draw(drawer)
         //uiManager.drawDebugBoxes(drawer)
 

@@ -1,9 +1,6 @@
 package v05.libs
 
-import org.openrndr.MouseButton
-import org.openrndr.MouseEvent
-import org.openrndr.MouseEventType
-import org.openrndr.MouseEvents
+import org.openrndr.*
 import org.openrndr.animatable.Animatable
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
@@ -41,9 +38,10 @@ open class UIElementImpl : UIElement {
     override val scrolled: Event<MouseEvent> = Event("ui-element-scrolled")
 }
 
-class UIManager(mouseEvents: MouseEvents) {
+class UIManager(val window: Window, mouseEvents: MouseEvents) {
     var activeElement: UIElement? = null
     var dragElement: UIElement? = null
+    var postDragElement: UIElement? = null
 
     private var lastMousePosition = Vector2(0.0, 0.0)
     private var velocity = Vector2(0.0, 0.0)
@@ -56,6 +54,7 @@ class UIManager(mouseEvents: MouseEvents) {
                 for (e in elements.filter { it.visible && event.position in it.actionBounds }.sortedBy { it.zOrder }) {
                     e.buttonDown.trigger(event)
                     if (event.propagationCancelled) {
+                        window.requestDraw()
                         activeElement = e
                         dragElement = e
                     }
@@ -65,6 +64,7 @@ class UIManager(mouseEvents: MouseEvents) {
 
         mouseEvents.dragged.listen { event ->
             if (dragElement != null) {
+                window.requestDraw()
                 potentialVelocity = event.position - lastMousePosition
                 lastMousePosition = event.position
             }
@@ -74,10 +74,10 @@ class UIManager(mouseEvents: MouseEvents) {
 
         mouseEvents.buttonUp.listen { event ->
             activeElement?.buttonUp?.trigger(event)
-
             if (dragElement != null) {
                 velocity = potentialVelocity
-                //dragElement = null
+                postDragElement = dragElement
+                dragElement = null
             }
         }
     }
@@ -87,10 +87,12 @@ class UIManager(mouseEvents: MouseEvents) {
         velocity *= 0.9
         if (velocity.length < 0.01) {
             velocity = Vector2.ZERO
+            postDragElement = null
         } else {
-            if (dragElement != null) {
+            if (postDragElement != null) {
+                window.requestDraw()
                 lastMousePosition += velocity
-                dragElement?.dragged?.trigger(MouseEvent(lastMousePosition, Vector2.ZERO, velocity, MouseEventType.DRAGGED, MouseButton.NONE, emptySet()))
+                postDragElement?.dragged?.trigger(MouseEvent(lastMousePosition, Vector2.ZERO, velocity, MouseEventType.DRAGGED, MouseButton.NONE, emptySet()))
             }
         }
     }

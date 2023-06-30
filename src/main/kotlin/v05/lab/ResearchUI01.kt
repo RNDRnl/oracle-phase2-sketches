@@ -59,7 +59,7 @@ fun main() {
             }
 
 
-            val uiManager = UIManager(mouse)
+            val uiManager = UIManager(window, mouse)
 
             val sliders = (0 until 10).map {
                 Slider(
