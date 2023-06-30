@@ -103,6 +103,8 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
     private val slots = mutableListOf<Slot>()
     private var articlesSorted = dataModel.articlesSorted[sortingMethod]!!
 
+
+
     private var highlighted = mutableListOf<Article>()
     private var highlightedFaculties = mutableListOf<String>()
     private var highlightedYears = mutableListOf<Int>()
@@ -192,10 +194,17 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
                                 when(sortingMethod) {
                                     SortMode.FACULTY_YEAR -> {
                                         drawer.fontMap = stfm
-                                        val yl = dataModel.yearLabels
-                                        val yOffset = map(yl.min().toDouble(), yl.max().toDouble(), 0.0, bounds.height-160.0, label.toDouble())
+                                        val count = filteredDataModel.groupedByYear[articlesSorted[cIndex].year.toInt()]?.size ?: 0
+                                        val smallest = filteredDataModel.groupedByYear.values.minBy { it.size }.size
+                                        val biggest = filteredDataModel.groupedByYear.values.maxBy { it.size }.size
+                                        val yOffset = map(
+                                            smallest.toDouble(),
+                                            biggest.toDouble(),
+                                            bounds.height-160.0, 0.0,
+                                            count.toDouble()
+                                        )
 
-                                        drawer.translate(position.x, 150.0 + yOffset)
+                                        drawer.translate(position.x, 150+(yOffset))
                                         drawer.rotate(-90.0)
                                         drawer.text(label, 0.0, 55.0)
                                     }

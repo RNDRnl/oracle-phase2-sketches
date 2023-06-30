@@ -92,7 +92,7 @@ fun main() = application {
                         FilterSet(
                             facultyNames.shuffled().take(2),
                             listOf(""),
-                            Pair(1900, 2023)
+                            Pair(1900+(Math.random()*50).toInt(), 2023-(Math.random()*10).toInt())
                         )
                     )
                 )
