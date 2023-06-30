@@ -22,7 +22,7 @@ import java.io.Serializable
 import java.math.BigDecimal
 
 class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
-    private val topicsDf = DataFrame.readCSV("offline-data/zeroshot-all-data-v3.csv")
+    private val topicsDf = DataFrame.readCSV("offline-data/zeroshot-all-data-v5.csv")
         .add("topic") {
             val r = getRow(index()).toMap().values
             val i = r.indexOf(rowMax())
@@ -31,8 +31,8 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
         .move { pathOf("topic") }.toLeft()
         .merge { colsOf<Number>()  }.into("scores")
 
-    private val articlesDf = DataFrame.read("offline-data/all-data-v3.csv")
-        .select{ cols(0..7) }
+    private val articlesDf = DataFrame.read("offline-data/all-data-v5.csv")
+        .select{ cols(0..12) }
         .fillNulls("faculty").with { "Unknown Faculty" }
         .convert("faculty").with { (it as String).correctedFaculty() }
         .fillNulls("abstract").with { "No abstract provided" }
@@ -44,7 +44,7 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
 
     val pos by column<Vector2>()
 
-    private val pointsDf = DataFrame.read("offline-data/all-data-v3-umap-2d.csv")
+    private val pointsDf = DataFrame.read("offline-data/umap-2d-v5.csv")
         .take(articlesDf.rowsCount())
         .merge { "x"<Double>() and "y"() }
         .by { Vector2(it[0], it[1]) }
@@ -160,8 +160,8 @@ data class Article(
     @ColumnName("abstract")
     val abstract: String,
 
-    @ColumnName("uuid")
-    val uuid: String,
+//    @ColumnName("uuid")
+//    val uuid: String,
 
     @ColumnName("topic")
     val topic: String,
