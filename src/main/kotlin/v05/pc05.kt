@@ -238,7 +238,7 @@ fun Program.pc05(data: DataModel, state: State) {
 
     extend(camera)
     extend {
-
+        uiManager.update()
         c.draw(drawer)
         //uiManager.drawDebugBoxes(drawer)
 
