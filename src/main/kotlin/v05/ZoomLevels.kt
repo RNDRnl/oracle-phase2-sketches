@@ -76,10 +76,11 @@ abstract class ZoomLevel(
 class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: FilteredDataModel) :
     ZoomLevel(i, rect, dataModel, filteredDataModel) {
 
+    private val sortingMethod = SortMode.YEAR_FACULTY
     private var rects = listOf<Rectangle>()
     private var color = ColorRGBa.GRAY
     private val slots = mutableListOf<Vector2>()
-    private var articlesSorted = dataModel.articlesSorted[SortMode.FACULTY_YEAR]!!
+    private var articlesSorted = dataModel.articlesSorted[sortingMethod]!!
 
     private var highlighted = mutableListOf<Article>()
     private var highlightedFaculties = mutableListOf<String>()
@@ -150,13 +151,26 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
                             if(d > 50) {
                                 drawer.fill = ColorRGBa.WHITE
                                 drawer.rectangle(Rectangle(position.x, 0.0, 4.0, bounds.height))
-                                drawer.fontMap = stfm
-                                val yl = dataModel.yearLabels
-                                val yOffset = map(yl.min().toDouble(), yl.max().toDouble(), 0.0, bounds.height-160.0, label.toDouble())
 
-                                drawer.translate(position.x, 150.0 + yOffset)
-                                drawer.rotate(-90.0)
-                                drawer.text(label, 0.0, 55.0)
+
+                                when(sortingMethod) {
+                                    SortMode.FACULTY_YEAR -> {
+                                        drawer.fontMap = stfm
+                                        val yl = dataModel.yearLabels
+                                        val yOffset = map(yl.min().toDouble(), yl.max().toDouble(), 0.0, bounds.height-160.0, label.toDouble())
+
+                                        drawer.translate(position.x, 150.0 + yOffset)
+                                        drawer.rotate(-90.0)
+                                        drawer.text(label, 0.0, 55.0)
+                                    }
+                                    SortMode.YEAR_FACULTY -> {
+                                        drawer.fontMap = fm
+                                        drawer.translate(position.x, bounds.height)
+                                        drawer.rotate(-90.0)
+                                        drawer.text(label, 0.0, 55.0)
+                                    }
+                                }
+
                                 lastX = position.x
                             }
                         }
