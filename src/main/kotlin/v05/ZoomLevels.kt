@@ -73,20 +73,17 @@ abstract class ZoomLevel(
     val stfm = loadFont("data/fonts/default.otf", 80.0, contentScale = 1.0)
 }
 
-class LabelRef(val label: String, val position: Vector2)
-
 class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: FilteredDataModel) :
     ZoomLevel(i, rect, dataModel, filteredDataModel) {
 
     private var rects = listOf<Rectangle>()
     private var color = ColorRGBa.GRAY
     private val slots = mutableListOf<Vector2>()
-    private var articlesSorted =
-        dataModel.articles.sortedBy { it.faculty }.sortedBy { -it.year.toInt() } //.sortedBy { it.faculty }
+    private var articlesSorted = dataModel.articlesSorted[SortMode.FACULTY_YEAR]!!
+
     private var highlighted = mutableListOf<Article>()
     private var highlightedFaculties = mutableListOf<String>()
     private var highlightedYears = mutableListOf<Int>()
-    private val listOfLabels = mutableListOf<LabelRef>() // should be place higher up
 
     init {
         for (x in 0..(rect.width.toInt() - 20) / 10) {
@@ -94,32 +91,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
                 slots.add(Vector2(x * 10.0, y * 42.0).plus(Vector2(5.0, 2.0)))
             }
         }
-
-        articlesSorted.forEachIndexed { index, article ->
-            val cIndex = (index + (i * slots.size))
-            if (cIndex < articlesSorted.size && index < slots.size) {
-                val label = articlesSorted[cIndex].year
-                if (listOfLabels.filter { it.label == label }.isEmpty() && label.toInt() > 1990) {
-                    val position = slots[index]
-                    listOfLabels.add(LabelRef(label, position))
-                }
-            }
-        }
     }
-
-//    private fun sortingStep() {
-//        val pStart = ((articlesSorted.size - 10)*Math.random()).toInt()
-//        val subset = articlesSorted.subList(pStart, pStart + 5)
-//        val sortedSubset = subset.sortedBy {
-//            it.faculty
-//        }
-//
-//        val before = articlesSorted.slice(0 until pStart)
-//        val after =  articlesSorted.slice((pStart + 5) until articlesSorted.size)
-//        val newSet = before.plus(sortedSubset).plus(after)
-//
-//        articlesSorted = newSet
-//    }
 
     override fun processMessage(message: ScreenMessage) {
         highlighted = message.articles.toMutableList()
@@ -151,7 +123,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
                         if (highlighted) {
                             this.fill = articlesSorted[cIndex].faculty.facultyColor()
                         } else {
-                            this.fill = articlesSorted[cIndex].faculty.facultyColor().shade(0.25)
+                            this.fill = articlesSorted[cIndex].faculty.facultyColor().shade(0.15)
                         }
                         val position = slots[index]
                         if (highlighted) {
@@ -165,20 +137,30 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
         }
 
         drawer.isolated {
-            drawer.rectangles {
-                listOfLabels.forEach { labelRef ->
-                    this.fill = ColorRGBa.WHITE
-                    this.stroke = null
-                    this.rectangle(Rectangle(labelRef.position.x, 0.0, 4.0, bounds.height))
-                }
-            }
-            listOfLabels.forEach { labelRef ->
-                drawer.isolated {
-                    drawer.fill = ColorRGBa.WHITE
-                    drawer.fontMap = stfm
-                    drawer.translate(labelRef.position.x, (bounds.height) - 0.0)
-                    drawer.rotate(-90.0)
-                    drawer.text(labelRef.label, 0.0, 55.0)
+            var lastX = -100.0
+            articlesSorted.forEachIndexed { index, article ->
+                val cIndex = (index + (screenId * slots.size))
+                if(cIndex < articlesSorted.size && index < slots.size) {
+                    val position = slots[index]
+                    val label = articlesSorted[cIndex].label
+
+                    if(label.isNotEmpty()) {
+                        drawer.isolated {
+                            val d = position.x - lastX
+                            if(d > 50) {
+                                drawer.fill = ColorRGBa.WHITE
+                                drawer.rectangle(Rectangle(position.x, 0.0, 4.0, bounds.height))
+                                drawer.fontMap = stfm
+                                val yl = dataModel.yearLabels
+                                val yOffset = map(yl.min().toDouble(), yl.max().toDouble(), 0.0, bounds.height-160.0, label.toDouble())
+
+                                drawer.translate(position.x, 150.0 + yOffset)
+                                drawer.rotate(-90.0)
+                                drawer.text(label, 0.0, 55.0)
+                                lastX = position.x
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -280,8 +262,6 @@ class Zoom1(i: Int, bounds: Rectangle, dataModel: DataModel, filteredDataModel: 
             world.step(1.0f / 200.0f, 100, 100)
 
             drawer.fontMap = fm
-
-
             for ((article, body) in articleBodies) {
 
                 if (body.frame.center.transform(body.body.transform.matrix44()) + this@Zoom1.bounds.corner in circle) {

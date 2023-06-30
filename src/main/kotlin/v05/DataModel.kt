@@ -21,6 +21,11 @@ import v05.filters.TopicFilterModel
 import java.io.Serializable
 import java.math.BigDecimal
 
+enum class SortMode {
+    FACULTY_YEAR,
+    YEAR_FACULTY
+}
+
 class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
     private val topicsDf = DataFrame.readCSV("offline-data/zeroshot-all-data-v5.csv")
         .add("topic") {
@@ -39,6 +44,7 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
         .fillNulls("author").with { "Unknown Author" }
         .fillNulls("contributor","department").with { "" }
         .fillNulls("publication year").with { "No date" }
+        .add("label") { "" }
         .add(topicsDf)
 
 
@@ -62,6 +68,24 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
     val yearBrackets = articles.histogramOf { it.year.toIntOrNull() }.brackets().also {
         println(it)
     }
+
+    var yearLabels = mutableListOf<Int>()
+    var facultyLabels = mutableListOf<String>()
+
+    val articlesSorted = mapOf(
+        SortMode.FACULTY_YEAR to articles.map { it.copy() }.sortedBy { it.faculty }.sortedBy { it.year.toInt() }.onEach {
+            if(!yearLabels.contains(it.year.toInt())) {
+                it.label = it.year
+            }
+            yearLabels.add(it.year.toInt())
+        },
+        SortMode.YEAR_FACULTY to articles.map { it.copy() }.sortedBy { it.year.toInt() }.sortedBy { it.faculty }.onEach {
+            if(!facultyLabels.contains(it.faculty)) {
+                it.label = it.faculty
+            }
+            facultyLabels.add(it.faculty)
+        }
+    )
 }
 
 
@@ -173,6 +197,9 @@ data class Article(
 
     @ColumnName("topic")
     val topic: String,
+
+    @ColumnName("label")
+    var label: String,
 
     @ColumnName("scores")
     val topicScores: List<BigDecimal>,
