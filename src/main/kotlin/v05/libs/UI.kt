@@ -1,6 +1,8 @@
 package v05.libs
 
+import org.openrndr.MouseButton
 import org.openrndr.MouseEvent
+import org.openrndr.MouseEventType
 import org.openrndr.MouseEvents
 import org.openrndr.animatable.Animatable
 import org.openrndr.color.ColorRGBa
@@ -43,6 +45,11 @@ class UIManager(mouseEvents: MouseEvents) {
     var activeElement: UIElement? = null
     var dragElement: UIElement? = null
 
+    private var lastMousePosition = Vector2(0.0, 0.0)
+    private var velocity = Vector2(0.0, 0.0)
+    private var potentialVelocity = Vector2(0.0, 0.0)
+
+
     init {
         mouseEvents.buttonDown.listen { event ->
             if (!event.propagationCancelled) {
@@ -57,15 +64,36 @@ class UIManager(mouseEvents: MouseEvents) {
         }
 
         mouseEvents.dragged.listen { event ->
+            if (dragElement != null) {
+                potentialVelocity = event.position - lastMousePosition
+                lastMousePosition = event.position
+            }
+
             dragElement?.dragged?.trigger(event)
         }
 
         mouseEvents.buttonUp.listen { event ->
             activeElement?.buttonUp?.trigger(event)
-            dragElement = null
+
+            if (dragElement != null) {
+                velocity = potentialVelocity
+                //dragElement = null
+            }
         }
     }
     val elements = mutableListOf<UIElement>()
+
+    fun update() {
+        velocity *= 0.9
+        if (velocity.length < 0.01) {
+            velocity = Vector2.ZERO
+        } else {
+            if (dragElement != null) {
+                lastMousePosition += velocity
+                dragElement?.dragged?.trigger(MouseEvent(lastMousePosition, Vector2.ZERO, velocity, MouseEventType.DRAGGED, MouseButton.NONE, emptySet()))
+            }
+        }
+    }
 
     fun drawDebugBoxes(drawer: Drawer) {
         drawer.isolated {
@@ -90,7 +118,6 @@ class UIManager(mouseEvents: MouseEvents) {
                 drawer.rectangle(dragElement!!.actionBounds)
             }
         }
-
     }
 }
 
