@@ -58,6 +58,14 @@ class FacultyFilter(val drawer: Drawer, val model: FacultyFilterModel): Filter()
                 }
             }
         }
+
+        dragged.listen {
+            for (i in model.states.indices) {
+                if (it.position in itemBox(i)) {
+                    model.states[i].visible = true
+                }
+            }
+        }
     }
 
     fun itemBox(i: Int): Rectangle {

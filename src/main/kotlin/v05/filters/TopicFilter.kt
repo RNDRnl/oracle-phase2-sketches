@@ -22,7 +22,19 @@ class TopicFilter(val drawer: Drawer, val model: TopicFilterModel): Filter() {
 
             for (i in model.states.indices) {
                 if (itemBoxes[i]?.contains(it.position) == true) {
-                    model.states[i].visible = !model.states[i].visible
+                    if(model.states.all { it.visible }) {
+                        model.states[i].visible = true
+                        model.states.minus(model.states[i]).forEach { s ->s.visible = false }
+                    } else {
+                        model.states[i].visible = !model.states[i].visible
+                    }
+                }
+            }
+        }
+        dragged.listen {
+            for (i in model.states.indices) {
+                if (it.position in (itemBoxes[i] ?: Rectangle.EMPTY)) {
+                    model.states[i].visible = true
                 }
             }
         }
@@ -35,7 +47,7 @@ class TopicFilter(val drawer: Drawer, val model: TopicFilterModel): Filter() {
     override fun draw() {
 
         if(visible) {
-            var topicBoxTracker = actionBounds.corner + 10.0
+            var topicBoxTracker = actionBounds.corner
             itemBoxes = model.states.withIndex().associate { (i, state) ->
                 var itemBox = Rectangle(0.0, 0.0,100.0, 100.0)
                 val item = model.list[i].uppercase()
