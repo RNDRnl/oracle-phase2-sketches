@@ -29,7 +29,6 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>): Filter(){
     var yOffset = 0.0
         set(value) {
             field = value.coerceAtMost(0.0)
-            println(field)
         }
     var entriesInView = mapOf<Vector2, Int>()
 
@@ -57,6 +56,8 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>): Filter(){
         dragged.listen {
             lastEventType = it.type
             yOffset += it.dragDisplacement.y
+
+
         }
 
         buttonUp.listen {
@@ -72,14 +73,11 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>): Filter(){
         drawer.drawStyle.clip = actionBounds
         if(visible && articles.isNotEmpty()) {
 
-            entriesInView = articles.withIndex().associate { (i, article) ->
+            entriesInView = articles.asSequence().withIndex().associate { (i, article) ->
                 var itemBox = Rectangle(actionBounds.corner, 0.0, 0.0)
 
                 drawer.writer {
-                    gaplessNewLine()
 
-                    drawer.fontMap = publicationFm
-                    val tw = textWidth(article.title)
 
                     itemBox = Rectangle(
                         actionBounds.corner.x,
@@ -89,6 +87,12 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>): Filter(){
                     )
 
                     if(itemBox.y < actionBounds.y + actionBounds.height && itemBox.y > actionBounds.y) {
+
+                        gaplessNewLine()
+
+                        drawer.fontMap = publicationFm
+                        val tw = textWidth(article.title)
+
                         val seconds = (System.currentTimeMillis() - initialT) / 1000.0
                         val xOffset = (tw - actionBounds.width + actionBounds.x).coerceAtLeast(0.0) / 2.0
                         val t = (sin(seconds * 0.5) * 0.5 + 0.5) * xOffset

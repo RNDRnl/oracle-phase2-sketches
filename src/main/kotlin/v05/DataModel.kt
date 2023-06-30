@@ -76,6 +76,7 @@ class State(val model: DataModel) {
         val filteredTopics = topicFilter.filteredList
         val filteredDates = dateFilter.filteredList[0] to dateFilter.filteredList[1]
         filterSet = FilterSet(filteredFaculties, filteredTopics, filteredDates)
+        changed.trigger((Unit))
     }
 
     val changed = Event<Unit>()

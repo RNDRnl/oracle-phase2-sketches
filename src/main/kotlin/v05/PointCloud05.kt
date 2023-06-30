@@ -51,7 +51,7 @@ fun main() = application {
         val state = State(data)
         val pc = viewBox(drawer.bounds) { pc05(data, state) }
 
-        thread {
+        thread(isDaemon = true) {
             val socket = DatagramSocket()
             val address = InetSocketAddress(InetAddress.getByName(ipAddress), 9002)
 

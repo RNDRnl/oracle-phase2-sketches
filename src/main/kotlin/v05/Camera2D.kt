@@ -40,7 +40,7 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
     override val changed = Event<Unit>()
 
     fun quantize(x: Double): Double {
-        return floor(x * 1000.0) / 1000.0
+        return floor(x * 10000.0) / 10000.0
     }
 
     fun Matrix44.scale(): Double = (this * Vector4(1.0, 1.0, 0.0, 0.0).normalized).xy.length
@@ -89,8 +89,6 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
 
 
     private var lastMousePosition = Vector2(0.0, 0.0)
-    private var velocity = Vector2(0.0, 0.0)
-    private var potentialVelocity = Vector2(0.0, 0.0)
 
     init {
         val w = RenderTarget.active.width.toDouble()
@@ -100,20 +98,10 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
 
         buttonDown.listen {
             it.cancelPropagation()
-            lastMousePosition = it.position
-            potentialVelocity = Vector2.ZERO
         }
 
-        buttonUp.listen {
-            velocity = potentialVelocity
-            view = buildTransform {
-                translate(velocity)
-            } * view
-        }
 
         dragged.listen {
-            potentialVelocity = it.position - lastMousePosition
-            lastMousePosition = it.position
             view = buildTransform {
                 translate(it.dragDisplacement)
             } * view
@@ -138,14 +126,6 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
     }
 
     override fun beforeDraw(drawer: Drawer, program: Program) {
-        view = buildTransform {
-            translate(velocity)
-        } * view
-
-        velocity *= 0.9
-        if (velocity.length < 0.01) {
-            velocity = Vector2.ZERO
-        }
         drawer.pushTransforms()
         drawer.ortho(RenderTarget.active)
         drawer.view = view
