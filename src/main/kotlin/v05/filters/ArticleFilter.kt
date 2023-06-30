@@ -85,9 +85,6 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>) : Filter() 
         val stRatio = yOffset/totalHeight
         val scrollWidgetY = (-yOffset / totalHeight).map(0.0, 1.0, 0.0, viewHeight-scrollWidgetHeight,clamp = true)
 
-        println("$vtRatio $scrollWidgetHeight .. $stRatio $scrollWidgetY")
-
-
         if (visible && articles.isNotEmpty()) {
 
             if (vtRatio < 1.0)

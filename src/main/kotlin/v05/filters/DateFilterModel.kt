@@ -17,7 +17,6 @@ class DateFilterModel: FilterModel() {
     init {
         states.forEachIndexed { i, it ->
             it.stateChanged.listen {
-
                 filterChanged.trigger(Unit)
             }
         }

@@ -82,7 +82,9 @@ fun Program.pc05(data: DataModel, state: State) {
     }
 
     state.changed.listen {
-        articleFilter.articles = state.filtered.values.toList()
+        if (articleFilter.visible) {
+            articleFilter.articles = state.filtered.values.toList()
+        }
     }
 
     camera.changed.listen {
@@ -92,6 +94,7 @@ fun Program.pc05(data: DataModel, state: State) {
             zoom = camera.mappedZoom
             radius = 40.0 / camera.view.c0r0
             lookAt = (camera.view.inversed * drawer.bounds.center.xy01).xy
+            state.changed.trigger(Unit)
         }
     }
 

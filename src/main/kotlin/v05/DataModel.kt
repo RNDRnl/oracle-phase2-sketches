@@ -122,18 +122,24 @@ class State(val model: DataModel) {
 
     var filterSet = FilterSet.EMPTY
         set(value) {
-            field = value
-            val new = value
-            filtered = if (new == FilterSet.EMPTY) {
-                model.pointsToArticles
-            } else {
-                model.pointsToArticles.filter {
-                    it.value.faculty in new.faculties &&
-                    it.value.topic in new.topics &&
-                    it.value.year.toInt() in new.dates.first..new.dates.second
+            if (value != field) {
+                field = value
+                filtered = if (value == FilterSet.EMPTY) {
+                    model.pointsToArticles
+                } else {
+                    val start = System.currentTimeMillis()
+                    val r = model.pointsToArticles.filter {
+                        it.value.year.toInt() in value.dates.first..value.dates.second &&
+                        it.value.faculty in value.faculties &&
+                                it.value.topic in value.topics
+
+                    }
+                    val end = System.currentTimeMillis()
+                    println("filtering took ${end-start}ms")
+                    r
                 }
+                changed.trigger(Unit)
             }
-            changed.trigger(Unit)
         }
 }
 
