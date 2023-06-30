@@ -96,7 +96,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
     override fun processMessage(message: ScreenMessage) {
         highlighted = message.articles.toMutableList()
         highlightedFaculties = message.filters.faculties.toMutableList()
-        for (y in message.filters.dates.first until message.filters.dates.second) {
+        for (y in message.filters.dates.first .. message.filters.dates.second) {
             highlightedYears.add(y)
         }
         if (message.articles.isNotEmpty()) {
