@@ -3,9 +3,11 @@ package v05
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import org.openrndr.application
+import org.openrndr.events.listen
 import org.openrndr.extra.viewbox.viewBox
 import org.openrndr.shape.Rectangle
 import v05.filters.FilterSet
+import v05.libs.UIManager
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
@@ -53,14 +55,20 @@ fun main() = application {
 
         val sendChannel = Channel<EventObject>(10000)
 
+        val uiManagerExport: UIManager by pc.userProperties
+
+
         thread(isDaemon = true) {
             val socket = DatagramSocket()
             val address = InetSocketAddress(InetAddress.getByName(ipAddress), 9002)
             socket.soTimeout = 10
 
 
+
+            val baos = ByteArrayOutputStream(16384)
             fun send(state: EventObject) {
-                val baos = ByteArrayOutputStream(1024)
+                baos.reset()
+
                 val oos = ObjectOutputStream(baos).use {
                     it.writeUnshared(state)
                     val dt = baos.toByteArray()
@@ -79,16 +87,13 @@ fun main() = application {
 
 
         }
-        state.changed.listen {
 
+        listOf(uiManagerExport.clicked, uiManagerExport.postDragEnded).listen {
             val indices: List<Int> = state.activePoints.map { data.pointsToArticleIndices[it.key]!! }
             println("total number of indicies: ${indices.size}")
             runBlocking {
                 sendChannel.send(EventObject(if (state.idle) IDLE else NAVIGATE, indices, state.zoom, state.filterSet))
             }
-            //println("this is the filterset: ${state.filterSet.faculties}")
-            //send()
-            //Thread.sleep(100)
         }
 
         extend {

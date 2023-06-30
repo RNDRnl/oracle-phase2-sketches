@@ -103,7 +103,6 @@ class State(val model: DataModel) {
         filterSet = FilterSet(filteredFaculties, filteredTopics, filteredDates)
         changed.trigger((Unit))
     }
-
     val changed = Event<Unit>()
 
     val kdtree = model.points.kdTree()

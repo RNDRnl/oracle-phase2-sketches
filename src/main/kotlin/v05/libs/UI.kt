@@ -53,6 +53,11 @@ class UIManager(val window: Window, mouseEvents: MouseEvents) {
         window.requestDraw()
     }
 
+    val postDragEnded = Event<Unit>()
+    val clicked = Event<Unit>()
+
+    var dragged = false
+
     init {
         mouseEvents.buttonDown.listen { event ->
             if (!event.propagationCancelled) {
@@ -63,13 +68,15 @@ class UIManager(val window: Window, mouseEvents: MouseEvents) {
                         velocity = Vector2.ZERO
                         requestDraw()
                         activeElement = e
-                        dragElement = e
+                        dragElement = null
                     }
                 }
             }
         }
 
         mouseEvents.dragged.listen { event ->
+            dragElement = activeElement
+
             if (dragElement != null) {
                 requestDraw()
                 potentialVelocity = event.position - lastMousePosition
@@ -81,8 +88,8 @@ class UIManager(val window: Window, mouseEvents: MouseEvents) {
 
         mouseEvents.buttonUp.listen { event ->
             activeElement?.buttonUp?.trigger(event)
-            if (activeElement != null) {
-                requestDraw()
+            if (activeElement != null && dragElement == null) {
+                clicked.trigger(Unit)
             }
 
             if (dragElement != null) {
@@ -101,9 +108,10 @@ class UIManager(val window: Window, mouseEvents: MouseEvents) {
         }
 
         velocity *= 0.9
-        if (velocity.length < 0.01) {
+        if (velocity.length < 0.01 && postDragElement != null) {
             velocity = Vector2.ZERO
             postDragElement = null
+            postDragEnded.trigger(Unit)
         } else {
             if (postDragElement != null) {
                 requestDraw()

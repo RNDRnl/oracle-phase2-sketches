@@ -43,7 +43,11 @@ fun Program.pc05(data: DataModel, state: State) {
     state.dateFilter = dateFilterModel
 
     val uiManager = UIManager(window, mouse)
-    val uiElements = listOf(camera, slider, discover, selectorBoxes, facultyFilter, topicFilter, dateFilter, articleFilter)
+    var uiManagerExport: UIManager by userProperties
+    uiManagerExport = uiManager
+
+    val uiElements =
+        listOf(camera, slider, discover, selectorBoxes, facultyFilter, topicFilter, dateFilter, articleFilter)
 
     uiElements.forEach {
         uiManager.elements.add(it)
@@ -72,9 +76,9 @@ fun Program.pc05(data: DataModel, state: State) {
     }
 
     articleFilter.articleSelected.listen {
-        if(articleFilter.currentArticle != null) {
+        if (articleFilter.currentArticle != null) {
             val pos = data.articlesToPoints[articleFilter.currentArticle]
-            if(pos != null) {
+            if (pos != null) {
                 selectorBoxes.current = 1
                 camera.centerAt(pos)
             }
@@ -96,6 +100,7 @@ fun Program.pc05(data: DataModel, state: State) {
             lookAt = (camera.view.inversed * drawer.bounds.center.xy01).xy
             state.changed.trigger(Unit)
         }
+
     }
 
     slider.valueChanged.listen {
@@ -142,10 +147,10 @@ fun Program.pc05(data: DataModel, state: State) {
                 drawer.strokeWeight = 0.05
                 drawer.rectangles {
                     for ((point, article) in data.pointsToArticles) {
-                        val opacity = if(state.filtered[point] != null) 1.0 else 0.2
+                        val opacity = if (state.filtered[point] != null) 1.0 else 0.2
                         this.stroke = if (state.activePoints[point] != null) ColorRGBa.YELLOW else null
 
-                        val size = if(state.filtered[point] != null) 6 else 2
+                        val size = if (state.filtered[point] != null) 6 else 2
 
                         this.fill = article.faculty.facultyColor().opacify(opacity)
                         this.rectangle(Rectangle.fromCenter(point, 0.25 * size, 0.45 * size))
@@ -156,9 +161,9 @@ fun Program.pc05(data: DataModel, state: State) {
 
                 drawer.fontMap = fm
                 drawer.fill = ColorRGBa.WHITE
-                when(slider.current) {
+                when (slider.current) {
                     in 0.8..1.0 -> {
-                        for((p, a) in state.activePoints) {
+                        for ((p, a) in state.activePoints) {
                             drawer.text(a.title, p.transform(camera.view))
                         }
                     }
@@ -180,39 +185,61 @@ fun Program.pc05(data: DataModel, state: State) {
                         drawer.stroke = null
                         drawer.fill = ColorRGBa.WHITE.opacify(it.animations.expandT)
                         drawer.shadeStyle = linearGradient(ColorRGBa.BLACK, ColorRGBa.TRANSPARENT, rotation = -90.0)
-                        drawer.rectangle(0.0, 0.0, it.actionBounds.width + (it.actionBounds.width * it.animations.expandT), height * 1.0)
+                        drawer.rectangle(
+                            0.0,
+                            0.0,
+                            it.actionBounds.width + (it.actionBounds.width * it.animations.expandT),
+                            height * 1.0
+                        )
                         drawer.shadeStyle = null
 
-                        drawer.drawStyle.clip = if(!it.expanded) it.actionBounds else it.actionBounds.copy(width = it.actionBounds.width * 2.0)
+                        drawer.drawStyle.clip =
+                            if (!it.expanded) it.actionBounds else it.actionBounds.copy(width = it.actionBounds.width * 2.0)
                         it.draw(drawer)
 
                         selectorBoxes.apply {
                             visible = it.expanded
-                            if(it.expanded) draw(drawer, it.actionBounds)
+                            if (it.expanded) draw(drawer, it.actionBounds)
                         }
 
                         facultyFilter.apply {
                             visible = it.expanded
-                            actionBounds = Rectangle(it.actionBounds.x + (50.0 * (1.0 - animations.slider)), it.actionBounds.y + 140.0, it.actionBounds.width - 50.0, it.actionBounds.height - 180.0 - 150.0 )
+                            actionBounds = Rectangle(
+                                it.actionBounds.x + (50.0 * (1.0 - animations.slider)),
+                                it.actionBounds.y + 140.0,
+                                it.actionBounds.width - 50.0,
+                                it.actionBounds.height - 180.0 - 150.0
+                            )
                             isMinimized = selectorBoxes.current == 1 || selectorBoxes.current == 2
                             draw()
                         }
 
                         topicFilter.apply {
                             visible = it.expanded && (selectorBoxes.current == 1 || selectorBoxes.current == 2)
-                            actionBounds = Rectangle(it.actionBounds.x + 50.0, it.actionBounds.y + 140.0, it.actionBounds.width - 50.0, facultyFilter.actionBounds.height + 60.0)
+                            actionBounds = Rectangle(
+                                it.actionBounds.x + 50.0,
+                                it.actionBounds.y + 140.0,
+                                it.actionBounds.width - 50.0,
+                                facultyFilter.actionBounds.height + 60.0
+                            )
                             draw()
                         }
 
                         dateFilter.apply {
                             visible = it.expanded
-                            actionBounds = Rectangle(topicFilter.actionBounds.x, it.actionBounds.y + 730.0, facultyFilter.actionBounds.width, 110.0)
+                            actionBounds = Rectangle(
+                                topicFilter.actionBounds.x,
+                                it.actionBounds.y + 730.0,
+                                facultyFilter.actionBounds.width,
+                                110.0
+                            )
                             draw()
                         }
 
                         articleFilter.apply {
                             visible = it.expanded && selectorBoxes.current == 2
-                            actionBounds = topicFilter.actionBounds.movedBy(Vector2(facultyFilter.actionBounds.width, 0.0))
+                            actionBounds =
+                                topicFilter.actionBounds.movedBy(Vector2(facultyFilter.actionBounds.width, 0.0))
                             draw()
                         }
                     }
@@ -245,6 +272,7 @@ fun Program.pc05(data: DataModel, state: State) {
             yield()
         }
     }
+
 
     window.presentationMode = PresentationMode.MANUAL
 
