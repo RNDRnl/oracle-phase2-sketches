@@ -59,8 +59,8 @@ class TopicFilter(val drawer: Drawer, val model: TopicFilterModel): Filter() {
                         final
                     }
 
-                    drawer.fill = if(state.visible) ColorRGBa.WHITE else ColorRGBa.TRANSPARENT
-                    drawer.stroke = ColorRGBa.WHITE
+                    drawer.fill = if(state.visible) ColorRGBa.GRAY.mix(ColorRGBa.WHITE, 0.5) else ColorRGBa.TRANSPARENT
+                    drawer.stroke = ColorRGBa.GRAY.mix(ColorRGBa.WHITE, 0.5)
                     val offset = itemBox.offsetEdges(-5.0, -4.0)
                     drawer.roundedRectangle(offset.toRounded(900.0))
 

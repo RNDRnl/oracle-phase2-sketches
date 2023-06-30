@@ -126,13 +126,14 @@ class Slider(val pos: Vector2): UIElementImpl() {
             val rail = LineSegment(bounds.x + h / 2.0, bounds.y + bounds.height / 2.0,
                 bounds.x + bounds.width - (h / 2.0), bounds.y + bounds.height / 2.0)
             val pos = rail.position(current)
-            drawer.circle(pos, h / 2.0)
+
+            drawer.fill = ColorRGBa.WHITE.opacify(0.7 + 0.3 * animations.fader).opacify(0.5)
+            drawer.circle(pos, h/2.0)
+            drawer.fill = ColorRGBa.WHITE.opacify(0.7 + 0.3 * animations.fader)
+            drawer.circle(pos, current.map(0.0, 1.0, (h / 2.0), (h/8.0)))
 
             drawer.fill = ColorRGBa.BLACK
             drawer.fontMap = fm
-            val n = current.toString().take(3)
-            val textWidth = n.fold(0.0) { acc, next -> fm.characterWidth(next) + acc }
-            drawer.text(n, pos.x - (textWidth / 2.0), pos.y + (fm.height / 2.0))
         }
     }
 
