@@ -56,6 +56,7 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
     val points = pointsDf[pos].toList().run { map(this.bounds, frame) }
 
     val pointsToArticles = (points zip articles).toMap()
+    val pointsToArticleIndices = (points zip articles.indices).toMap()
     val articlesToPoints = pointsToArticles.entries.associateBy({ it.value }) { it.key }
 
     val yearBrackets = articles.histogramOf { it.year.toIntOrNull() }.brackets().also {
@@ -115,7 +116,7 @@ class State(val model: DataModel) {
             }
         }
 
-        return active.toMap()
+        return active
     }
 
     var activePoints = findActivePoints(model.frame.center, radius)
