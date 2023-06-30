@@ -44,6 +44,7 @@ fun main() = application {
     }
     program {
 
+
         val ipAddress = System.getProperty("screenIP") ?: "192.168.1.158"
 
         val data = DataModel(Rectangle.fromCenter(drawer.bounds.center, height * 1.0, height * 1.0))
@@ -66,12 +67,16 @@ fun main() = application {
             state.changed.listen {
                 println("sending to ${ipAddress}:9002")
                 val indices = state.activePoints.map { data.articles.indexOf(it.value) }
+                println("this is the filterset: ${state.filterSet.faculties}")
                 send(EventObject(if (state.idle) IDLE else NAVIGATE, indices, state.zoom, state.filterSet))
+
             }
         }
 
         extend {
             pc.draw()
+
+            drawer.circles(pointers.pointers.map { it.position }, 10.0)
         }
     }
 }

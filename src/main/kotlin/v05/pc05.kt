@@ -60,17 +60,14 @@ fun Program.pc05(data: DataModel, state: State) {
 
     facultyFilterModel.filterChanged.listen {
         state.filterChanged()
-        articleFilter.articles = state.filtered.values.toList()
     }
 
     topicFilterModel.filterChanged.listen {
         state.filterChanged()
-        articleFilter.articles = state.filtered.values.toList()
     }
 
     dateFilterModel.filterChanged.listen {
         state.filterChanged()
-        articleFilter.articles = state.filtered.values.toList()
     }
 
     articleFilter.articleSelected.listen {
@@ -81,6 +78,10 @@ fun Program.pc05(data: DataModel, state: State) {
                 camera.centerAt(pos)
             }
         }
+    }
+
+    state.changed.listen {
+        articleFilter.articles = state.filtered.values.toList()
     }
 
     camera.changed.listen {
