@@ -1,5 +1,7 @@
 package v05.filters
 
+import org.openrndr.MouseEventType
+import org.openrndr.MouseEvents
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
 import org.openrndr.draw.loadFont
@@ -25,6 +27,10 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>): Filter(){
         }
 
     var yOffset = 0.0
+        set(value) {
+            field = value.coerceAtMost(0.0)
+            println(field)
+        }
     var entriesInView = mapOf<Vector2, Int>()
 
     var lastPos = Vector2.ZERO
@@ -40,21 +46,30 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>): Filter(){
             }
         }
 
+    var lastEventType: MouseEventType? = null
     init {
         actionBounds = Rectangle(10.0, 0.0, 460.0, 600.0)
         buttonDown.listen {
             it.cancelPropagation()
+            lastEventType = it.type
         }
 
         dragged.listen {
+            lastEventType = it.type
             yOffset += it.dragDisplacement.y
         }
+
+        buttonUp.listen {
+            if(lastEventType == MouseEventType.BUTTON_DOWN) lastPos = it.position
+        }
+
     }
 
     val publicationFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 27.0)
     var initialT = System.currentTimeMillis()
     override fun draw() {
 
+        drawer.drawStyle.clip = actionBounds
         if(visible && articles.isNotEmpty()) {
 
             entriesInView = articles.withIndex().associate { (i, article) ->
@@ -67,13 +82,13 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>): Filter(){
                     val tw = textWidth(article.title)
 
                     itemBox = Rectangle(
-                        actionBounds.corner.x + actionBounds.corner.x,
+                        actionBounds.corner.x,
                         actionBounds.corner.y + i * 30.0 + (25.0 * i) + yOffset,
-                        tw + 40.0,
+                        actionBounds.width,
                         29.0
                     )
 
-                    if(itemBox.y < actionBounds.height && itemBox.y > 80.0) {
+                    if(itemBox.y < actionBounds.y + actionBounds.height && itemBox.y > actionBounds.y) {
                         val seconds = (System.currentTimeMillis() - initialT) / 1000.0
                         val xOffset = (tw - actionBounds.width + actionBounds.x).coerceAtLeast(0.0) / 2.0
                         val t = (sin(seconds * 0.5) * 0.5 + 0.5) * xOffset
@@ -102,5 +117,6 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>): Filter(){
 
 
         }
+        drawer.drawStyle.clip = null
     }
 }

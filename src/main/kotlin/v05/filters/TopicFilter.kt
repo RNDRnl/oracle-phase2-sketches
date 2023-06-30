@@ -30,43 +30,44 @@ class TopicFilter(val drawer: Drawer, val model: TopicFilterModel): Filter() {
 
     var itemBoxes = mapOf<Int, Rectangle>()
 
-    val topicFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 16.0)
+    val topicFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 19.0)
 
     override fun draw() {
 
         if(visible) {
-            var topicBoxTracker = actionBounds.corner
+            var topicBoxTracker = actionBounds.corner + 10.0
             itemBoxes = model.states.withIndex().associate { (i, state) ->
                 var itemBox = Rectangle(0.0, 0.0,100.0, 100.0)
-                val item = model.list[i]
+                val item = model.list[i].uppercase()
 
                 drawer.writer {
                     gaplessNewLine()
 
                     drawer.fontMap = topicFm
                     val tw = textWidth(item) + 40.0
-                    itemBox = Rectangle(topicBoxTracker.x, topicBoxTracker.y, tw, 40.0).run {
+                    itemBox = Rectangle(topicBoxTracker.x, topicBoxTracker.y, tw + 10.0, 41.0).run {
                         val final: Rectangle
                         val isIn = x + width < actionBounds.corner.x + actionBounds.width
                         if(isIn) {
                             final = movedTo(topicBoxTracker)
-                            topicBoxTracker = Vector2(topicBoxTracker.x + tw, topicBoxTracker.y)
+                            topicBoxTracker = Vector2(topicBoxTracker.x + tw + 10.0, topicBoxTracker.y)
                         } else {
-                            topicBoxTracker = Vector2(actionBounds.corner.x, topicBoxTracker.y + 50.0)
+                            topicBoxTracker = Vector2(actionBounds.corner.x, topicBoxTracker.y + 44.0)
                             final = movedTo(topicBoxTracker)
-                            topicBoxTracker = Vector2(topicBoxTracker.x + tw, topicBoxTracker.y)
+                            topicBoxTracker = Vector2(topicBoxTracker.x + tw + 10.0, topicBoxTracker.y)
                         }
                         final
                     }
 
                     drawer.fill = if(state.visible) ColorRGBa.WHITE else ColorRGBa.TRANSPARENT
                     drawer.stroke = ColorRGBa.WHITE
-                    drawer.roundedRectangle(itemBox.toRounded(900.0))
+                    val offset = itemBox.offsetEdges(-5.0, -4.0)
+                    drawer.roundedRectangle(offset.toRounded(900.0))
 
                     drawer.fill = if(state.visible) ColorRGBa.BLACK else  ColorRGBa.WHITE
-                    cursor.x = itemBox.center.x - tw / 2.0
-                    cursor.y = itemBox.center.y + topicFm.height / 2.0
-                    text(item.uppercase())
+                    cursor.x = offset.center.x - (tw / 2.0) + 20.0
+                    cursor.y = offset.center.y + topicFm.height / 2.0
+                    text(item)
                 }
 
 

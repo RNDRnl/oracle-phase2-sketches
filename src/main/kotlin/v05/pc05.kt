@@ -8,6 +8,7 @@ import org.openrndr.extra.compositor.draw
 import org.openrndr.extra.compositor.layer
 import org.openrndr.extra.fx.blur.GaussianBlur
 import org.openrndr.extra.noise.uniform
+import org.openrndr.extra.shadestyles.linearGradient
 import org.openrndr.math.*
 import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Circle
@@ -29,10 +30,10 @@ fun Program.pc05(data: DataModel, state: State) {
     val facultyFilter = FacultyFilter(drawer, facultyFilterModel)
 
     val topicFilterModel = TopicFilterModel()
-    val topicFilter = TopicFilter(drawer, topicFilterModel).apply { visible = false }
+    val topicFilter = TopicFilter(drawer, topicFilterModel)
 
     val dateFilterModel = DateFilterModel()
-    val dateFilter = DateFilter(drawer, dateFilterModel).apply { visible = false }
+    val dateFilter = DateFilter(drawer, dateFilterModel)
 
     val articleFilter = ArticleFilter(drawer, data.articles)
 
@@ -57,25 +58,29 @@ fun Program.pc05(data: DataModel, state: State) {
         state.idle = false
     }
 
-
-/*    sidebar.filtersChanged.listen { fe ->
-        state.filterSet = fe
-        if(sidebar.currentArticle != null) {
-            val v = data.articlesToPoints[sidebar.currentArticle]
-            v?.let { camera.centerAt(it) }
-        }
-    }*/
-
     facultyFilterModel.filterChanged.listen {
         state.filterChanged()
+        articleFilter.articles = state.filtered.values.toList()
     }
 
     topicFilterModel.filterChanged.listen {
         state.filterChanged()
+        articleFilter.articles = state.filtered.values.toList()
     }
 
     dateFilterModel.filterChanged.listen {
         state.filterChanged()
+        articleFilter.articles = state.filtered.values.toList()
+    }
+
+    articleFilter.articleSelected.listen {
+        if(articleFilter.currentArticle != null) {
+            val pos = data.articlesToPoints[articleFilter.currentArticle]
+            if(pos != null) {
+                selectorBoxes.current = 1
+                camera.centerAt(pos)
+            }
+        }
     }
 
     camera.changed.listen {
@@ -93,7 +98,7 @@ fun Program.pc05(data: DataModel, state: State) {
     }
 
     val c = compose {
-        layer {
+        layer {// Background
             val poisson = PoissonFill()
             val blur = GaussianBlur().apply {
                 sigma = 25.0
@@ -124,10 +129,9 @@ fun Program.pc05(data: DataModel, state: State) {
                 drawer.image(bg)
             }
         }
-        layer {
+        layer {// Point cloud
 
             val fm = loadFont("data/fonts/Roboto-Regular.ttf", 36.0)
-            val titleFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 40.0)
 
             draw {
                 drawer.strokeWeight = 0.05
@@ -160,51 +164,68 @@ fun Program.pc05(data: DataModel, state: State) {
                 drawer.circle(state.lookAt, 40.0)
 
             }
+        }
+        layer {
+            draw { // UI elements
 
-            layer {
-                draw {
+                drawer.isolated {
+                    drawer.defaults()
+                    discover.let {
 
-                    val filters = listOf(facultyFilter, topicFilter, dateFilter, articleFilter)
+                        drawer.stroke = null
+                        drawer.fill = ColorRGBa.WHITE.opacify(it.animations.expandT)
+                        drawer.shadeStyle = linearGradient(ColorRGBa.BLACK, ColorRGBa.TRANSPARENT, rotation = -90.0)
+                        drawer.rectangle(0.0, 0.0, it.actionBounds.width + (it.actionBounds.width * it.animations.expandT), height * 1.0)
+                        drawer.shadeStyle = null
 
-                    discover.draw(drawer)
+                        drawer.drawStyle.clip = if(!it.expanded) it.actionBounds else it.actionBounds.copy(width = it.actionBounds.width * 2.0)
+                        it.draw(drawer)
 
-                    facultyFilter.actionBounds = Rectangle(discover.actionBounds.x + 50.0, discover.actionBounds.y + 140.0, discover.actionBounds.width - 50.0, discover.actionBounds.height - 180.0 - 150.0 )
-                    topicFilter.actionBounds = facultyFilter.actionBounds
-                    dateFilter.actionBounds = Rectangle(facultyFilter.actionBounds.x, facultyFilter.actionBounds.y + facultyFilter.actionBounds.height, facultyFilter.actionBounds.width, 150.0)
-                    articleFilter.actionBounds = facultyFilter.actionBounds.movedBy(Vector2(facultyFilter.actionBounds.width, 0.0))
-
-                    selectorBoxes.draw(drawer, discover.actionBounds)
-
-                    when(selectorBoxes.current) {
-                        0 -> {
-                            facultyFilter.isMinimized = false
-                            facultyFilter.visible = true
-                            topicFilter.visible = false
-                            articleFilter.visible = false
+                        selectorBoxes.apply {
+                            visible = it.expanded
+                            if(it.expanded) draw(drawer, it.actionBounds)
                         }
-                        1 -> {
-                            facultyFilter.visible = true
-                            facultyFilter.isMinimized = true
-                            topicFilter.visible = true
-                            articleFilter.visible = false
+
+                        facultyFilter.apply {
+                            visible = it.expanded
+                            actionBounds = Rectangle(it.actionBounds.x + (50.0 * (1.0 - animations.slider)), it.actionBounds.y + 140.0, it.actionBounds.width - 50.0, it.actionBounds.height - 180.0 - 150.0 )
+                            isMinimized = selectorBoxes.current == 1 || selectorBoxes.current == 2
+                            draw()
                         }
-                        2 -> {
-                            facultyFilter.isMinimized = true
-                            facultyFilter.visible = true
-                            topicFilter.visible = true
-                            articleFilter.visible = true
+
+                        topicFilter.apply {
+                            visible = it.expanded && (selectorBoxes.current == 1 || selectorBoxes.current == 2)
+                            actionBounds = Rectangle(it.actionBounds.x + 50.0, it.actionBounds.y + 140.0, it.actionBounds.width - 50.0, facultyFilter.actionBounds.height + 60.0)
+                            draw()
+                        }
+
+                        dateFilter.apply {
+                            visible = it.expanded
+                            actionBounds = Rectangle(topicFilter.actionBounds.x, it.actionBounds.y + 730.0, facultyFilter.actionBounds.width, 110.0)
+                            draw()
+                        }
+
+                        articleFilter.apply {
+                            visible = it.expanded && selectorBoxes.current == 2
+                            actionBounds = topicFilter.actionBounds.movedBy(Vector2(facultyFilter.actionBounds.width, 0.0))
+                            draw()
                         }
                     }
 
-                    filters.forEachIndexed { i, it ->
-                        it.draw()
-                    }
-
+                    drawer.drawStyle.clip = null
                     slider.draw(drawer)
                 }
+
             }
-            layer {
-                draw {
+        }
+        layer {// Decoration
+
+            val titleFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 40.0)
+
+            draw {
+
+                drawer.isolated {
+                    drawer.defaults()
 
                     drawer.fontMap = titleFm
                     drawer.fill = ColorRGBa.WHITE
@@ -218,7 +239,7 @@ fun Program.pc05(data: DataModel, state: State) {
     extend {
 
         c.draw(drawer)
-       // uiManager.drawDebugBoxes(drawer)
+        //uiManager.drawDebugBoxes(drawer)
 
     }
 

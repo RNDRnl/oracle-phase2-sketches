@@ -10,15 +10,13 @@ import org.openrndr.shape.Rectangle
 
 class DateFilter(val drawer: Drawer, val model: DateFilterModel): Filter() {
 
-    override var visible = true
-
     inner class Selector(var state: DateFilterState) {
         var pos: Double
             get() {
                 return state.year.map(1900.0, 2020.0, 0.0, 1.0)
             }
             set(value) {
-                state.year = value.map(0.0, 1.0, 1880.0, 2020.0)
+                state.year = value.map(0.0, 1.0, 1900.0, 2020.0)
             }
     }
 
@@ -27,12 +25,14 @@ class DateFilter(val drawer: Drawer, val model: DateFilterModel): Filter() {
 
     init {
         actionBounds = Rectangle(80.0, 90.0 + 32.0 + 600.0, 460.0, 150.0)
-        buttonDown.listen {
-            it.cancelPropagation()
+
+        buttonDown.listen {e ->
+            e.cancelPropagation()
+            closestSelector = selectors.minBy { actionBounds.position(it.pos, 0.5).distanceTo(e.position)}
         }
 
         dragged.listen {
-            val mappedPosition = map(actionBounds.x, actionBounds.x + actionBounds.width, 0.0, 1.0, it.position.x)
+            val mappedPosition = map(actionBounds.x + 10.0, actionBounds.x + actionBounds.width, 0.0, 1.0, it.position.x)
             closestSelector?.pos = mappedPosition.coerceIn(0.0, 1.0)
         }
 
@@ -41,23 +41,22 @@ class DateFilter(val drawer: Drawer, val model: DateFilterModel): Filter() {
         }
     }
 
-    fun buttonUp(e: MouseEvent) {
-        closestSelector = null
-    }
-
     override fun draw() {
-        val rail = LineSegment(actionBounds.x, actionBounds.center.y, actionBounds.width, actionBounds.center.y)
+        if(visible) {
+            val rail = LineSegment(actionBounds.x + 15.0, actionBounds.center.y, actionBounds.x + actionBounds.width - 30.0, actionBounds.center.y)
 
-        drawer.stroke = ColorRGBa.WHITE
-        drawer.lineSegment(rail)
+            drawer.stroke = ColorRGBa.WHITE
+            drawer.lineSegment(rail)
 
-        selectors.forEach {
-            val center = rail.position(it.pos)
-            drawer.stroke = null
-            drawer.fill = ColorRGBa.WHITE
-            drawer.text(it.state.year.toString(), center.x - 15.0, center.y - 25.0)
-            drawer.circle(center, 15.0)
+            selectors.forEach {
+                val center = rail.position(it.pos)
+                drawer.stroke = null
+                drawer.fill = ColorRGBa.WHITE
+                drawer.text(it.state.year.toString(), center.x - 15.0, center.y - 25.0)
+                drawer.circle(center, 15.0)
+            }
         }
+
     }
 }
 

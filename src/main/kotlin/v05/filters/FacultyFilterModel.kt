@@ -16,18 +16,10 @@ class FacultyFilterModel: FilterModel() {
     init {
         states.forEach {
             it.stateChanged.listen {
-                if (states.none { s -> s.visible }) {
-                    states.forEach { state ->
-                        state.visible = true
-                    }
-                }
+                if(states.none { it.visible }) states.forEach { it.visible = true }
                 filterChanged.trigger(Unit)
             }
         }
-    }
-
-    fun reset() {
-        states.forEach { it.visible = true }
     }
 
 }

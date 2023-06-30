@@ -123,13 +123,13 @@ class State(val model: DataModel) {
         set(value) {
             field = value
             val new = value
-            if (new == FilterSet.EMPTY) {
-                filtered = model.pointsToArticles
+            filtered = if (new == FilterSet.EMPTY) {
+                model.pointsToArticles
             } else {
-                filtered = model.pointsToArticles.filter {
+                model.pointsToArticles.filter {
                     it.value.faculty in new.faculties &&
-                            it.value.topic in new.topics &&
-                            it.value.year.takeLast(4).toInt() in new.dates.first..new.dates.second
+                    it.value.topic in new.topics &&
+                    it.value.year.toInt() in new.dates.first..new.dates.second
                 }
             }
             changed.trigger(Unit)

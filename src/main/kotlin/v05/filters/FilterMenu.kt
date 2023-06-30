@@ -2,6 +2,7 @@ package v05.filters
 
 import org.openrndr.MouseEvent
 import org.openrndr.animatable.Animatable
+import org.openrndr.animatable.PropertyAnimationKey
 import org.openrndr.animatable.easing.Easing
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
@@ -25,8 +26,8 @@ open class FilterMenu: UIElementImpl() {
             ::expandT.animate(1.0, 1000, Easing.CubicInOut)
         }
 
-        fun compress() {
-            ::expandT.animate(0.0, 1000, Easing.CubicInOut)
+        fun compress(): PropertyAnimationKey<Double> {
+            return ::expandT.animate(0.0, 1000, Easing.CubicInOut)
         }
     }
     val animations = Animations()
@@ -34,14 +35,18 @@ open class FilterMenu: UIElementImpl() {
     var expanded = false
         set(value) {
             animations.cancel()
-            if (!field && value) animations.expand() else if (field && !value) animations.compress()
+            if (!field && value) {
+                animations.expand()
+                field = true
+            } else if (field && !value) {
+                animations.compress().completed.listen {
+                    field = false
+                }
+            }
 
-            field = value
         }
 
 
-    val boundsWidth = 460.0
-    val boundsHeight = 80.0
 
     var icon = loadSVG("<svg></svg>")
     var title = ""

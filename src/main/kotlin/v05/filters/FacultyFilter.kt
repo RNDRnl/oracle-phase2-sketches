@@ -1,19 +1,45 @@
 package v05.filters
 
+import org.openrndr.animatable.Animatable
+import org.openrndr.animatable.PropertyAnimationKey
+import org.openrndr.animatable.easing.Easing
 import org.openrndr.color.ColorRGBa
+import org.openrndr.color.mix
 import org.openrndr.draw.Drawer
 import org.openrndr.draw.loadFont
 import org.openrndr.draw.writer
 import org.openrndr.extra.shapes.roundedRectangle
 import org.openrndr.extra.shapes.toRounded
+import org.openrndr.math.mod
 import org.openrndr.shape.Rectangle
 import v05.*
 
 class FacultyFilter(val drawer: Drawer, val model: FacultyFilterModel): Filter() {
 
-    override var visible = true
+
+    inner class Animations: Animatable() {
+        var slider = 0.0
+
+        fun minimize() {
+            ::slider.animate(1.0, 750, Easing.CubicInOut)
+        }
+
+        fun maximize() {
+            ::slider.animate(0.0, 750, Easing.CubicInOut)
+        }
+    }
+    val animations = Animations()
+
     override var isCurrent = true
     var isMinimized = false
+        set(value) {
+            if(!field && value) {
+                animations.minimize()
+            } else if (field && !value) {
+                animations.maximize()
+            }
+            field = value
+        }
     override var title = "FACULTIES"
 
     init {
@@ -23,29 +49,35 @@ class FacultyFilter(val drawer: Drawer, val model: FacultyFilterModel): Filter()
             it.cancelPropagation()
             for (i in model.states.indices) {
                 if (it.position in itemBox(i)) {
-                    model.states[i].visible = !model.states[i].visible
+                     if(model.states.all { it.visible }) {
+                        model.states[i].visible = true
+                        model.states.minus(model.states[i]).forEach { s ->s.visible = false }
+                    } else {
+                        model.states[i].visible = !model.states[i].visible
+                    }
                 }
             }
         }
     }
 
     fun itemBox(i: Int): Rectangle {
-        val offsetX = if(isMinimized) 30.0 else 0.0
+        val offsetX = animations.slider * 45.0
 
         return Rectangle(
-            actionBounds.x - (offsetX * 2.1),
-            i * 30.0 + (25.0 * i) + actionBounds.y,
+            actionBounds.x + 5.0,
+            i * 30.0 + (25.0 * i) + actionBounds.y + 10.0,
             80.0 - offsetX,
             30.0
         )
     }
 
-    val facultyAbbrFm = loadFont("data/fonts/Roboto-Regular.ttf", 18.0)
+    val facultyAbbrFm = loadFont("data/fonts/Roboto-Regular.ttf", 17.0)
     val facultyFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 16.0)
 
     override fun draw() {
 
         if(visible) {
+            animations.updateAnimation()
             model.states.forEachIndexed { i, state ->
 
                 val item = model.list[i]
@@ -65,12 +97,11 @@ class FacultyFilter(val drawer: Drawer, val model: FacultyFilterModel): Filter()
                     cursor.y = itemBox.center.y + facultyAbbrFm.height / 2.0
                     text(t0)
 
-                    if(!isMinimized) {
-                        drawer.fontMap = facultyFm
-                        drawer.fill = ColorRGBa.WHITE.opacify(0.8)
-                        cursor.x = itemBox.corner.x + itemBox.width + 5.0
-                        text(item.uppercase())
-                    }
+                    drawer.fontMap = facultyFm
+                    drawer.fill = ColorRGBa.WHITE.opacify(1.0 - animations.slider)
+                    cursor.x = itemBox.corner.x + itemBox.width + 5.0
+                    text(item.uppercase())
+
 
                 }
 
