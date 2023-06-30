@@ -73,13 +73,34 @@ abstract class ZoomLevel(
     val stfm = loadFont("data/fonts/default.otf", 80.0, contentScale = 1.0)
 }
 
+class Slot(val position: Vector2, var scaleX:Double = 1.0, var scaleY: Double = 1.0, var shade: Double = 0.15) : Animatable() {
+
+    fun animateIn() {
+        val delay = (Math.random()*500.0).toLong()
+        ::scaleX.animate(0.45, 0, Easing.SineInOut, delay)
+        ::scaleY.animate(0.85, 0, Easing.SineInOut, delay)
+        ::shade.animate(1.0, 500, Easing.SineInOut, delay)
+    }
+    fun animateOut() {
+        val delay = (Math.random()*500.0).toLong()
+        ::shade.animate(0.15, 500, Easing.SineInOut, delay).completed.listen {
+            ::scaleX.animate(1.0, 0, Easing.SineInOut, 0)
+            ::scaleY.animate(1.0, 0, Easing.SineInOut, 0)
+        }
+    }
+    fun update() {
+        this.updateAnimation()
+    }
+}
+
+
 class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: FilteredDataModel) :
     ZoomLevel(i, rect, dataModel, filteredDataModel) {
 
-    private val sortingMethod = SortMode.YEAR_FACULTY
+    private val sortingMethod = SortMode.FACULTY_YEAR
     private var rects = listOf<Rectangle>()
     private var color = ColorRGBa.GRAY
-    private val slots = mutableListOf<Vector2>()
+    private val slots = mutableListOf<Slot>()
     private var articlesSorted = dataModel.articlesSorted[sortingMethod]!!
 
     private var highlighted = mutableListOf<Article>()
@@ -89,7 +110,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
     init {
         for (x in 0..(rect.width.toInt() - 20) / 10) {
             for (y in 0..((rect.height).toInt() - 20) / 42) {
-                slots.add(Vector2(x * 10.0, y * 42.0).plus(Vector2(5.0, 2.0)))
+                slots.add(Slot(Vector2(x * 10.0, y * 42.0).plus(Vector2(5.0, 2.0))))
             }
         }
     }
@@ -97,9 +118,27 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
     override fun processMessage(message: ScreenMessage) {
         highlighted = message.articles.toMutableList()
         highlightedFaculties = message.filters.faculties.toMutableList()
+        highlightedYears.clear()
         for (y in message.filters.dates.first .. message.filters.dates.second) {
             highlightedYears.add(y)
         }
+        articlesSorted.forEachIndexed { index, article ->
+            val cIndex = (index + (screenId * slots.size))
+            if (cIndex < articlesSorted.size && index < slots.size) {
+                val highlighted =
+                    highlightedFaculties.contains(articlesSorted[cIndex].faculty) && highlightedYears.contains(
+                        articlesSorted[cIndex].year.toInt()
+                    )
+                val slot = slots[index]
+                slot.cancel()
+                if (highlighted) {
+                    slot.animateIn()
+                } else {
+                    slot.animateOut()
+                }
+            }
+        }
+
         if (message.articles.isNotEmpty()) {
             color = message.articles[0].faculty.facultyColor()
             rects = Rectangle(0.0, 0.0, bounds.width, bounds.height).grid(message.articles.size, 1).flatten()
@@ -121,17 +160,15 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
                     if(cIndex < articlesSorted.size && index < slots.size) {
                         val highlighted = highlightedFaculties.contains(articlesSorted[cIndex].faculty) && highlightedYears.contains(articlesSorted[cIndex].year.toInt())
                         this.stroke = null
-                        if (highlighted) {
-                            this.fill = articlesSorted[cIndex].faculty.facultyColor()
-                        } else {
-                            this.fill = articlesSorted[cIndex].faculty.facultyColor().shade(0.15)
-                        }
-                        val position = slots[index]
-                        if (highlighted) {
-                            this.rectangle(Rectangle(position, 10.0 * 0.45, 42.0 * 0.85))
-                        } else {
-                            this.rectangle(Rectangle(position, 10.0, 42.0))
-                        }
+                        val slot = slots[index]
+                        this.fill = articlesSorted[cIndex].faculty.facultyColor().shade(slot.shade)
+
+                        slot.update()
+//                        if (highlighted) {
+                            this.rectangle(Rectangle(slot.position, 10.0 * slot.scaleX, 42.0 * slot.scaleX))
+//                        } else {
+//                            this.rectangle(Rectangle(slot.position, 10.0, 42.0))
+//                        }
                     }
                 }
             }
@@ -142,7 +179,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
             articlesSorted.forEachIndexed { index, article ->
                 val cIndex = (index + (screenId * slots.size))
                 if(cIndex < articlesSorted.size && index < slots.size) {
-                    val position = slots[index]
+                    val position = slots[index].position
                     val label = articlesSorted[cIndex].label
 
                     if(label.isNotEmpty()) {
@@ -151,7 +188,6 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
                             if(d > 50) {
                                 drawer.fill = ColorRGBa.WHITE
                                 drawer.rectangle(Rectangle(position.x, 0.0, 4.0, bounds.height))
-
 
                                 when(sortingMethod) {
                                     SortMode.FACULTY_YEAR -> {
