@@ -65,14 +65,17 @@ fun Program.pc05(data: DataModel, state: State) {
 
     facultyFilterModel.filterChanged.listen {
         state.filterChanged()
+        camera.changed.trigger(Unit)
     }
 
     topicFilterModel.filterChanged.listen {
         state.filterChanged()
+        camera.changed.trigger(Unit)
     }
 
     dateFilterModel.filterChanged.listen {
         state.filterChanged()
+        camera.changed.trigger(Unit)
     }
 
     articleFilter.articleSelected.listen {
