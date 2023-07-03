@@ -1,11 +1,13 @@
 package v05.extensions
 
+import kotlinx.coroutines.yield
 import mu.KotlinLogging
 import org.openrndr.Extension
 import org.openrndr.Program
 import org.openrndr.draw.Drawer
 import org.openrndr.events.Event
 import org.openrndr.events.listen
+import org.openrndr.launch
 
 
 private val logger = KotlinLogging.logger {}
@@ -25,14 +27,18 @@ class IdleDetector : Extension{
                 idleEnded.trigger(Unit)
             }
         }
-    }
-    override fun beforeDraw(drawer: Drawer, program: Program) {
-        if (program.seconds - lastInteraction > 60.0) {
-            if (!idle) {
-                logger.info { "no activity detected for 60.0s, starting idle mode" }
-                idle = true
-                idleStarted.trigger(Unit)
+        program.launch {
+            while (true) {
+                if (program.seconds - lastInteraction > 60.0) {
+                    if (!idle) {
+                        logger.info { "no activity detected for 60.0s, starting idle mode" }
+                        idle = true
+                        idleStarted.trigger(Unit)
+                    }
+                }
+                yield()
             }
         }
     }
+
 }
