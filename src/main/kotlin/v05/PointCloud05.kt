@@ -8,6 +8,7 @@ import org.openrndr.extra.viewbox.viewBox
 import org.openrndr.shape.Rectangle
 import v05.filters.FilterSet
 import v05.libs.UIManager
+import v05.libs.watchProperty
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
@@ -95,6 +96,13 @@ fun main() = application {
                 sendChannel.send(EventObject(if (state.idle) IDLE else NAVIGATE, indices, state.zoom, state.filterSet))
             }
         }
+        watchProperty(state::idle).listen {
+            val indices: List<Int> = state.activePoints.map { data.pointsToArticleIndices[it.key]!! }
+            runBlocking {
+                sendChannel.send(EventObject(if (state.idle) IDLE else NAVIGATE, indices, state.zoom, state.filterSet))
+            }
+        }
+
 
         extend {
             pc.draw()
