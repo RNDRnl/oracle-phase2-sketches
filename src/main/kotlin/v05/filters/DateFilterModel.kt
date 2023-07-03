@@ -3,7 +3,7 @@ package v05.filters
 
 class DateFilterModel: FilterModel() {
 
-    override val list = listOf(1900, 2020)
+    override val list = listOf(1900, 2023)
     override val states = list.map { DateFilterState(it) }
     val filteredList: List<Int>
         get() = filter()

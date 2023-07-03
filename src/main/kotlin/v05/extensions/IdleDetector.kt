@@ -14,13 +14,13 @@ private val logger = KotlinLogging.logger {}
 
 class IdleDetector : Extension{
     override var enabled = true
-    var lastInteraction = 0.0
+    var lastInteraction = System.currentTimeMillis()
     var idle = true
     val idleStarted = Event<Unit>("idle-started")
     val idleEnded = Event<Unit>("idle-ended")
     override fun setup(program: Program) {
         listOf(program.mouse.moved, program.mouse.dragged, program.mouse.buttonDown, program.mouse.buttonDown).listen {
-            lastInteraction = program.seconds
+            lastInteraction = System.currentTimeMillis()
             if (idle) {
                 logger.info { "activity detected, ending idle mode" }
                 idle = false
@@ -29,7 +29,7 @@ class IdleDetector : Extension{
         }
         program.launch {
             while (true) {
-                if (program.seconds - lastInteraction > 60.0) {
+                if (System.currentTimeMillis() - lastInteraction > 60_000) {
                     if (!idle) {
                         logger.info { "no activity detected for 60.0s, starting idle mode" }
                         idle = true

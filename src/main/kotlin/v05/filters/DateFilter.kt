@@ -13,10 +13,10 @@ class DateFilter(val drawer: Drawer, val model: DateFilterModel): Filter() {
     inner class Selector(var state: DateFilterState) {
         var pos: Double
             get() {
-                return state.year.map(1900.0, 2020.0, 0.0, 1.0)
+                return state.year.map(1900.0, 2023.0, 0.0, 1.0)
             }
             set(value) {
-                state.year = value.map(0.0, 1.0, 1900.0, 2020.0)
+                state.year = value.map(0.0, 1.0, 1900.0, 2023.0)
             }
     }
 
