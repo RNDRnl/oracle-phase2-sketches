@@ -8,17 +8,22 @@ import org.openrndr.extra.compositor.compose
 import org.openrndr.extra.compositor.draw
 import org.openrndr.extra.compositor.layer
 import org.openrndr.extra.fx.blur.GaussianBlur
+import org.openrndr.extra.hashgrid.filter
+import org.openrndr.extra.noise.scatter
 import org.openrndr.extra.noise.uniform
 import org.openrndr.extra.propertywatchers.watchingProperty
 import org.openrndr.extra.shadestyles.linearGradient
 import org.openrndr.math.*
+import org.openrndr.math.transforms.project
 import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
+import org.openrndr.shape.bounds
 import v05.extensions.IdleDetector
 import v05.filters.*
 import v05.libs.UIManager
 import v05.libs.watchProperty
+import kotlin.random.Random
 
 
 fun Program.pc05(data: DataModel, state: State) {
@@ -43,6 +48,10 @@ fun Program.pc05(data: DataModel, state: State) {
     state.facultyFilter = facultyFilterModel
     state.topicFilter = topicFilterModel
     state.dateFilter = dateFilterModel
+
+
+
+    val labelPoints = data.points.shuffled(Random(0)).take(40)
 
 
 
@@ -160,13 +169,15 @@ fun Program.pc05(data: DataModel, state: State) {
         layer {// Point cloud
 
             val fm = loadFont("data/fonts/Roboto-Regular.ttf", 36.0)
+            val fms = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 24.0)
 
             draw {
-                drawer.strokeWeight = 0.05
+                drawer.strokeWeight = 0.2
                 drawer.rectangles {
                     for ((point, article) in data.pointsToArticles) {
                         val opacity = if (state.filtered[point] != null) 1.0 else 0.2
-                        this.stroke = if (state.activePoints[point] != null) ColorRGBa.YELLOW else null
+                        this.stroke = if (state.activePoints[point] != null) article.faculty.facultyColor().mix(
+                            ColorRGBa.WHITE, 0.75) else null
 
                         val size = if (state.filtered[point] != null) 6 else 2
 
@@ -174,8 +185,15 @@ fun Program.pc05(data: DataModel, state: State) {
                         this.rectangle(Rectangle.fromCenter(point, 0.25 * size, 0.45 * size))
                     }
                 }
+                //drawer.circles(labelPoints, 3.0)
 
+                val filteredPoints = labelPoints.filter { it in state.filtered.keys }
+
+                val projectedPoints = filteredPoints.map { project(it.xy0, drawer.projection, drawer.view*drawer.model, drawer.width, drawer.height).xy }
                 drawer.defaults()
+                val labelTexts = filteredPoints.map { data.pointsToArticles[it]!!.topic }
+                drawer.fontMap = fms
+                drawer.texts(labelTexts, projectedPoints)
 
                 drawer.fontMap = fm
                 drawer.fill = ColorRGBa.WHITE
