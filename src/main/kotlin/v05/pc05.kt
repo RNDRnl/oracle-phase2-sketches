@@ -9,6 +9,7 @@ import org.openrndr.extra.compositor.draw
 import org.openrndr.extra.compositor.layer
 import org.openrndr.extra.fx.blur.GaussianBlur
 import org.openrndr.extra.noise.uniform
+import org.openrndr.extra.propertywatchers.watchingProperty
 import org.openrndr.extra.shadestyles.linearGradient
 import org.openrndr.math.*
 import org.openrndr.poissonfill.PoissonFill
@@ -17,6 +18,7 @@ import org.openrndr.shape.Rectangle
 import v05.extensions.IdleDetector
 import v05.filters.*
 import v05.libs.UIManager
+import v05.libs.watchProperty
 
 
 fun Program.pc05(data: DataModel, state: State) {
@@ -24,7 +26,7 @@ fun Program.pc05(data: DataModel, state: State) {
     val camera = Camera2D()
 
     val slider = Slider(Vector2(width / 2.0, height - 60.0))
-    val discover = Discover()
+    val discover = Discover(state)
     val selectorBoxes = SelectorBoxes()
 
     val facultyFilterModel = FacultyFilterModel()
@@ -41,6 +43,8 @@ fun Program.pc05(data: DataModel, state: State) {
     state.facultyFilter = facultyFilterModel
     state.topicFilter = topicFilterModel
     state.dateFilter = dateFilterModel
+
+
 
     val uiManager = UIManager(window, mouse)
     var uiManagerExport: UIManager by userProperties
@@ -65,16 +69,19 @@ fun Program.pc05(data: DataModel, state: State) {
 
     facultyFilterModel.filterChanged.listen {
         state.filterChanged()
+        // FIXME this should not be necessary, without invoking trigger we end up with a bugged point cloud view
         camera.changed.trigger(Unit)
     }
 
     topicFilterModel.filterChanged.listen {
         state.filterChanged()
+        // FIXME this should not be necessary, without invoking trigger we end up with a bugged point cloud view
         camera.changed.trigger(Unit)
     }
 
     dateFilterModel.filterChanged.listen {
         state.filterChanged()
+        // FIXME this should not be necessary, without invoking trigger we end up with a bugged point cloud view
         camera.changed.trigger(Unit)
     }
 
@@ -85,6 +92,14 @@ fun Program.pc05(data: DataModel, state: State) {
                 selectorBoxes.current = 1
                 camera.centerAt(pos)
             }
+        }
+    }
+
+    watchProperty(discover::expanded).listen {
+        if (!it) {
+            state.filterSet = FilterSet.EMPTY
+        } else {
+            state.filterChanged()
         }
     }
 

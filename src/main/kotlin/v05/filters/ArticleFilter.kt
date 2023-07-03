@@ -9,6 +9,7 @@ import org.openrndr.draw.loadFont
 import org.openrndr.draw.writer
 import org.openrndr.events.Event
 import org.openrndr.extra.shadestyles.linearGradient
+import org.openrndr.internal.Driver
 import org.openrndr.math.Vector2
 import org.openrndr.math.map
 import org.openrndr.shape.Rectangle
@@ -85,6 +86,9 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>) : Filter() 
         val stRatio = yOffset/totalHeight
         val scrollWidgetY = (-yOffset / totalHeight).map(0.0, 1.0, 0.0, viewHeight-scrollWidgetHeight,clamp = true)
 
+        if (actionBounds.area < 1.0)
+            return
+
         if (visible && articles.isNotEmpty()) {
 
             if (vtRatio < 1.0)
@@ -126,11 +130,13 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>) : Filter() 
 
                         val div = article.title.split("|")
                         div.take(2).forEachIndexed { i, item ->
-                            val cc = if (i == 0) color else color.mix(ColorRGBa.GRAY, 0.65)
-                            item.forEach { c ->
-                                drawer.fill =  ColorRGBa.WHITE
-                                text(c.toString())
-                            }
+                            //val cc = if (i == 0) color else color.mix(ColorRGBa.GRAY, 0.65)
+                            drawer.fill = ColorRGBa.WHITE
+                            text(item)
+//                            item.forEach { c ->
+//                                drawer.fill =  ColorRGBa.WHITE
+//                                text(c.toString())
+//                            }
                         }
 
                         drawer.fontMap = publicationFs
@@ -145,6 +151,7 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>) : Filter() 
                 (itemBox.corner + actionBounds.corner) to i
             }
             drawer.drawStyle.clip = null
+            Driver.instance.setState(drawer.drawStyle)
         }
 
     }

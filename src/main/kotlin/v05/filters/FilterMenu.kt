@@ -14,10 +14,11 @@ import org.openrndr.math.transforms.buildTransform
 import org.openrndr.shape.Rectangle
 import org.openrndr.svg.loadSVG
 import v05.Article
+import v05.State
 import v05.facultyNames
 import v05.libs.UIElementImpl
 
-open class FilterMenu: UIElementImpl() {
+open class FilterMenu(val state: State): UIElementImpl() {
 
     inner class Animations: Animatable() {
         var expandT = 0.0
@@ -109,10 +110,15 @@ open class FilterMenu: UIElementImpl() {
         drawer.fill = ColorRGBa.WHITE.opacify(0.8)
         drawer.stroke = null
         drawer.fontMap = titleFm
-        drawer.text(title, actionBounds.corner + Vector2(80.0, 40.0))
+
+        val completeTitle = title.replace("%COUNT%", "${state.filtered.size}")
+
+        drawer.text(completeTitle, actionBounds.corner + Vector2(80.0, 40.0))
 
         drawer.fontMap = subtitleFm
         drawer.text(subtitle, actionBounds.corner + Vector2(80.0,  45.0 + titleFm.height))
+
+
 
     }
 

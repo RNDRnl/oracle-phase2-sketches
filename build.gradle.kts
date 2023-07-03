@@ -59,6 +59,7 @@ val orxFeatures = setOf<String>(
     "orx-triangulation",
     "orx-video-profiles",
     "orx-view-box",
+    "orx-property-watchers"
 )
 
 /** ## additional ORML features to be added to this project */

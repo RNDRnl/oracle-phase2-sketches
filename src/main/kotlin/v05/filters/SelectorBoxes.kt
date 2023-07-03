@@ -11,7 +11,7 @@ import org.w3c.dom.css.Rect
 import v05.libs.UIElementImpl
 
 
-class SelectorBoxes: UIElementImpl() {
+class SelectorBoxes : UIElementImpl() {
 
     var current = 0
 
@@ -35,7 +35,7 @@ class SelectorBoxes: UIElementImpl() {
     val fM = loadFont("data/fonts/default.otf", 18.0)
     fun draw(drawer: Drawer, bounds: Rectangle) {
 
-        if(visible) {
+        if (visible) {
 
             val r0 = Rectangle(bounds.corner + offset, 130.0, 32.0)
             val r1 = Rectangle(bounds.corner + Vector2(r0.width, 0.0) + offset, 130.0, 32.0)
@@ -44,16 +44,16 @@ class SelectorBoxes: UIElementImpl() {
             boxes = listOf(r0, r1, r2)
 
             boxes.forEachIndexed { i, it ->
-                drawer.fill = if(i == current) ColorRGBa.WHITE else ColorRGBa.TRANSPARENT
+                drawer.fill = if (i <= current) ColorRGBa.WHITE else ColorRGBa.TRANSPARENT
                 drawer.stroke = ColorRGBa.WHITE
                 drawer.rectangle(it)
 
-                drawer.fill = if(i == current) ColorRGBa.BLACK else ColorRGBa.WHITE
+                drawer.fill = if (i <= current) ColorRGBa.BLACK else ColorRGBa.WHITE
                 drawer.writer {
                     drawer.fontMap = fM
                     box = it
                     cursor.x = it.center.x - textWidth(texts[i]) / 2.0
-                    cursor.y = it.center.y + it.height / 4.0
+                    cursor.y = it.center.y + it.height / 4.0 - 2.0
                     text(texts[i])
                 }
             }

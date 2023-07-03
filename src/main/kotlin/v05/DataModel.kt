@@ -89,12 +89,23 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
 }
 
 
+enum class FilterState {
+    NO_FILTER,
+    GLOBAL_FACULTY,
+    GLOBAL_TOPIC,
+    GLOBAL_ARTICLE,
+    SHOWCASE_FACULTY,
+    SHOWCASE_ARTICLE
+}
+
 
 class State(val model: DataModel) {
 
     lateinit var facultyFilter: FacultyFilterModel
     lateinit var topicFilter: TopicFilterModel
     lateinit var dateFilter: DateFilterModel
+
+    var filterState = FilterState.NO_FILTER
 
     fun filterChanged() {
         val filteredFaculties = facultyFilter.filteredList
