@@ -37,7 +37,7 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
         .merge { colsOf<Number>()  }.into("scores")
 
     private val articlesDf = DataFrame.read("offline-data/all-data-v5.csv")
-        .select{ cols(0..12) }
+        .select{ cols(0..14) }
         .fillNulls("faculty").with { "Unknown Faculty" }
         .convert("faculty").with { (it as String).correctedFaculty() }
         .fillNulls("abstract").with { "No abstract provided" }
@@ -64,6 +64,8 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
     val pointsToArticles = (points zip articles).toMap()
     val pointsToArticleIndices = (points zip articles.indices).toMap()
     val articlesToPoints = pointsToArticles.entries.associateBy({ it.value }) { it.key }
+
+    val topGraduates = articlesDf.filter { "best_student"<Int>() == 1 }.toListOf<Article>()
 
     val yearBrackets = articles.histogramOf { it.year.toIntOrNull() }.brackets().also {
         println(it)
@@ -218,7 +220,8 @@ data class Article(
 
 fun main() {
     val dmn = DataModel(Rectangle.fromCenter(Vector2.ZERO, 1920.0, 1080.0))
-    dmn.dataFrame.toStandaloneHTML().openInBrowser()
+    //dmn.dataFrame.toStandaloneHTML().openInBrowser()
 
-    println(dmn.articles.random().topicScores)
+    println(dmn.topGraduates.size)
+    println(dmn.topGraduates)
 }
