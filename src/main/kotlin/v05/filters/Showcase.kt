@@ -39,6 +39,10 @@ class Showcase(val title: String, val articles: List<Article>, var frame: Rectan
 
     val titleFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 36.0)
     val buttonFm = loadFont("data/fonts/Roboto-Regular.ttf", 17.0)
+
+
+    val subtitleFm = loadFont("data/fonts/Roboto-Regular.ttf", 13.0)
+
     fun draw(drawer: Drawer) {
         updateAnimation()
 
@@ -56,7 +60,7 @@ class Showcase(val title: String, val articles: List<Article>, var frame: Rectan
 
             toggleButton = Rectangle(
                     frame.x + frame.width - 140.0,
-            frame.y + 35.0,
+            frame.y + 27.0,
             100.0, 25.0)
 
             drawer.stroke = ColorRGBa.WHITE
@@ -79,12 +83,15 @@ class Showcase(val title: String, val articles: List<Article>, var frame: Rectan
             drawer.fill = ColorRGBa.WHITE
             drawer.text(title, frame.corner + Vector2(20.0, 50.0))
 
+            drawer.fontMap = subtitleFm
+            drawer.text("${articles.size} PUBLICATIONS", frame.corner + Vector2(20.0, 70.0))
+
             drawer.stroke = null
             drawer.rectangles {
                 articles.forEachIndexed { i, it ->
                     val w = (frame.width - 120.0) / articles.size
                     this.fill = it.faculty.facultyColor()
-                    this.rectangle(40.0 + i * w + (w / 5.0) * i, frame.y + 80.0, w, 60.0 - (58.0 * fader))
+                    this.rectangle(40.0 + i * w + (w / 5.0) * i, frame.y + 95.0, w, 60.0 - (58.0 * fader))
                 }
             }
 

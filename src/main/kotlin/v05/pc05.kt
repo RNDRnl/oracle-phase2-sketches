@@ -413,8 +413,6 @@ fun Program.pc05(data: DataModel, state: State) {
 
                    showcases.draw(drawer)
 
-
-
                     slider.draw(drawer)
                 }
 
@@ -431,7 +429,7 @@ fun Program.pc05(data: DataModel, state: State) {
 
                     drawer.fontMap = titleFm
                     drawer.fill = ColorRGBa.WHITE
-                    drawer.text("ORACLE", 25.0, 50.0)
+                    drawer.text("ORACLE", 10.0, 37.0)
                 }
             }
         }

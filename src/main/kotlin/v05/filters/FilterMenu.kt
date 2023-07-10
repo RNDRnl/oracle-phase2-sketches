@@ -57,7 +57,7 @@ open class FilterMenu(val state: State): UIElementImpl() {
     var subtitle = ""
 
     val titleFm = loadFont("data/fonts/Roboto-Regular.ttf", 28.0)
-    val subtitleFm = loadFont("data/fonts/Roboto-Regular.ttf", 12.0)
+    val subtitleFm = loadFont("data/fonts/Roboto-Regular.ttf", 13.0)
 
     fun drawBasics(drawer: Drawer) {
 
@@ -80,12 +80,8 @@ open class FilterMenu(val state: State): UIElementImpl() {
         drawer.stroke = null
         drawer.fontMap = titleFm
 
-        val completeTitle = title.replace("%COUNT%", "${state.filtered.size}")
+        drawer.text(title, actionBounds.corner + Vector2(80.0, 40.0))
 
-        drawer.text(completeTitle, actionBounds.corner + Vector2(80.0, 40.0))
-
-        drawer.fontMap = subtitleFm
-        drawer.text(subtitle, actionBounds.corner + Vector2(80.0,  45.0 + titleFm.height))
 
     }
 

@@ -3,6 +3,7 @@ package v05.filters
 import org.openrndr.MouseEventType
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
+import org.openrndr.draw.writer
 import org.openrndr.events.Event
 import org.openrndr.internal.Driver
 import org.openrndr.math.Vector2
@@ -114,6 +115,18 @@ class Showcases(state: State): FilterMenu(state) {
             abHeight)
 
         drawBasics(drawer)
+
+        drawer.fontMap = subtitleFm
+        drawer.fill = ColorRGBa.WHITE
+        drawer.writer {
+            cursor.x = actionBounds.x + 78.0
+            cursor.y = actionBounds.y + 45.0 + titleFm.height
+            val type = if(current == showcases[0]) "SHOWCASE" else "SHELF"
+            val text = if(current != null) "EXPLORING THE ${current!!.title} $type" else "EXPLORE CURATED COLLECTION AND PHYSICAL SHELVES"
+
+            text(text)
+        }
+
 
         drawer.drawStyle.clip = Rectangle(Vector2(actionBounds.x, actionBounds.y + 80.0), boundsWidth, (boundsHeight + expandedY) - 80.0)
 
