@@ -27,6 +27,7 @@ class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val dat
             pointCloudShadeStyle.parameter("time", clock.seconds)
             drawer.shadeStyle = pointCloudShadeStyle
             drawer.rectangles {
+                var idx = 0
                 for ((point, article) in data.pointsToArticles) {
                     val opacity = if (state.filtered[point] != null) 1.0 else 0.2
                     this.stroke = if (state.activePoints[point] != null) article.faculty.facultyColor().mix(
@@ -36,7 +37,9 @@ class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val dat
                     val size = if (state.filtered[point] != null) 6 else 2
 
                     this.fill = article.faculty.facultyColor().opacify(opacity)
-                    this.rectangle(Rectangle.fromCenter(point, 0.25 * size, 0.45 * size))
+
+                    this.rectangle(Rectangle.fromCenter(point, 0.25 * size, 0.45 * size), data.rotations[idx]+ 90.0)
+                    idx++
                 }
             }
         }

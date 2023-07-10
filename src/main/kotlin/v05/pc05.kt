@@ -17,9 +17,11 @@ import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import v05.extensions.IdleDetector
 import v05.filters.*
+import v05.fx.GradientFilter
 import v05.libs.UIManager
 import v05.libs.watchProperty
 import v05.views.PointCloud
+import kotlin.math.atan2
 import kotlin.random.Random
 
 
@@ -154,6 +156,44 @@ fun Program.pc05(data: DataModel, state: State) {
 
     val pointCloudView = PointCloud(drawer, this, state, data)
 
+    val pointCloudDensity  = drawImage(width, height, type = ColorType.FLOAT32) {
+        drawer.clear(ColorRGBa.BLACK)
+        drawer.drawStyle.blendMode = BlendMode.ADD
+
+        drawer.shadeStyle = shadeStyle {
+            fragmentTransform = """float d = length(2.0 * (va_texCoord0.xy - vec2(0.5) ));
+                float ed = smoothstep(1.0, 0.0, d);
+                 x_fill.rgb *= ed;
+            """.trimMargin()
+        }
+        drawer.stroke = null
+        drawer.fill = ColorRGBa.WHITE
+        val size = 160.0
+        drawer.rectangles {
+            for (i in data.points.indices) {
+                rectangle(data.points[i] - Vector2(size/2.0, size/2.0), size, size)
+            }
+        }
+    }
+    val gradientFilter = GradientFilter()
+    val pointCloudGradient = pointCloudDensity.createEquivalent()
+    gradientFilter.apply(pointCloudDensity, pointCloudGradient)
+    val pcgs = pointCloudGradient.shadow
+    pcgs.download()
+    for (i in data.points.indices) {
+        val ix = data.points[i].x.toInt().coerceIn(0, width-1)
+        val iy = data.points[i].y.toInt().coerceIn(0, height-1)
+        val c = pcgs[ix, iy].toVector4().xy
+        val r = atan2(c.x, c.y)
+        data.rotations[i] = r.asDegrees
+
+
+    }
+
+
+    pcgs.destroy()
+
+
     val c = compose {
         layer {// Background
             val poisson = PoissonFill()
@@ -166,7 +206,6 @@ fun Program.pc05(data: DataModel, state: State) {
             val mul = 2
             val bg = drawImage(width * mul, height * mul, type = ColorType.FLOAT32) {
                 drawer.clear(ColorRGBa.TRANSPARENT)
-
                 drawer.stroke = null
                 drawer.points {
                     for (i in data.articles.indices) {
@@ -185,8 +224,6 @@ fun Program.pc05(data: DataModel, state: State) {
                         this.point(width-2.0, y.toDouble())
                     }
                 }
-                //drawer.fill = ColorRGBa.BLACK
-                ///drawer.circle(drawer.bounds.center, 400.0)
             }
             poisson.apply(bg, bg)
             blur.apply(bg, bg)
@@ -356,6 +393,12 @@ fun Program.pc05(data: DataModel, state: State) {
         c.draw(drawer)
       //  uiManager.drawDebugBoxes(drawer)
 
+//        drawer.defaults()
+//        drawer.image(pointCloudDensity)
+//        drawer.shadeStyle = shadeStyle {
+//            fragmentTransform = """x_fill.rg = x_fill.rg * 0.5 + 0.5;"""
+//        }
+//        drawer.image(pointCloudGradient)
     }
 
 }

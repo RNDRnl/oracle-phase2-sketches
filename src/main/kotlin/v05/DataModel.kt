@@ -18,6 +18,7 @@ import v05.filters.FilterSet
 import v05.libs.brackets
 import v05.libs.histogramOf
 import v05.filters.TopicFilterModel
+import java.awt.geom.Arc2D
 import java.io.Serializable
 import java.math.BigDecimal
 
@@ -61,6 +62,7 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
     val articles = articlesDf.toListOf<Article>()
     val points = pointsDf[pos].toList().run { map(this.bounds, frame) }
 
+    val rotations = DoubleArray(points.size)
     val pointsToArticles = (points zip articles).toMap()
     val pointsToArticleIndices = (points zip articles.indices).toMap()
     val articlesToPoints = pointsToArticles.entries.associateBy({ it.value }) { it.key }
