@@ -33,12 +33,24 @@ open class FilterMenu(val state: State): UIElementImpl() {
     }
     val animations = Animations()
 
+    fun setupListeners() {
+
+        buttonDown.listen {
+            it.cancelPropagation()
+        }
+
+        buttonUp.listen {
+            if (it.position in actionBounds.copy(height =  80.0)) {
+                active = !active
+            }
+        }
+
+    }
+
     var active = false
         set(value) {
             field = value
-            if(field) {
-                expanded = !expanded
-            }
+            expanded = value
         }
     var expanded = false
         set(value) {

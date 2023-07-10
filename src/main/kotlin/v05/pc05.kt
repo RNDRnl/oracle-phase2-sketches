@@ -115,11 +115,20 @@ fun Program.pc05(data: DataModel, state: State) {
         }
     }
 
+    watchProperty(discover::active).listen {
+        if(it) {
+            topGraduates.active = false
+            topGraduates.expanded = false
+        }
+
+        listOf(facultyFilter, topicFilter, dateFilter, articleFilter).map { f -> f.visible = it}
+    }
+
     watchProperty(topGraduates::active).listen {
         if(it) {
             discover.active = false
-            discover.expanded = true
         }
+        discover.expanded = it
     }
 
     state.changed.listen {
@@ -344,7 +353,7 @@ fun Program.pc05(data: DataModel, state: State) {
     extend {
 
         c.draw(drawer)
-        //uiManager.drawDebugBoxes(drawer)
+        uiManager.drawDebugBoxes(drawer)
 
     }
 

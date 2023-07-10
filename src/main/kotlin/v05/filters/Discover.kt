@@ -18,15 +18,7 @@ class Discover(state: State): FilterMenu(state) {
 
         actionBounds = Rectangle(10.0, 0.0, boundsWidth, boundsHeight)
 
-        buttonDown.listen {
-            it.cancelPropagation()
-        }
-
-        buttonUp.listen {
-            if (it.position in actionBounds.copy(height =  80.0)) {
-                active = !active
-            }
-        }
+        setupListeners()
     }
 
     override fun draw(drawer: Drawer) {
