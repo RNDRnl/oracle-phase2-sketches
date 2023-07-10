@@ -10,7 +10,7 @@ import org.openrndr.math.Vector2
 import org.openrndr.shape.Rectangle
 
 
-class TopicFilter(val drawer: Drawer, val model: TopicFilterModel): Filter() {
+class TopicFilter(val model: TopicFilterModel): Filter() {
 
     override var title = "TOPICS"
     override var visible = false
@@ -45,7 +45,7 @@ class TopicFilter(val drawer: Drawer, val model: TopicFilterModel): Filter() {
 
     val topicFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 19.0)
 
-    override fun draw() {
+    override fun draw(drawer: Drawer) {
 
         if(visible) {
             var topicBoxTracker = actionBounds.corner

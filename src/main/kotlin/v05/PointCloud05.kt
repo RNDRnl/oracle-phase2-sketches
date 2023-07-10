@@ -77,7 +77,7 @@ fun main() = application {
 
             while (true) {
                 runBlocking {
-                    println("sending to ${ipAddress}:9002")
+                   // println("sending to ${ipAddress}:9002")
                     val eo = sendChannel.receive()
                     send(eo)
                 }
@@ -88,7 +88,7 @@ fun main() = application {
 
         listOf(uiManagerExport.clicked, uiManagerExport.postDragEnded).listen {
             val indices: List<Int> = state.activePoints.map { data.pointsToArticleIndices[it.key]!! }
-            println("total number of indicies: ${indices.size}")
+           // println("total number of indicies: ${indices.size}")
             runBlocking {
                 sendChannel.send(EventObject(if (state.idle) IDLE else NAVIGATE, indices, state.zoom, state.filterSet))
             }

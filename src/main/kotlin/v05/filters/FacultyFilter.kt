@@ -14,7 +14,7 @@ import org.openrndr.math.mod
 import org.openrndr.shape.Rectangle
 import v05.*
 
-class FacultyFilter(val drawer: Drawer, val model: FacultyFilterModel): Filter() {
+class FacultyFilter(val model: FacultyFilterModel): Filter() {
 
 
     inner class Animations: Animatable() {
@@ -83,7 +83,7 @@ class FacultyFilter(val drawer: Drawer, val model: FacultyFilterModel): Filter()
     val facultyAbbrFm = loadFont("data/fonts/Roboto-Regular.ttf", 17.0)
     val facultyFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 16.0)
 
-    override fun draw() {
+    override fun draw(drawer: Drawer) {
 
         if(visible) {
             animations.updateAnimation()

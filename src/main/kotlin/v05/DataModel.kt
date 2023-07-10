@@ -6,6 +6,7 @@ import org.jetbrains.kotlinx.dataframe.api.*
 import org.jetbrains.kotlinx.dataframe.io.read
 import org.jetbrains.kotlinx.dataframe.io.readCSV
 import org.jetbrains.kotlinx.dataframe.io.toStandaloneHTML
+import org.jetbrains.kotlinx.dataframe.name
 import org.openrndr.events.Event
 import org.openrndr.extra.kdtree.kdTree
 import org.openrndr.math.Vector2
@@ -38,7 +39,6 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
         .merge { colsOf<Number>()  }.into("scores")
 
     private val articlesDf = DataFrame.read("offline-data/all-data-v5.csv")
-        .select{ cols(0..14) }
         .fillNulls("faculty").with { "Unknown Faculty" }
         .convert("faculty").with { (it as String).correctedFaculty() }
         .fillNulls("abstract").with { "No abstract provided" }
@@ -68,11 +68,16 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
     val pointsToArticleIndices = (points zip articles.indices).toMap()
     val articlesToPoints = pointsToArticles.entries.associateBy({ it.value }) { it.key }
 
-    val topGraduates = articlesDf.filter { "best_student"<Int>() == 1 }.toListOf<Article>()
+    // showcases
 
-    val yearBrackets = articles.histogramOf { it.year.toIntOrNull() }.brackets().also {
-        println(it)
+    val topGraduates = "TOP GRADUATES" to articlesDf.filter { "best_student"<Int>() == 1 }.toListOf<Article>()
+    val scTopics = articlesDf.select { cols { it.name.startsWith("topic_") } }.columns().map {
+        val name = it.name
+        val articles = articlesDf.filter { name<Int>() == 1 }.toListOf<Article>()
+        name.drop(8).uppercase() to articles
     }
+    val showcases = listOf(topGraduates) + scTopics
+
 
     var yearLabels = mutableListOf<Int>()
     var facultyLabels = mutableListOf<String>()
@@ -225,6 +230,6 @@ fun main() {
     val dmn = DataModel(Rectangle.fromCenter(Vector2.ZERO, 1920.0, 1080.0))
     //dmn.dataFrame.toStandaloneHTML().openInBrowser()
 
-    println(dmn.topGraduates.size)
-    println(dmn.topGraduates)
+    println(dmn.scTopics)
+    println(dmn.scTopics.map { it.first to it.second.size })
 }

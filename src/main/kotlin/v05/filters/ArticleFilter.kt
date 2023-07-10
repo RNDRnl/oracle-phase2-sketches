@@ -17,7 +17,7 @@ import v05.Article
 import v05.facultyColor
 import kotlin.math.sin
 
-class ArticleFilter(val drawer: Drawer, var articles: List<Article>) : Filter() {
+class ArticleFilter(var articles: List<Article>) : Filter() {
 
     val articleSelected = Event<Unit>()
 
@@ -62,8 +62,6 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>) : Filter() 
         dragged.listen {
             lastEventType = it.type
             yOffset += it.dragDisplacement.y
-
-
         }
 
         buttonUp.listen {
@@ -75,7 +73,7 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>) : Filter() 
     val publicationFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 28.0)
     val publicationFs = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 18.0)
     var initialT = System.currentTimeMillis()
-    override fun draw() {
+    override fun draw(drawer: Drawer) {
 
         val itemHeight = 55.0
 
@@ -98,9 +96,8 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>) : Filter() 
             drawer.drawStyle.clip = actionBounds
 
             entriesInView = articles.asSequence().withIndex().associate { (i, article) ->
-                var itemBox = Rectangle(actionBounds.corner, 0.0, 0.0)
 
-                itemBox = Rectangle(
+                var itemBox = Rectangle(
                     actionBounds.corner.x,
                     actionBounds.corner.y + i * 55.0 + yOffset,
                     actionBounds.width,
@@ -143,9 +140,9 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>) : Filter() 
                         drawer.fontMap = publicationFs
                         newLine()
                         cursor.x = itemBox.corner.x
-                        text("${article.year}")
+                        text(article.year)
                         cursor.x = itemBox.corner.x + itemBox.width/2.0
-                        text("${article.author}")
+                        text(article.author)
                     }
                 }
 

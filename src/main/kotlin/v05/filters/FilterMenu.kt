@@ -28,24 +28,10 @@ open class FilterMenu(val state: State): UIElementImpl() {
         }
 
         fun compress(): PropertyAnimationKey<Double> {
-            return ::expandT.animate(0.0, 1000, Easing.CubicInOut)
+            return ::expandT.animate(0.0, 500, Easing.CubicInOut)
         }
     }
     val animations = Animations()
-
-    fun setupListeners() {
-
-        buttonDown.listen {
-            it.cancelPropagation()
-        }
-
-        buttonUp.listen {
-            if (it.position in actionBounds.copy(height =  80.0)) {
-                active = !active
-            }
-        }
-
-    }
 
     var active = false
         set(value) {

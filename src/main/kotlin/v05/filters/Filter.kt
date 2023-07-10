@@ -1,5 +1,6 @@
 package v05.filters
 
+import org.openrndr.draw.Drawer
 import org.openrndr.events.Event
 import v05.libs.UIElementImpl
 
@@ -9,7 +10,7 @@ abstract class Filter: UIElementImpl() {
     open var isCurrent = false
     open val title = ""
 
-    open fun draw() {
+    open fun draw(drawer: Drawer) {
 
 
     }

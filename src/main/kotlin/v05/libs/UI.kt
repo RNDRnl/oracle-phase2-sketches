@@ -1,10 +1,12 @@
 package v05.libs
 
 import org.openrndr.*
+import org.openrndr.color.ColorHSLa
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
 import org.openrndr.draw.isolated
 import org.openrndr.events.Event
+import org.openrndr.extra.noise.uniform
 import org.openrndr.extra.noise.uniformRing
 import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
@@ -127,14 +129,13 @@ class UIManager(val window: Window, mouseEvents: MouseEvents) {
             drawer.fill = null
             drawer.rectangles {
                 elements.filter { it.visible }.mapIndexed { i, it ->
-                    val v = Vector3.uniformRing(0.0, 1.0, Random(i))
-                    this.stroke = ColorRGBa.fromVector(v)
+                    this.stroke = ColorHSLa(0.5, 0.5, 0.5).shiftHue(360.0 * Double.uniform(0.0, 1.0, Random(i) )).toRGBa()
                     this.rectangle(it.actionBounds)
                 }
             }
 
             drawer.fill = ColorRGBa.GREEN
-            for(e in elements) {
+            for(e in elements.filter { it.visible }) {
                 val rect = e.actionBounds
                 e::class.simpleName?.let { drawer.text(it, rect.center) }
             }
@@ -142,6 +143,14 @@ class UIManager(val window: Window, mouseEvents: MouseEvents) {
             if (dragElement != null) {
                 drawer.fill = ColorRGBa.WHITE.opacify(0.2)
                 drawer.rectangle(dragElement!!.actionBounds)
+            }
+
+            drawer.fill = ColorRGBa.PINK
+            if(postDragElement != null) {
+                postDragElement!!::class.simpleName?.let { drawer.text("last dragged: $it", 20.0, 20.0) }
+            }
+            if(activeElement != null) {
+                activeElement!!::class.simpleName?.let { drawer.text("last clicked: $it", 20.0, 40.0) }
             }
         }
     }

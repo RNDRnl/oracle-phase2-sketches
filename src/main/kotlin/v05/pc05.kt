@@ -32,19 +32,18 @@ fun Program.pc05(data: DataModel, state: State) {
     val discover = Discover(state)
     val discoverSelector = DiscoverSelector()
 
-    val topGraduates = TopGraduates(state)
-    val topGraduatesSelector = TopGraduatesSelector()
+    val showcases = Showcases(state)
 
     val facultyFilterModel = FacultyFilterModel()
-    val facultyFilter = FacultyFilter(drawer, facultyFilterModel)
+    val facultyFilter = FacultyFilter(facultyFilterModel)
 
     val topicFilterModel = TopicFilterModel()
-    val topicFilter = TopicFilter(drawer, topicFilterModel)
+    val topicFilter = TopicFilter(topicFilterModel)
 
     val dateFilterModel = DateFilterModel()
-    val dateFilter = DateFilter(drawer, dateFilterModel)
+    val dateFilter = DateFilter(dateFilterModel)
 
-    val articleFilter = ArticleFilter(drawer, data.articles)
+    val articleFilter = ArticleFilter(data.articles)
 
     state.facultyFilter = facultyFilterModel
     state.topicFilter = topicFilterModel
@@ -56,10 +55,9 @@ fun Program.pc05(data: DataModel, state: State) {
     uiManagerExport = uiManager
 
     val uiElements =
-        listOf(
-            camera, slider,
+        listOf(camera, slider,
+            showcases, showcases.filter,
             discover, discoverSelector,
-            topGraduates, topGraduatesSelector,
             facultyFilter, topicFilter, dateFilter, articleFilter
         )
 
@@ -115,6 +113,29 @@ fun Program.pc05(data: DataModel, state: State) {
         }
     }
 
+    showcases.showcaseSelected.listen {
+        //showcases don't provide a filterset
+        if(showcases.current != null) {
+            state.filtered = data.pointsToArticles.filter {
+                it.value in showcases.current!!.articles
+            }
+        } else {
+            state.filtered = data.pointsToArticles
+        }
+        state.changed.trigger(Unit)
+    }
+
+    showcases.filter.articleSelected.listen {
+        if (showcases.filter.currentArticle != null) {
+            val pos = data.articlesToPoints[showcases.filter.currentArticle]
+            if (pos != null) {
+                camera.centerAt(pos)
+            } else {
+                println()
+            }
+        }
+    }
+
     watchProperty(discover::expanded).listen {
         if (!it) {
             state.filterSet = FilterSet.EMPTY
@@ -124,15 +145,16 @@ fun Program.pc05(data: DataModel, state: State) {
     }
 
     watchProperty(discover::active).listen {
-        if (it) {
-            topGraduates.active = false
-            topGraduates.expanded = false
+        if(it) {
+            showcases.active = false
+            showcases.expanded = false
         }
         listOf(facultyFilter, topicFilter, dateFilter, articleFilter).map { f -> f.visible = it }
     }
 
-    watchProperty(topGraduates::active).listen {
+    watchProperty(showcases::active).listen {
         if (it) {
+            showcases.current = null
             discover.active = false
         }
         discover.expanded = it
@@ -207,6 +229,8 @@ fun Program.pc05(data: DataModel, state: State) {
 
 
     }
+
+
     pcgs.destroy()
 
     val pointCloudLocalMaxima = pointCloudGradient.createEquivalent(type = ColorType.UINT8)
@@ -349,7 +373,7 @@ fun Program.pc05(data: DataModel, state: State) {
                                     it.actionBounds.height - 180.0 - 150.0
                                 )
                                 isMinimized = discoverSelector.current == 1 || discoverSelector.current == 2
-                                draw()
+                                draw(drawer)
                             }
 
                             topicFilter.apply {
@@ -361,7 +385,7 @@ fun Program.pc05(data: DataModel, state: State) {
                                     it.actionBounds.width - 50.0,
                                     facultyFilter.actionBounds.height + 60.0
                                 )
-                                draw()
+                                draw(drawer)
                             }
 
                             dateFilter.apply {
@@ -372,14 +396,14 @@ fun Program.pc05(data: DataModel, state: State) {
                                     facultyFilter.actionBounds.width,
                                     110.0
                                 )
-                                draw()
+                                draw(drawer)
                             }
 
                             articleFilter.apply {
                                 visible = it.expanded && discoverSelector.current == 2
                                 actionBounds =
                                     topicFilter.actionBounds.movedBy(Vector2(facultyFilter.actionBounds.width, 0.0))
-                                draw()
+                                draw(drawer)
                             }
 
                         }
@@ -387,16 +411,7 @@ fun Program.pc05(data: DataModel, state: State) {
                         drawer.drawStyle.clip = null
                     }
 
-                    topGraduates.let {
-
-                        it.draw(drawer)
-
-                        topGraduatesSelector.apply {
-                            visible = it.expanded
-                            if (it.expanded) draw(drawer, it.actionBounds)
-                        }
-
-                    }
+                   showcases.draw(drawer)
 
 
 
@@ -435,7 +450,7 @@ fun Program.pc05(data: DataModel, state: State) {
     extend {
 
         c.draw(drawer)
-        //  uiManager.drawDebugBoxes(drawer)
+        //uiManager.drawDebugBoxes(drawer)
 
 //        drawer.defaults()
 //        drawer.image(pointCloudDensity)
@@ -447,5 +462,3 @@ fun Program.pc05(data: DataModel, state: State) {
 
 
 }
-
-inline infix fun <T> T?.checkNullOr(predicate: (T) -> Boolean): Boolean = if (this != null) predicate(this) else true

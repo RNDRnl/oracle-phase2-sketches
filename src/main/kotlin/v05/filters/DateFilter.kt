@@ -8,7 +8,7 @@ import org.openrndr.shape.LineSegment
 import org.openrndr.shape.Rectangle
 
 
-class DateFilter(val drawer: Drawer, val model: DateFilterModel): Filter() {
+class DateFilter(val model: DateFilterModel): Filter() {
 
     inner class Selector(var state: DateFilterState) {
         var pos: Double
@@ -42,7 +42,7 @@ class DateFilter(val drawer: Drawer, val model: DateFilterModel): Filter() {
         }
     }
 
-    override fun draw() {
+    override fun draw(drawer: Drawer) {
         if(visible) {
             val rail = LineSegment(actionBounds.x + 15.0, actionBounds.center.y, actionBounds.x + actionBounds.width - 30.0, actionBounds.center.y)
 
