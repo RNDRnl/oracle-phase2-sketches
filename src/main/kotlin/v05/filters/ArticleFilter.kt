@@ -140,7 +140,7 @@ class ArticleFilter(var articles: List<Article>) : Filter() {
                         drawer.fontMap = publicationFs
                         newLine()
                         cursor.x = itemBox.corner.x
-                        text(article.year)
+                        text(article.year.toString())
                         cursor.x = itemBox.corner.x + itemBox.width/2.0
                         text(article.author)
                     }

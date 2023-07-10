@@ -393,7 +393,7 @@ class Zoom2(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
                     3 -> multiColumnText(drawer, "ABSTRACT", article.abstract, 3)
                     4 -> books(drawer, sameFaculty, "FROM THE SAME FACULTY (${currentArticle!!.faculty})")
                     5 -> books(drawer, sameTopic, "FROM THE SAME TOPIC (${currentArticle!!.topic})")
-                    6 -> singleColumnText(drawer, article.year)
+                    6 -> singleColumnText(drawer, article.year.toString())
                     7 -> timeline(drawer)
                 }
             }
@@ -428,7 +428,7 @@ class Zoom2(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
         drawer.writer {
             box = dateBox
             newLine()
-            text(ad.year.take((animations.textFade * ad.year.length).toInt()))
+            text(ad.year.toString().take((animations.textFade * 4).toInt()))
         }
 
         val facultyBox = Rectangle(rects[1].x, dateBox.y + dateBox.height + (stfm.height * 2.0), rects[1].width, 250.0)

@@ -29,7 +29,7 @@ class FilteredDataModel(val allArticles: List<Article>) {
             allArticles.filter {
                 (noFaculties || (it.faculty in filter.faculties)) &&
                         (noTopics || (it.topic in filter.topics)) &&
-                        it.year.takeLast(4).toInt() in filter.dates.first..filter.dates.second
+                        it.year.toString().takeLast(4).toInt() in filter.dates.first..filter.dates.second
             }
         }
 
@@ -37,8 +37,8 @@ class FilteredDataModel(val allArticles: List<Article>) {
 
         groupedByFaculty = filteredArticles.groupBy { it.faculty }
         groupedByTopic = filteredArticles.groupBy { it.topic }
-        groupedByYear = filteredArticles.groupBy { it.year.toInt() }
-        yearBrackets = filteredArticles.histogramOf { it.year.toIntOrNull() }.brackets()
+        groupedByYear = filteredArticles.groupBy { it.year }
+        yearBrackets = filteredArticles.histogramOf { it.year }.brackets()
 
     }
 
@@ -59,6 +59,6 @@ class FilteredDataModel(val allArticles: List<Article>) {
     var groupedByYear: Map<Int, List<Article>> = filteredArticles.groupBy { it.year.toInt() }
         private set
 
-    var yearBrackets = articles.histogramOf { it.year.toIntOrNull() }.brackets()
+    var yearBrackets = articles.histogramOf { it.year }.brackets()
         private set
 }

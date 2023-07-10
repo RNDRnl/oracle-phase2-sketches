@@ -129,7 +129,7 @@ fun Program.pc05(data: DataModel, state: State) {
         if (showcases.filter.currentArticle != null) {
             val pos = data.articlesToPoints[showcases.filter.currentArticle]
             if (pos != null) {
-                camera.centerAt(pos)
+                camera.centerAtSlow(pos)
             } else {
                 println()
             }

@@ -29,14 +29,15 @@ enum class SortMode {
 }
 
 class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
-    private val topicsDf = DataFrame.readCSV("offline-data/zeroshot-all-data-v5.csv")
+     val topicsDf = DataFrame.readCSV("offline-data/zeroshot-all-data-v5.csv")
         .add("topic") {
             val r = getRow(index()).toMap().values
             val i = r.indexOf(rowMax())
             topicNames[i]
         }
         .move { pathOf("topic") }.toLeft()
-        .merge { colsOf<Number>()  }.into("scores")
+         .convert { colsOf<Number>() }.with { it.toDouble() }
+        .merge { colsOf<Double>()  }.into("scores")
 
     private val articlesDf = DataFrame.read("offline-data/all-data-v5.csv")
         .fillNulls("faculty").with { "Unknown Faculty" }
@@ -83,13 +84,13 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
     var facultyLabels = mutableListOf<String>()
 
     val articlesSorted = mapOf(
-        SortMode.FACULTY_YEAR to articles.map { it.copy() }.sortedBy { it.faculty }.sortedBy { it.year.toInt() }.onEach {
-            if(!yearLabels.contains(it.year.toInt())) {
-                it.label = it.year
+        SortMode.FACULTY_YEAR to articles.map { it.copy() }.sortedBy { it.faculty }.sortedBy { it.year }.onEach {
+            if(!yearLabels.contains(it.year)) {
+                it.label = it.year.toString()
             }
-            yearLabels.add(it.year.toInt())
+            yearLabels.add(it.year)
         },
-        SortMode.YEAR_FACULTY to articles.map { it.copy() }.sortedBy { it.year.toInt() }.sortedBy { it.faculty }.onEach {
+        SortMode.YEAR_FACULTY to articles.map { it.copy() }.sortedBy { it.year }.sortedBy { it.faculty }.onEach {
             if(!facultyLabels.contains(it.faculty)) {
                 it.label = it.faculty
             }
@@ -207,7 +208,7 @@ data class Article(
     val department: String,
 
     @ColumnName("publication year")
-    val year: String,
+    val year: Int,
 
     @ColumnName("abstract")
     val abstract: String,
@@ -222,13 +223,13 @@ data class Article(
     var label: String,
 
     @ColumnName("scores")
-    val topicScores: List<BigDecimal>,
+    val topicScores: List<Double>,
 
 ):Serializable
 
 fun main() {
     val dmn = DataModel(Rectangle.fromCenter(Vector2.ZERO, 1920.0, 1080.0))
-    //dmn.dataFrame.toStandaloneHTML().openInBrowser()
+    dmn.topicsDf.toStandaloneHTML().openInBrowser()
 
     println(dmn.scTopics)
     println(dmn.scTopics.map { it.first to it.second.size })
