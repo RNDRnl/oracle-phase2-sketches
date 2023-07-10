@@ -1,5 +1,6 @@
 package v05
 
+import kotlinx.coroutines.yield
 import org.openrndr.*
 import org.openrndr.draw.Drawer
 import org.openrndr.draw.RenderTarget
@@ -54,12 +55,26 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
         return exp(lnScale)
     }
 
+
+    fun centerAtSlow(targetPosition: Vector2) {
+        val w = RenderTarget.active.width
+        val h = RenderTarget.active.height
+        val currentPosition = -(view * Vector4(w/2.0, h/2.0, 0.0, 1.0)).xy
+        program.launch {
+            for (i in 0 until 60) {
+                centerAt(currentPosition.mix(targetPosition, i/59.0))
+                yield()
+            }
+        }
+    }
+
     fun centerAt(targetPosition: Vector2) {
         val w = RenderTarget.active.width
         val h = RenderTarget.active.height
         view = buildTransform {
             translate(-targetPosition + Vector2(w/2.0, h/2.0))
         }
+        println((view * Vector4.UNIT_W).xy)
     }
 
     fun setNormalizedScale(targetScaleNormalized: Double) {

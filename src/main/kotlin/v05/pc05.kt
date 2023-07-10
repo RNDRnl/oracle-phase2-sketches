@@ -8,21 +8,19 @@ import org.openrndr.extra.compositor.compose
 import org.openrndr.extra.compositor.draw
 import org.openrndr.extra.compositor.layer
 import org.openrndr.extra.fx.blur.GaussianBlur
-import org.openrndr.extra.noise.uniform
 import org.openrndr.extra.shadestyles.linearGradient
 import org.openrndr.math.*
 import org.openrndr.math.transforms.project
 import org.openrndr.poissonfill.PoissonFill
-import org.openrndr.shape.Circle
 import org.openrndr.shape.Rectangle
 import v05.extensions.IdleDetector
 import v05.filters.*
 import v05.fx.GradientFilter
+import v05.fx.LocalMaximaFilter
 import v05.libs.UIManager
 import v05.libs.watchProperty
 import v05.views.PointCloud
 import kotlin.math.atan2
-import kotlin.random.Random
 
 
 fun Program.pc05(data: DataModel, state: State) {
@@ -53,18 +51,17 @@ fun Program.pc05(data: DataModel, state: State) {
     state.dateFilter = dateFilterModel
 
 
-
-    val labelPoints = data.points.shuffled(Random(0)).take(40)
-
     val uiManager = UIManager(window, mouse)
     var uiManagerExport: UIManager by userProperties
     uiManagerExport = uiManager
 
     val uiElements =
-        listOf(camera, slider,
+        listOf(
+            camera, slider,
             discover, discoverSelector,
             topGraduates, topGraduatesSelector,
-            facultyFilter, topicFilter, dateFilter, articleFilter)
+            facultyFilter, topicFilter, dateFilter, articleFilter
+        )
 
     uiElements.forEach {
         uiManager.elements.add(it)
@@ -103,7 +100,7 @@ fun Program.pc05(data: DataModel, state: State) {
             val pos = data.articlesToPoints[articleFilter.currentArticle]
             if (pos != null) {
                 discoverSelector.current = 1
-                camera.centerAt(pos)
+                camera.centerAtSlow(pos)
             }
         }
     }
@@ -117,7 +114,7 @@ fun Program.pc05(data: DataModel, state: State) {
     }
 
     watchProperty(discover::active).listen {
-        if(it) {
+        if (it) {
             topGraduates.active = false
             topGraduates.expanded = false
         }
@@ -125,7 +122,7 @@ fun Program.pc05(data: DataModel, state: State) {
     }
 
     watchProperty(topGraduates::active).listen {
-        if(it) {
+        if (it) {
             discover.active = false
         }
         discover.expanded = it
@@ -156,7 +153,7 @@ fun Program.pc05(data: DataModel, state: State) {
 
     val pointCloudView = PointCloud(drawer, this, state, data)
 
-    val pointCloudDensity  = drawImage(width, height, type = ColorType.FLOAT32) {
+    val pointCloudDensity = drawImage(width, height, type = ColorType.FLOAT32) {
         drawer.clear(ColorRGBa.BLACK)
         drawer.drawStyle.blendMode = BlendMode.ADD
 
@@ -171,7 +168,7 @@ fun Program.pc05(data: DataModel, state: State) {
         val size = 160.0
         drawer.rectangles {
             for (i in data.points.indices) {
-                rectangle(data.points[i] - Vector2(size/2.0, size/2.0), size, size)
+                rectangle(data.points[i] - Vector2(size / 2.0, size / 2.0), size, size)
             }
         }
     }
@@ -181,18 +178,32 @@ fun Program.pc05(data: DataModel, state: State) {
     val pcgs = pointCloudGradient.shadow
     pcgs.download()
     for (i in data.points.indices) {
-        val ix = data.points[i].x.toInt().coerceIn(0, width-1)
-        val iy = data.points[i].y.toInt().coerceIn(0, height-1)
+        val ix = data.points[i].x.toInt().coerceIn(0, width - 1)
+        val iy = data.points[i].y.toInt().coerceIn(0, height - 1)
         val c = pcgs[ix, iy].toVector4().xy
         val r = atan2(c.x, c.y)
         data.rotations[i] = r.asDegrees
 
-
     }
-
-
     pcgs.destroy()
 
+    val pointCloudLocalMaxima = pointCloudGradient.createEquivalent(type = ColorType.UINT8)
+    val localMaximaFilter = LocalMaximaFilter()
+    localMaximaFilter.apply(pointCloudDensity, pointCloudLocalMaxima)
+
+    val pclms = pointCloudLocalMaxima.shadow
+    pclms.download()
+    val labelPointsCandidates = mutableListOf<Vector2>()
+    for (y in 0 until pointCloudLocalMaxima.height) {
+        for (x in 0 until pointCloudLocalMaxima.width) {
+            val c = pclms[x, y].r
+            if (c > 0.5) {
+                labelPointsCandidates.add(Vector2(x.toDouble(), y.toDouble()))
+            }
+        }
+    }
+
+    val labelPoints = labelPointsCandidates.map { state.kdtree.findNearest(it)!! }
 
     val c = compose {
         layer {// Background
@@ -210,18 +221,18 @@ fun Program.pc05(data: DataModel, state: State) {
                 drawer.points {
                     for (i in data.articles.indices) {
                         fill = data.articles[i].faculty.facultyColor().shade(0.2)
-                        point(data.points[i] + Vector2(width/4.0, height/4.0))
+                        point(data.points[i] + Vector2(width / 4.0, height / 4.0))
                     }
                 }
                 drawer.points {
                     fill = ColorRGBa.BLACK
                     for (x in 0 until width) {
                         this.point(x.toDouble(), 1.0)
-                        this.point(x.toDouble(), height-2.0)
+                        this.point(x.toDouble(), height - 2.0)
                     }
                     for (y in 0 until height) {
                         this.point(1.0, y.toDouble())
-                        this.point(width-2.0, y.toDouble())
+                        this.point(width - 2.0, y.toDouble())
                     }
                 }
             }
@@ -247,9 +258,17 @@ fun Program.pc05(data: DataModel, state: State) {
 
                 val filteredPoints = labelPoints.filter { it in state.filtered.keys }
 
-                val projectedPoints = filteredPoints.map { project(it.xy0, drawer.projection, drawer.view*drawer.model, drawer.width, drawer.height).xy }
+                val projectedPoints = filteredPoints.map {
+                    project(
+                        it.xy0,
+                        drawer.projection,
+                        drawer.view * drawer.model,
+                        drawer.width,
+                        drawer.height
+                    ).xy
+                }
                 drawer.defaults()
-                val labelTexts = filteredPoints.map { data.pointsToArticles[it]!!.topic }
+                val labelTexts = filteredPoints.map { data.pointsToArticles[it]!!.faculty }
                 drawer.fontMap = fms
                 drawer.texts(labelTexts, projectedPoints)
 
@@ -286,11 +305,12 @@ fun Program.pc05(data: DataModel, state: State) {
                     drawer.shadeStyle = null
 
                     discover.let {
-                        drawer.drawStyle.clip = if (!it.expanded) it.actionBounds else it.actionBounds.copy(width = it.actionBounds.width * 2.0)
+                        drawer.drawStyle.clip =
+                            if (!it.expanded) it.actionBounds else it.actionBounds.copy(width = it.actionBounds.width * 2.0)
 
                         it.draw(drawer)
 
-                        if(it.expanded && it.active) {
+                        if (it.expanded && it.active) {
 
                             discoverSelector.apply {
                                 visible = it.expanded
@@ -310,7 +330,8 @@ fun Program.pc05(data: DataModel, state: State) {
                             }
 
                             topicFilter.apply {
-                                visible = it.expanded && (discoverSelector.current == 1 || discoverSelector.current == 2)
+                                visible =
+                                    it.expanded && (discoverSelector.current == 1 || discoverSelector.current == 2)
                                 actionBounds = Rectangle(
                                     it.actionBounds.x + 50.0,
                                     it.actionBounds.y + 140.0,
@@ -391,7 +412,7 @@ fun Program.pc05(data: DataModel, state: State) {
     extend {
 
         c.draw(drawer)
-      //  uiManager.drawDebugBoxes(drawer)
+        //  uiManager.drawDebugBoxes(drawer)
 
 //        drawer.defaults()
 //        drawer.image(pointCloudDensity)
@@ -400,6 +421,7 @@ fun Program.pc05(data: DataModel, state: State) {
 //        }
 //        drawer.image(pointCloudGradient)
     }
+
 
 }
 

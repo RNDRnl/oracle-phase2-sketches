@@ -1,7 +1,9 @@
-#version 450 core
-#define OR_IN_OUT
-#define OR_GL
-uniform sampler2D tex0;
+package v05.fx
+
+import org.openrndr.draw.Filter1to1
+import org.openrndr.draw.filterShaderFromCode
+
+class LocalMaximaFilter : Filter1to1(shader = filterShaderFromCode("""uniform sampler2D tex0;
 in vec2 v_texCoord0;
 out vec4 o_output;
 void main() {
@@ -16,7 +18,7 @@ void main() {
             }
             float r = texture(tex0, v_texCoord0 + step * vec2(i, j)).r;
             if (r >= maxR) {
-                isxMax = false;                 
+                isMax = false;                 
             }
         }
     }
@@ -25,9 +27,5 @@ void main() {
          
 }
     
-// -------------
-// local-maxima
-// created 2023-07-10T14:12:11.113212050
-/*
-0(19) : error C1503: undefined variable "isxMax"
-*/
+""","local-maxima"))
+
