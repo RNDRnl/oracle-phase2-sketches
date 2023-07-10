@@ -2,26 +2,23 @@ package v05.filters
 
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
-import org.openrndr.draw.defaultFontMap
 import org.openrndr.draw.loadFont
 import org.openrndr.draw.writer
 import org.openrndr.math.Vector2
 import org.openrndr.shape.Rectangle
-import org.w3c.dom.css.Rect
 import v05.libs.UIElementImpl
 
 
-class SelectorBoxes : UIElementImpl() {
+class TopGraduatesSelector : UIElementImpl() {
 
     var current = 0
 
     var boxes = listOf(
-        Rectangle(0.0, 0.0, 130.0, 32.0),
-        Rectangle(0.0, 0.0, 110.0, 32.0),
-        Rectangle(0.0, 0.0, 140.0, 32.0)
+        Rectangle(0.0, 0.0, 185.0, 32.0),
+        Rectangle(0.0, 0.0, 195.0, 32.0)
     )
 
-    val texts = listOf("FACULTIES", "TOPICS", "PUBLICATIONS")
+    val texts = listOf("FACULTIES", "TOPICS")
 
     init {
         buttonDown.listen { e ->
@@ -37,11 +34,10 @@ class SelectorBoxes : UIElementImpl() {
 
         if (visible) {
 
-            val r0 = Rectangle(bounds.corner + offset, 130.0, 32.0)
-            val r1 = Rectangle(bounds.corner + Vector2(r0.width, 0.0) + offset, 130.0, 32.0)
-            val r2 = Rectangle(bounds.corner + Vector2(r0.width + r1.width, 0.0) + offset, 130.0, 32.0)
+            val r0 = Rectangle(bounds.corner + offset, 185.0, 32.0)
+            val r1 = Rectangle(bounds.corner + Vector2(r0.width, 0.0) + offset, 195.0, 32.0)
 
-            boxes = listOf(r0, r1, r2)
+            boxes = listOf(r0, r1)
 
             boxes.forEachIndexed { i, it ->
                 drawer.fill = if (i <= current) ColorRGBa.WHITE else ColorRGBa.TRANSPARENT
@@ -58,7 +54,7 @@ class SelectorBoxes : UIElementImpl() {
                 }
             }
 
-            actionBounds = Rectangle(boxes[0].corner, boxes[2].x + boxes[2].width - boxes[0].x, boxes[2].height)
+            actionBounds = Rectangle(boxes[0].corner, boxes[1].x + boxes[1].width - boxes[0].x, boxes[1].height)
         }
     }
 }

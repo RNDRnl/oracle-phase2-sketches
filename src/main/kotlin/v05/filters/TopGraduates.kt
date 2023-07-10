@@ -6,17 +6,17 @@ import org.openrndr.svg.loadSVG
 import v05.State
 import java.io.File
 
-class Discover(state: State): FilterMenu(state) {
+class TopGraduates(state: State): FilterMenu(state) {
 
     val boundsWidth = 510.0
     val boundsHeight = 80.0
 
     init {
-        icon = loadSVG(File("data/icons/discoverIcon.svg"))
-        title = "DISCOVER & FILTER %COUNT% DOCUMENTS"
-        subtitle = "FACULTIES, TOPICS, TITLES & AUTHORS"
+        icon = loadSVG(File("data/icons/topGraduatesIcon.svg"))
+        title = "TOP GRADUATES"
+        subtitle = "discover 170+ top graduates dissertations".uppercase()
 
-        actionBounds = Rectangle(10.0, 0.0, boundsWidth, boundsHeight)
+        actionBounds = Rectangle(10.0, 80.0, boundsWidth, boundsHeight)
 
         buttonDown.listen {
             it.cancelPropagation()
@@ -33,11 +33,9 @@ class Discover(state: State): FilterMenu(state) {
         val expandedY = drawer.height * 0.75 * animations.expandT
         actionBounds = Rectangle(
             10.0,
-            (drawer.height - boundsHeight * 2) - drawer.height * 0.75 * animations.expandT,
+            80.0 + (drawer.height - boundsHeight * 2) - drawer.height * 0.75 * animations.expandT,
             boundsWidth,
             boundsHeight + expandedY)
-
-        println("${this::class.simpleName}  $expandedY  $expanded")
 
         drawBasics(drawer)
     }

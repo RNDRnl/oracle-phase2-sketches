@@ -33,6 +33,13 @@ open class FilterMenu(val state: State): UIElementImpl() {
     }
     val animations = Animations()
 
+    var active = false
+        set(value) {
+            field = value
+            if(field) {
+                expanded = !expanded
+            }
+        }
     var expanded = false
         set(value) {
             animations.cancel()
@@ -47,48 +54,12 @@ open class FilterMenu(val state: State): UIElementImpl() {
 
         }
 
-
-
     var icon = loadSVG("<svg></svg>")
     var title = ""
     var subtitle = ""
 
     val titleFm = loadFont("data/fonts/Roboto-Regular.ttf", 28.0)
     val subtitleFm = loadFont("data/fonts/Roboto-Regular.ttf", 12.0)
-/*
-    open fun dragged(e: MouseEvent) {
-        e.cancelPropagation()
-
-            if(e.position in dateFilter.headerBox.movedBy(bounds.corner)) {
-                e.cancelPropagation()
-
-                val mappedPosition = map(dateFilter.boundingBox.x, dateFilter.boundingBox.x + dateFilter.boundingBox.width, 0.0, 1.0, e.position.x)
-                dateFilter.closestSelector?.pos = mappedPosition.coerceIn(0.0, 1.0)
-            }
-
-    }
-
-    open fun buttonDown(e: MouseEvent) {
-        if(e.position in dateFilter.headerBox.movedBy(bounds.corner)) {
-            e.cancelPropagation()
-
-            dateFilter.closestSelector = dateFilter.selectors.minBy { dateFilter.boundingBox.position(it.pos, dateFilter.boundingBox.center.y).distanceTo(e.position)}
-        }
-
-    }
-
-    open fun buttonUp(e: MouseEvent) {
-        val target = filters.firstOrNull { e.position in it.headerBox.movedBy(bounds.corner) }
-
-        if(target != null) {
-            if(!target.isVisible) {
-                target.isVisible = true
-                filters.minus(setOf(target, dateFilter)).onEach { it.isVisible = false }
-            }
-        } else {
-            filters.minus(dateFilter).firstOrNull { it.isVisible }?.lastPos = e.position
-        }
-    }*/
 
     fun drawBasics(drawer: Drawer) {
 
@@ -117,8 +88,6 @@ open class FilterMenu(val state: State): UIElementImpl() {
 
         drawer.fontMap = subtitleFm
         drawer.text(subtitle, actionBounds.corner + Vector2(80.0,  45.0 + titleFm.height))
-
-
 
     }
 
