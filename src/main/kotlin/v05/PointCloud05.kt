@@ -63,9 +63,6 @@ fun main() = application {
             val socket = DatagramSocket()
             val address = InetSocketAddress(InetAddress.getByName(ipAddress), 9002)
             socket.soTimeout = 10
-
-
-
             val baos = ByteArrayOutputStream(16384)
             fun send(state: EventObject) {
                 baos.reset()

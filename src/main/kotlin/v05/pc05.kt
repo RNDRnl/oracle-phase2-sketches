@@ -53,8 +53,6 @@ fun Program.pc05(data: DataModel, state: State) {
 
     val labelPoints = data.points.shuffled(Random(0)).take(40)
 
-
-
     val uiManager = UIManager(window, mouse)
     var uiManagerExport: UIManager by userProperties
     uiManagerExport = uiManager
@@ -153,6 +151,16 @@ fun Program.pc05(data: DataModel, state: State) {
         camera.setNormalizedScale(it)
     }
 
+    val pointCloudShadeStyle = shadeStyle {
+        fragmentTransform = """float dx = cos(v_worldPosition.x*10.0)*2.0+2.0; 
+            float dy = cos(v_worldPosition.y*10.0)*2.0+2.0;
+float c = 0.5 + 0.5 * cos(va_texCoord0.y * 3.1415 * dx + dy + p_time) * sin(va_texCoord0.x * 3.1415 * dy + dx + p_time);
+x_fill.rgb *= c;                             
+        """
+    }
+
+
+
     val c = compose {
         layer {// Background
             val poisson = PoissonFill()
@@ -192,16 +200,21 @@ fun Program.pc05(data: DataModel, state: State) {
 
             draw {
                 drawer.strokeWeight = 0.2
-                drawer.rectangles {
-                    for ((point, article) in data.pointsToArticles) {
-                        val opacity = if (state.filtered[point] != null) 1.0 else 0.2
-                        this.stroke = if (state.activePoints[point] != null) article.faculty.facultyColor().mix(
-                            ColorRGBa.WHITE, 0.75) else null
+                drawer.isolated {
+                    pointCloudShadeStyle.parameter("time", seconds)
+                    drawer.shadeStyle = pointCloudShadeStyle
+                    drawer.rectangles {
+                        for ((point, article) in data.pointsToArticles) {
+                            val opacity = if (state.filtered[point] != null) 1.0 else 0.2
+                            this.stroke = if (state.activePoints[point] != null) article.faculty.facultyColor().mix(
+                                ColorRGBa.WHITE, 0.75
+                            ) else null
 
-                        val size = if (state.filtered[point] != null) 6 else 2
+                            val size = if (state.filtered[point] != null) 6 else 2
 
-                        this.fill = article.faculty.facultyColor().opacify(opacity)
-                        this.rectangle(Rectangle.fromCenter(point, 0.25 * size, 0.45 * size))
+                            this.fill = article.faculty.facultyColor().opacify(opacity)
+                            this.rectangle(Rectangle.fromCenter(point, 0.25 * size, 0.45 * size))
+                        }
                     }
                 }
                 //drawer.circles(labelPoints, 3.0)
@@ -223,7 +236,6 @@ fun Program.pc05(data: DataModel, state: State) {
                         }
                     }
                 }
-
                 drawer.fill = null
                 drawer.stroke = ColorRGBa.WHITE
                 drawer.circle(state.lookAt, 40.0)
