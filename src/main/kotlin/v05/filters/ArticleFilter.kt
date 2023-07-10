@@ -52,6 +52,7 @@ class ArticleFilter(val drawer: Drawer, var articles: List<Article>) : Filter() 
     var lastEventType: MouseEventType? = null
 
     init {
+        visible = false
         actionBounds = Rectangle(10.0, 0.0, 460.0, 600.0)
         buttonDown.listen {
             it.cancelPropagation()

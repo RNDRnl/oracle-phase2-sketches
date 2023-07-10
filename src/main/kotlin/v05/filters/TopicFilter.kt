@@ -16,6 +16,7 @@ class TopicFilter(val drawer: Drawer, val model: TopicFilterModel): Filter() {
     override var visible = false
 
     init {
+        visible = false
         actionBounds = Rectangle(80.0, 90.0 + 32.0, 460.0, 600.0)
         buttonDown.listen {
             it.cancelPropagation()

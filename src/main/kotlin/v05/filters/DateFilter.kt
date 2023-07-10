@@ -24,6 +24,7 @@ class DateFilter(val drawer: Drawer, val model: DateFilterModel): Filter() {
     var closestSelector: Selector? = null
 
     init {
+        visible = false
         actionBounds = Rectangle(80.0, 90.0 + 32.0 + 600.0, 460.0, 150.0)
 
         buttonDown.listen {e ->

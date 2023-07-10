@@ -126,7 +126,7 @@ class UIManager(val window: Window, mouseEvents: MouseEvents) {
             drawer.defaults()
             drawer.fill = null
             drawer.rectangles {
-                elements.mapIndexed { i, it ->
+                elements.filter { it.visible }.mapIndexed { i, it ->
                     val v = Vector3.uniformRing(0.0, 1.0, Random(i))
                     this.stroke = ColorRGBa.fromVector(v)
                     this.rectangle(it.actionBounds)

@@ -118,8 +118,7 @@ fun Program.pc05(data: DataModel, state: State) {
             topGraduates.active = false
             topGraduates.expanded = false
         }
-
-        listOf(facultyFilter, topicFilter, dateFilter, articleFilter).map { f -> f.visible = it}
+        listOf(facultyFilter, topicFilter, dateFilter, articleFilter).map { f -> f.visible = it }
     }
 
     watchProperty(topGraduates::active).listen {
@@ -365,7 +364,7 @@ x_fill.rgb *= c;
     extend {
 
         c.draw(drawer)
-        uiManager.drawDebugBoxes(drawer)
+      //  uiManager.drawDebugBoxes(drawer)
 
     }
 

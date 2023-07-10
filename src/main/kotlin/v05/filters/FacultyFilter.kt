@@ -43,6 +43,7 @@ class FacultyFilter(val drawer: Drawer, val model: FacultyFilterModel): Filter()
     override var title = "FACULTIES"
 
     init {
+        visible = false
         actionBounds = Rectangle(10.0, 0.0, 460.0, 600.0)
 
         buttonDown.listen {
