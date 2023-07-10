@@ -19,6 +19,7 @@ import v05.extensions.IdleDetector
 import v05.filters.*
 import v05.libs.UIManager
 import v05.libs.watchProperty
+import v05.views.PointCloud
 import kotlin.random.Random
 
 
@@ -150,15 +151,8 @@ fun Program.pc05(data: DataModel, state: State) {
         camera.setNormalizedScale(it)
     }
 
-    val pointCloudShadeStyle = shadeStyle {
-        fragmentTransform = """float dx = cos(v_worldPosition.x*10.0)*2.0+2.0; 
-            float dy = cos(v_worldPosition.y*10.0)*2.0+2.0;
-float c = 0.5 + 0.5 * cos(va_texCoord0.y * 3.1415 * dx + dy + p_time) * sin(va_texCoord0.x * 3.1415 * dy + dx + p_time);
-x_fill.rgb *= c;                             
-        """
-    }
 
-
+    val pointCloudView = PointCloud(drawer, this, state, data)
 
     val c = compose {
         layer {// Background
@@ -170,19 +164,29 @@ x_fill.rgb *= c;
             }
 
             val mul = 2
-            val bg = drawImage(width * mul, height * mul) {
+            val bg = drawImage(width * mul, height * mul, type = ColorType.FLOAT32) {
                 drawer.clear(ColorRGBa.TRANSPARENT)
-                val circles = facultyColors.map {
-                    it.shade(0.2) to Circle(Vector2.uniform(drawer.bounds), Double.uniform(80.0, 200.0))
-                }
 
                 drawer.stroke = null
-                circles.forEach {
-                    drawer.fill = it.first
-                    drawer.circle(it.second)
+                drawer.points {
+                    for (i in data.articles.indices) {
+                        fill = data.articles[i].faculty.facultyColor().shade(0.2)
+                        point(data.points[i] + Vector2(width/4.0, height/4.0))
+                    }
                 }
-                drawer.fill = ColorRGBa.BLACK
-                drawer.circle(drawer.bounds.center, 400.0)
+                drawer.points {
+                    fill = ColorRGBa.BLACK
+                    for (x in 0 until width) {
+                        this.point(x.toDouble(), 1.0)
+                        this.point(x.toDouble(), height-2.0)
+                    }
+                    for (y in 0 until height) {
+                        this.point(1.0, y.toDouble())
+                        this.point(width-2.0, y.toDouble())
+                    }
+                }
+                //drawer.fill = ColorRGBa.BLACK
+                ///drawer.circle(drawer.bounds.center, 400.0)
             }
             poisson.apply(bg, bg)
             blur.apply(bg, bg)
@@ -199,23 +203,9 @@ x_fill.rgb *= c;
 
             draw {
                 drawer.strokeWeight = 0.2
-                drawer.isolated {
-                    pointCloudShadeStyle.parameter("time", seconds)
-                    drawer.shadeStyle = pointCloudShadeStyle
-                    drawer.rectangles {
-                        for ((point, article) in data.pointsToArticles) {
-                            val opacity = if (state.filtered[point] != null) 1.0 else 0.2
-                            this.stroke = if (state.activePoints[point] != null) article.faculty.facultyColor().mix(
-                                ColorRGBa.WHITE, 0.75
-                            ) else null
 
-                            val size = if (state.filtered[point] != null) 6 else 2
+                pointCloudView.draw()
 
-                            this.fill = article.faculty.facultyColor().opacify(opacity)
-                            this.rectangle(Rectangle.fromCenter(point, 0.25 * size, 0.45 * size))
-                        }
-                    }
-                }
                 //drawer.circles(labelPoints, 3.0)
 
                 val filteredPoints = labelPoints.filter { it in state.filtered.keys }
