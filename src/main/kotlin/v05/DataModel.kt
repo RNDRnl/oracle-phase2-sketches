@@ -62,6 +62,7 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
     val articles = articlesDf.toListOf<Article>()
     val points = pointsDf[pos].toList().run { map(this.bounds, frame) }
 
+    val densities = DoubleArray(points.size)
     val rotations = DoubleArray(points.size)
     val pointsToArticles = (points zip articles).toMap()
     val pointsToArticleIndices = (points zip articles.indices).toMap()

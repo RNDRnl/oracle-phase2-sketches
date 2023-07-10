@@ -29,7 +29,6 @@ class Discover(state: State): FilterMenu(state) {
             boundsWidth,
             boundsHeight + expandedY)
 
-        println("${this::class.simpleName}  $expandedY  $expanded")
 
         drawBasics(drawer)
     }

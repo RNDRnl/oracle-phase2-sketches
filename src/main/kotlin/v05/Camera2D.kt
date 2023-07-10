@@ -1,15 +1,13 @@
 package v05
 
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.yield
 import org.openrndr.*
 import org.openrndr.draw.Drawer
 import org.openrndr.draw.RenderTarget
 import org.openrndr.events.Event
 import org.openrndr.extra.camera.ChangeEvents
-import org.openrndr.math.Matrix44
-import org.openrndr.math.Vector2
-import org.openrndr.math.Vector4
-import org.openrndr.math.map
+import org.openrndr.math.*
 import org.openrndr.math.transforms.buildTransform
 import org.openrndr.shape.Rectangle
 import v05.libs.UIElementImpl
@@ -55,14 +53,16 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
         return exp(lnScale)
     }
 
-
+    var panJob: Job? = null
     fun centerAtSlow(targetPosition: Vector2) {
         val w = RenderTarget.active.width
         val h = RenderTarget.active.height
-        val currentPosition = -(view * Vector4(w/2.0, h/2.0, 0.0, 1.0)).xy
-        program.launch {
-            for (i in 0 until 60) {
-                centerAt(currentPosition.mix(targetPosition, i/59.0))
+        val currentPosition = ( -(view * Vector4.UNIT_W).xy)
+        println("current position = ${currentPosition}, target position = ${targetPosition}")
+        panJob?.cancel()
+        panJob = program.launch {
+            for (i in 0 until 120) {
+                centerAt(currentPosition.mix(-targetPosition, smoothstep(0.0, 1.0,i/119.0)))
                 yield()
             }
         }
@@ -71,10 +71,25 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
     fun centerAt(targetPosition: Vector2) {
         val w = RenderTarget.active.width
         val h = RenderTarget.active.height
+        val currentPosition = ( (view * Vector4.UNIT_W).xy)
         view = buildTransform {
-            translate(-targetPosition + Vector2(w/2.0, h/2.0))
+            translate((targetPosition - currentPosition))
+        } * view
+
+    }
+
+    fun getNormalizedScale() : Double {
+        return toNormalizedScale(view.scale())
+    }
+
+    fun setNormalizedScaleSlow(targetScaleNormalized: Double) {
+        program.launch {
+            val cs = getNormalizedScale()
+            for (i in 0 until 120) {
+                setNormalizedScale(mix(cs, targetScaleNormalized, i/119.0))
+                yield()
+            }
         }
-        println((view * Vector4.UNIT_W).xy)
     }
 
     fun setNormalizedScale(targetScaleNormalized: Double) {
@@ -149,6 +164,7 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
     override fun afterDraw(drawer: Drawer, program: Program) {
         dirty = false
         drawer.popTransforms()
+        val currentPosition = ( (view.inversed * Vector4.UNIT_W).div.xy)
     }
 }
 

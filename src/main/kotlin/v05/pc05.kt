@@ -95,6 +95,16 @@ fun Program.pc05(data: DataModel, state: State) {
         camera.changed.trigger(Unit)
     }
 
+//    watchProperty(articleFilter::visible).listen {
+//        if (it) {
+//            println("here we are now")
+//            camera.setNormalizedScaleSlow(1.0)
+//        } else {
+//            println("entartain us")
+//            camera.setNormalizedScaleSlow(0.0)
+//        }
+//    }
+
     articleFilter.articleSelected.listen {
         if (articleFilter.currentArticle != null) {
             val pos = data.articlesToPoints[articleFilter.currentArticle]
@@ -175,6 +185,17 @@ fun Program.pc05(data: DataModel, state: State) {
     val gradientFilter = GradientFilter()
     val pointCloudGradient = pointCloudDensity.createEquivalent()
     gradientFilter.apply(pointCloudDensity, pointCloudGradient)
+
+    val pcds = pointCloudDensity.shadow
+    pcds.download()
+
+    for (i in data.points.indices) {
+        val ix = data.points[i].x.toInt().coerceIn(0, width - 1)
+        val iy = data.points[i].y.toInt().coerceIn(0, height - 1)
+        val c = pcds[ix, iy].r
+        println(c)
+        data.densities[i] = c
+    }
     val pcgs = pointCloudGradient.shadow
     pcgs.download()
     for (i in data.points.indices) {
@@ -183,6 +204,7 @@ fun Program.pc05(data: DataModel, state: State) {
         val c = pcgs[ix, iy].toVector4().xy
         val r = atan2(c.x, c.y)
         data.rotations[i] = r.asDegrees
+
 
     }
     pcgs.destroy()
@@ -240,6 +262,7 @@ fun Program.pc05(data: DataModel, state: State) {
             blur.apply(bg, bg)
 
             draw {
+                drawer.drawStyle.colorMatrix = tint(ColorRGBa.WHITE.shade(0.2))
                 drawer.translate(-bg.width / (mul * 2.0), -bg.height / (mul * 2.0))
                 drawer.image(bg)
             }
