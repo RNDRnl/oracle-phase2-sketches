@@ -137,6 +137,18 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
             } * view
             dirty = true
         }
+
+        pinched.listen {
+            view = buildTransform {
+                view = buildTransform {
+                    translate(it.center)
+                    scale(it.scaleDelta*-40.0)
+                    translate(-it.center)
+                } * view
+                dirty = true
+            } * view
+        }
+
     }
 
     fun scrolled(mouse: MouseEvent) { // this

@@ -3,9 +3,11 @@ package v05.lab
 import org.openrndr.application
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.isolated
+import org.openrndr.events.Event
 import org.openrndr.extra.noise.uniform
 import org.openrndr.math.map
 import org.openrndr.shape.Rectangle
+import v05.extensions.PinchEvent
 import v05.libs.UIElement
 import v05.libs.UIElementImpl
 import v05.libs.UIManager
@@ -59,7 +61,7 @@ fun main() {
             }
 
 
-            val uiManager = UIManager(window, mouse)
+            val uiManager = UIManager(window, mouse, Event<PinchEvent>())
 
             val sliders = (0 until 10).map {
                 Slider(

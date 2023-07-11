@@ -11,12 +11,14 @@ import org.openrndr.extra.noise.uniformRing
 import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
 import org.openrndr.shape.Rectangle
+import v05.extensions.PinchEvent
 import kotlin.random.Random
 
 interface UIElement: MouseEvents {
     val zOrder: Int
     val actionBounds: Rectangle
     val visible: Boolean
+    val pinched: Event<PinchEvent>
 }
 
 open class UIElementImpl : UIElement {
@@ -28,6 +30,7 @@ open class UIElementImpl : UIElement {
     override val buttonDown: Event<MouseEvent> = Event("ui-element-button-down")
     override val buttonUp: Event<MouseEvent> = Event("ui-element-button-up")
     override val dragged: Event<MouseEvent> = Event("ui-element-dragged")
+    override val pinched: Event<PinchEvent> = Event("ui-element-pinched")
 
     override val entered: Event<MouseEvent> = Event("ui-element-entered")
     override val exited: Event<MouseEvent> = Event("ui-element-exited")
@@ -39,7 +42,7 @@ open class UIElementImpl : UIElement {
     override val scrolled: Event<MouseEvent> = Event("ui-element-scrolled")
 }
 
-class UIManager(val window: Window, mouseEvents: MouseEvents) {
+class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<PinchEvent>) {
     var activeElement: UIElement? = null
     var dragElement: UIElement? = null
     var postDragElement: UIElement? = null
@@ -99,6 +102,13 @@ class UIManager(val window: Window, mouseEvents: MouseEvents) {
                 postDragElement = dragElement
                 dragElement = null
             }
+        }
+
+        pinchEvent.listen {
+
+            activeElement?.pinched?.trigger(it)
+
+
         }
     }
     val elements = mutableListOf<UIElement>()

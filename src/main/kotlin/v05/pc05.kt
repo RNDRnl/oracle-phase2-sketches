@@ -14,6 +14,7 @@ import org.openrndr.math.transforms.project
 import org.openrndr.poissonfill.PoissonFill
 import org.openrndr.shape.Rectangle
 import v05.extensions.IdleDetector
+import v05.extensions.PinchDetector
 import v05.filters.*
 import v05.fx.GradientFilter
 import v05.fx.LocalMaximaFilter
@@ -50,7 +51,9 @@ fun Program.pc05(data: DataModel, state: State) {
     state.dateFilter = dateFilterModel
 
 
-    val uiManager = UIManager(window, mouse)
+    val pinchDetector = extend(PinchDetector())
+
+    val uiManager = UIManager(window, mouse, pinchDetector.pinchChanged)
     var uiManagerExport: UIManager by userProperties
     uiManagerExport = uiManager
 
