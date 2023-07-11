@@ -24,7 +24,7 @@ class FilteredDataModel(val allArticles: List<Article>) {
         } else {
             println(filter.topics.isEmpty())
             val noTopics = filter.topics.joinToString("").isBlank()
-            val noFaculties =filter.faculties.joinToString("").isBlank()
+            val noFaculties = filter.faculties.joinToString("").isBlank()
 
             allArticles.filter {
                 (noFaculties || (it.faculty in filter.faculties)) &&
@@ -56,9 +56,11 @@ class FilteredDataModel(val allArticles: List<Article>) {
     var groupedByTopic: Map<String, List<Article>> = filteredArticles.groupBy { it.topic }
         private set
 
-    var groupedByYear: Map<Int, List<Article>> = filteredArticles.groupBy { it.year.toInt() }
+    var groupedByYear: Map<Int, List<Article>> = filteredArticles.groupBy { it.year }
         private set
 
     var yearBrackets = articles.histogramOf { it.year }.brackets()
         private set
+
+
 }

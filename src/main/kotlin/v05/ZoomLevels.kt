@@ -24,6 +24,11 @@ import v01.toVec2
 import v05.model.FilteredDataModel
 import kotlin.random.Random
 
+// zoom ranges
+val FURTHEST = 0.0..0.34
+val CLOSER = (FURTHEST.endInclusive + 0.01)..0.7
+val CLOSEST = (CLOSER.endInclusive + 0.01)..1.0
+
 class ArticleBody(val frame: Rectangle, val body: Body)
 
 interface ScreenDrawer {

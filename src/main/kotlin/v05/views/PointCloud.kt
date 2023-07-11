@@ -5,15 +5,15 @@ import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
 import org.openrndr.draw.isolated
 import org.openrndr.draw.shadeStyle
-import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
 import org.openrndr.math.Vector4
 import org.openrndr.math.smoothstep
+import org.openrndr.math.transforms.buildTransform
 import org.openrndr.math.transforms.unproject
 import org.openrndr.shape.Rectangle
-import v05.DataModel
-import v05.State
-import v05.facultyColor
+import org.openrndr.shape.ShapeContour
+import org.openrndr.shape.contains
+import v05.*
 
 
 val pointCloudShadeStyle by lazy {
@@ -32,11 +32,16 @@ x_fill.rgb = mix(x_fill.rgb, res, p_fade);
 }
 
 class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val data: DataModel) {
+
+    var currentlySelected = Rectangle(0.0, 0.0, 3.0, 0.75) to 0.0
+    var closestArticle = state.filtered[state.closest]
+
     fun draw() {
 
         val up = unproject(Vector3(drawer.width/2.0, drawer.height/2.0, 1.0),drawer.projection, drawer.view * drawer.model, drawer.width, drawer.height)
-
         val center = up.xy
+
+        closestArticle = state.filtered[state.closest]
 
         drawer.isolated {
             pointCloudShadeStyle.parameter("time", clock.seconds)
@@ -46,23 +51,37 @@ class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val dat
             drawer.rectangles {
                 var idx = 0
                 for ((point, article) in data.pointsToArticles) {
+
+                    val size = (if (state.filtered[point] != null) 3.0 else 1.0) * 0.75
+                    val rotation = (data.rotations[idx])
+                    val rect = Rectangle.fromCenter(point, 0.707 * size,  size)
+
+                    val isInRect = (state.closest == point && point in rect && state.zoom in CLOSEST)
+
                     val opacity = if (state.filtered[point] != null) 1.0 else 0.2
-                    this.stroke = if (state.activePoints[point] != null) article.faculty.facultyColor().mix(
+                    this.stroke = if (
+                        (state.activePoints[point] != null && state.zoom in CLOSER) || isInRect) article.faculty.facultyColor().mix(
                         ColorRGBa.WHITE, 0.75
                     ) else null
 
-                    val size = (if (state.filtered[point] != null) 3.0 else 1.0) * 0.75
 
                     this.fill = article.faculty.facultyColor().opacify(opacity)
 
 
-                    val r = (data.rotations[idx])
 
-                    this.rectangle(Rectangle.fromCenter(point, 0.707 * size,  size), r)
+                    this.rectangle(rect, rotation)
                     idx++
+
+                    if(article == closestArticle) currentlySelected = rect to rotation
+
                 }
             }
 
+
         }
+
+
+
+
     }
 }

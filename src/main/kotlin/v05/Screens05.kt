@@ -25,7 +25,7 @@ fun main() = application {
             AppMode.Debug -> { // local testing
                 width = (2560 * 4) / scale
                 height = (1080 * 3) / scale
-                position = IntVector2(-300, -1800)
+                position = IntVector2(0, 0)
             }
 
             AppMode.Prototype -> { // used for testing at RNDR

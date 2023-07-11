@@ -31,6 +31,7 @@ fun Program.pc05(data: DataModel, state: State) {
     val camera = Camera2D()
 
     val slider = Slider(Vector2(width / 2.0, height - 60.0))
+    val viewfinder = Viewfinder(state, camera)
 
     val discover = Discover(state)
     val discoverSelector = DiscoverSelector()
@@ -187,7 +188,6 @@ fun Program.pc05(data: DataModel, state: State) {
 
         state.apply {
             zoom = camera.mappedZoom
-            radius = 40.0 / camera.view.c0r0
             lookAt = (camera.view.inversed * drawer.bounds.center.xy01).xy
             state.changed.trigger(Unit)
         }
@@ -343,24 +343,19 @@ fun Program.pc05(data: DataModel, state: State) {
                         drawer.height
                     ).xy
                 }
+
                 drawer.defaults()
                 val labelTexts = filteredPoints.map { data.pointsToArticles[it]!!.faculty }
                 drawer.fontMap = fms
                 drawer.texts(labelTexts, projectedPoints)
 
-                drawer.fontMap = fm
-                drawer.fill = ColorRGBa.WHITE
-                when (slider.current) {
-                    in 0.8..1.0 -> {
-                        for ((p, a) in state.activePoints) {
-                            drawer.text(a.title, p.transform(camera.view))
-                        }
-                    }
+                val p = Vector2(state.closest.x + 3.0, state.closest.y)
+                println(pointCloudView.currentlySelected.first)
+                if(p in pointCloudView.currentlySelected.first && pointCloudView.closestArticle != null && state.zoom in CLOSEST) {
+                    drawer.fontMap = fm
+                    drawer.fill = ColorRGBa.WHITE
+                    drawer.text(pointCloudView.closestArticle!!.title, p.transform(camera.view))
                 }
-                drawer.fill = null
-                drawer.stroke = ColorRGBa.WHITE
-                drawer.circle(state.lookAt, 40.0)
-
             }
         }
         layer {
@@ -443,6 +438,11 @@ fun Program.pc05(data: DataModel, state: State) {
                    showcases.draw(drawer)
 
                     //slider.draw(drawer)
+
+                    showcases.draw(drawer)
+                    viewfinder.draw(state.zoom, drawer)
+                    slider.draw(drawer)
+
                 }
 
             }

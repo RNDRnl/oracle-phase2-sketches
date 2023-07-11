@@ -140,20 +140,29 @@ class State(val model: DataModel) {
         }
 
     var zoom = 0.0
-    var radius = 40.0
     var lookAt = model.frame.center
         set(value) {
-            activePoints = findActivePoints(value, radius)
+            activePoints = findActivePoints(value)
         }
 
     var filtered = model.pointsToArticles
         set(value) {
-            activePoints = findActivePoints(model.frame.center, radius)
+            activePoints = findActivePoints(lookAt)
             field = value
         }
 
-    fun findActivePoints(pos: Vector2, radius: Double): Map<Vector2, Article> {
-        val nearest = kdtree.findAllInRadius(pos, radius).sortedBy { it.distanceTo(pos) }
+    var activePoints = findActivePoints(model.frame.center)
+        set(value) {
+            field = value
+            closest = value.keys.first()
+            furthest = value.keys.last()
+        }
+
+    var closest  = activePoints.keys.minBy { it.distanceTo(model.frame.center) }
+    var furthest = activePoints.keys.maxBy { it.distanceTo(model.frame.center) }
+
+    fun findActivePoints(pos: Vector2): Map<Vector2, Article> {
+        val nearest = kdtree.findKNearest(pos, 200).sortedBy { it.distanceTo(pos) }
         val active = mutableMapOf<Vector2, Article>()
 
         for(p in nearest) {
@@ -166,7 +175,6 @@ class State(val model: DataModel) {
         return active
     }
 
-    var activePoints = findActivePoints(model.frame.center, radius)
 
     var filterSet = FilterSet.EMPTY
         set(value) {
@@ -177,7 +185,7 @@ class State(val model: DataModel) {
                 } else {
                     val start = System.currentTimeMillis()
                     val r = model.pointsToArticles.filter {
-                        it.value.year.toInt() in value.dates.first..value.dates.second &&
+                        it.value.year in value.dates.first..value.dates.second &&
                         it.value.faculty in value.faculties &&
                                 it.value.topic in value.topics
 
