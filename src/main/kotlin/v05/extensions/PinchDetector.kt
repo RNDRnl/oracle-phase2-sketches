@@ -21,6 +21,7 @@ class PinchDetector : Extension {
             startDistance = program.pointers.pointers[0].position.distanceTo(
                 program.pointers.pointers[1].position
             )
+            lastScale = 1.0
         } else if (pinching && program.pointers.pointers.size < 2) {
             pinching = false
             pinchEnded.trigger(Unit)
@@ -30,13 +31,18 @@ class PinchDetector : Extension {
             val currentDistance = program.pointers.pointers[0].position.distanceTo(
                 program.pointers.pointers[1].position
             )
-            pinchChanged.trigger(
-                PinchEvent(
-                    center,
-                    currentDistance / startDistance,
-                    currentDistance / startDistance - lastScale
+
+            val delta = currentDistance / startDistance - lastScale
+
+            if (delta > 1E-4) {
+                pinchChanged.trigger(
+                    PinchEvent(
+                        center,
+                        currentDistance / startDistance,
+                        delta
+                    )
                 )
-            )
+            }
             lastScale = currentDistance / startDistance
         }
     }

@@ -57,12 +57,12 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
     fun centerAtSlow(targetPosition: Vector2) {
         val w = RenderTarget.active.width
         val h = RenderTarget.active.height
-        val currentPosition = ( -(view * Vector4.UNIT_W).xy)
+        val currentPosition = (-(view * Vector4.UNIT_W).xy)
         println("current position = ${currentPosition}, target position = ${targetPosition}")
         panJob?.cancel()
         panJob = program.launch {
             for (i in 0 until 120) {
-                centerAt(currentPosition.mix(-targetPosition, smoothstep(0.0, 1.0,i/119.0)))
+                centerAt(currentPosition.mix(-targetPosition, smoothstep(0.0, 1.0, i / 119.0)))
                 yield()
             }
         }
@@ -71,14 +71,14 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
     fun centerAt(targetPosition: Vector2) {
         val w = RenderTarget.active.width
         val h = RenderTarget.active.height
-        val currentPosition = ( (view * Vector4.UNIT_W).xy)
+        val currentPosition = ((view * Vector4.UNIT_W).xy)
         view = buildTransform {
             translate((targetPosition - currentPosition))
         } * view
 
     }
 
-    fun getNormalizedScale() : Double {
+    fun getNormalizedScale(): Double {
         return toNormalizedScale(view.scale())
     }
 
@@ -86,7 +86,7 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
         program.launch {
             val cs = getNormalizedScale()
             for (i in 0 until 120) {
-                setNormalizedScale(mix(cs, targetScaleNormalized, i/119.0))
+                setNormalizedScale(mix(cs, targetScaleNormalized, i / 119.0))
                 yield()
             }
         }
@@ -140,13 +140,12 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
 
         pinched.listen {
             view = buildTransform {
-                view = buildTransform {
-                    translate(it.center)
-                    scale(it.scaleDelta*-40.0)
-                    translate(-it.center)
-                } * view
-                dirty = true
+                translate(it.center)
+                scale(it.scaleDelta * -40.0)
+                translate(-it.center)
             } * view
+            dirty = true
+
         }
 
     }
@@ -176,7 +175,7 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
     override fun afterDraw(drawer: Drawer, program: Program) {
         dirty = false
         drawer.popTransforms()
-        val currentPosition = ( (view.inversed * Vector4.UNIT_W).div.xy)
+        val currentPosition = ((view.inversed * Vector4.UNIT_W).div.xy)
     }
 }
 
