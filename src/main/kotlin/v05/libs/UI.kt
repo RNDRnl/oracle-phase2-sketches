@@ -65,6 +65,7 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
 
     init {
         mouseEvents.buttonDown.listen { event ->
+            lastMousePosition = event.position
             if (!event.propagationCancelled) {
                 for (e in elements.filter { it.visible && event.position in it.actionBounds }.sortedBy { it.zOrder }) {
                     e.buttonDown.trigger(event)
@@ -81,6 +82,11 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
 
         mouseEvents.dragged.listen { event ->
             if (!event.propagationCancelled) {
+
+                if (dragElement != null) {
+                    potentialVelocity = Vector2.ZERO
+                }
+
                 dragElement = activeElement
 
                 if (dragElement != null) {
@@ -94,6 +100,8 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
         }
 
         mouseEvents.buttonUp.listen { event ->
+            lastMousePosition = event.position
+
             activeElement?.buttonUp?.trigger(event)
             if (activeElement != null && dragElement == null) {
                 clicked.trigger(Unit)
@@ -107,7 +115,10 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
         }
 
         pinchEvent.listen {
+
             activeElement?.pinched?.trigger(it)
+
+
         }
     }
     val elements = mutableListOf<UIElement>()
@@ -161,6 +172,8 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
             if(activeElement != null) {
                 activeElement!!::class.simpleName?.let { drawer.text("last clicked: $it", 20.0, 40.0) }
             }
+
+            drawer.fill = ColorRGBa.RED
         }
     }
 }
