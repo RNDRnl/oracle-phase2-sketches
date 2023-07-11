@@ -80,15 +80,17 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
         }
 
         mouseEvents.dragged.listen { event ->
-            dragElement = activeElement
+            if (!event.propagationCancelled) {
+                dragElement = activeElement
 
-            if (dragElement != null) {
-                requestDraw()
-                potentialVelocity = event.position - lastMousePosition
-                lastMousePosition = event.position
+                if (dragElement != null) {
+                    requestDraw()
+                    potentialVelocity = event.position - lastMousePosition
+                    lastMousePosition = event.position
+                }
+
+                dragElement?.dragged?.trigger(event)
             }
-
-            dragElement?.dragged?.trigger(event)
         }
 
         mouseEvents.buttonUp.listen { event ->
@@ -105,10 +107,7 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
         }
 
         pinchEvent.listen {
-
             activeElement?.pinched?.trigger(it)
-
-
         }
     }
     val elements = mutableListOf<UIElement>()
