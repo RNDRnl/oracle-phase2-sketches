@@ -25,7 +25,8 @@ import java.math.BigDecimal
 
 enum class SortMode {
     FACULTY_YEAR,
-    YEAR_FACULTY
+    YEAR_FACULTY,
+    AUTHOR
 }
 
 class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
@@ -95,7 +96,8 @@ class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
                 it.label = it.faculty
             }
             facultyLabels.add(it.faculty)
-        }
+        },
+        SortMode.AUTHOR to articles.map { it.copy() }.sortedBy { it.author }
     )
 }
 

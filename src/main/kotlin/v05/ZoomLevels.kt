@@ -73,23 +73,26 @@ abstract class ZoomLevel(
     val stfm = loadFont("data/fonts/default.otf", 80.0, contentScale = 1.0)
 }
 
-class Slot(val position: Vector2, var scaleX:Double = 1.0, var scaleY: Double = 1.0, var shade: Double = 0.15) : Animatable() {
+class Slot(
+    val position: Vector2,
+    var scaleX:Double = 0.45,
+    var scaleY: Double = 0.85,
+    var shade: Double = 1.0
+) :Animatable() {
+    private var speed = Math.random()
+    var slider: Double = 0.0
 
     fun animateIn() {
-        val delay = (Math.random()*500.0).toLong()
-        ::scaleX.animate(0.45, 0, Easing.SineInOut, delay)
-        ::scaleY.animate(0.85, 0, Easing.SineInOut, delay)
-        ::shade.animate(1.0, 500, Easing.SineInOut, delay)
+        ::slider.animate(1.0, 0, Easing.CubicInOut, (300*speed).toLong())
     }
+
     fun animateOut() {
-        val delay = (Math.random()*500.0).toLong()
-        ::shade.animate(0.15, 500, Easing.SineInOut, delay).completed.listen {
-            ::scaleX.animate(1.0, 0, Easing.SineInOut, 0)
-            ::scaleY.animate(1.0, 0, Easing.SineInOut, 0)
-        }
+        ::slider.animate(0.0, 0, Easing.CubicInOut, (300*speed).toLong())
     }
+
     fun update() {
         this.updateAnimation()
+        shade = if(slider > 0.5) 1.0 else 0.25
     }
 }
 
@@ -97,13 +100,11 @@ class Slot(val position: Vector2, var scaleX:Double = 1.0, var scaleY: Double = 
 class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: FilteredDataModel) :
     ZoomLevel(i, rect, dataModel, filteredDataModel) {
 
-    private val sortingMethod = SortMode.FACULTY_YEAR
+    private val sortingMethod = SortMode.AUTHOR
     private var rects = listOf<Rectangle>()
     private var color = ColorRGBa.GRAY
     private val slots = mutableListOf<Slot>()
     private var articlesSorted = dataModel.articlesSorted[sortingMethod]!!
-
-
 
     private var highlighted = mutableListOf<Article>()
     private var highlightedFaculties = mutableListOf<String>()
@@ -132,7 +133,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
                         articlesSorted[cIndex].year.toInt()
                     )
                 val slot = slots[index]
-                slot.cancel()
+//                slot.cancel()
                 if (highlighted) {
                     slot.animateIn()
                 } else {
@@ -167,7 +168,7 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
 
                         slot.update()
 //                        if (highlighted) {
-                            this.rectangle(Rectangle(slot.position, 10.0 * slot.scaleX, 42.0 * slot.scaleX))
+                            this.rectangle(Rectangle(slot.position, 10.0 * slot.scaleX, 42.0 * slot.scaleY))
 //                        } else {
 //                            this.rectangle(Rectangle(slot.position, 10.0, 42.0))
 //                        }
@@ -203,7 +204,6 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
                                             bounds.height-160.0, 0.0,
                                             count.toDouble()
                                         )
-
                                         drawer.translate(position.x, 150+(yOffset))
                                         drawer.rotate(-90.0)
                                         drawer.text(label, 0.0, 55.0)
@@ -213,6 +213,9 @@ class Zoom0(i: Int, rect: Rectangle, dataModel: DataModel, filteredDataModel: Fi
                                         drawer.translate(position.x, bounds.height)
                                         drawer.rotate(-90.0)
                                         drawer.text(label, 0.0, 55.0)
+                                    }
+                                    SortMode.AUTHOR -> {
+
                                     }
                                 }
 
