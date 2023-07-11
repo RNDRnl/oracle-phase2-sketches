@@ -52,6 +52,12 @@ fun Program.pc05(data: DataModel, state: State) {
 
 
     val pinchDetector = extend(PinchDetector())
+    mouse.dragged.listen {
+        if (pinchDetector.pinching) {
+            it.cancelPropagation()
+        }
+    }
+
 
     val uiManager = UIManager(window, mouse, pinchDetector.pinchChanged)
     var uiManagerExport: UIManager by userProperties
