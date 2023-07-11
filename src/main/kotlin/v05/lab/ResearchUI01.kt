@@ -7,6 +7,8 @@ import org.openrndr.events.Event
 import org.openrndr.extra.noise.uniform
 import org.openrndr.math.map
 import org.openrndr.shape.Rectangle
+import v05.Camera2D
+import v05.extensions.PinchDetector
 import v05.extensions.PinchEvent
 import v05.libs.UIElement
 import v05.libs.UIElementImpl
@@ -16,6 +18,8 @@ fun main() {
     application {
         program {
 
+
+            val pinchDetector = extend(PinchDetector())
 
             class Slider(area: Rectangle) : UIElementImpl() {
                 var value = 0.0
@@ -61,7 +65,7 @@ fun main() {
             }
 
 
-            val uiManager = UIManager(window, mouse, Event<PinchEvent>())
+            val uiManager = UIManager(window, mouse, pinchDetector.pinchChanged)
 
             val sliders = (0 until 10).map {
                 Slider(
@@ -74,8 +78,10 @@ fun main() {
                 )
             }
 
+            val c = extend(Camera2D())
+            uiManager.elements.add(c)
             for (slider in sliders) {
-                uiManager.elements.add(slider)
+                //uiManager.elements.add(slider)
             }
 
             extend {

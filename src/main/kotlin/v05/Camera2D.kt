@@ -139,9 +139,10 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
         }
 
         pinched.listen {
+            println("scale ${it.scale}, delta ${it.scaleDelta}")
             view = buildTransform {
                 translate(it.center)
-                scale(it.scaleDelta * -40.0)
+                scale(1.0 + it.scaleDelta)
                 translate(-it.center)
             } * view
             dirty = true

@@ -4,6 +4,7 @@ import org.openrndr.*
 import org.openrndr.draw.Drawer
 import org.openrndr.events.Event
 import org.openrndr.math.Vector2
+import kotlin.math.abs
 
 data class PinchEvent(val center: Vector2, val scale: Double, val scaleDelta: Double)
 class PinchDetector : Extension {
@@ -34,7 +35,7 @@ class PinchDetector : Extension {
 
             val delta = currentDistance / startDistance - lastScale
 
-            if (delta > 1E-4) {
+            if (abs(delta) > 1E-4) {
                 pinchChanged.trigger(
                     PinchEvent(
                         center,
