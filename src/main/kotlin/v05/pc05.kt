@@ -19,9 +19,11 @@ import v05.filters.*
 import v05.fx.GradientFilter
 import v05.fx.LocalMaximaFilter
 import v05.libs.UIManager
+import v05.libs.equidistantFlowlines
 import v05.libs.watchProperty
 import v05.views.PointCloud
 import kotlin.math.atan2
+import kotlin.random.Random
 
 
 fun Program.pc05(data: DataModel, state: State) {
@@ -58,6 +60,11 @@ fun Program.pc05(data: DataModel, state: State) {
         }
     }
 
+    mouse.scrolled.listen {
+        if (pinchDetector.pinching) {
+            it.cancelPropagation()
+        }
+    }
 
     val uiManager = UIManager(window, mouse, pinchDetector.pinchChanged)
     var uiManagerExport: UIManager by userProperties
@@ -238,8 +245,6 @@ fun Program.pc05(data: DataModel, state: State) {
 
 
     }
-
-
     pcgs.destroy()
 
     val pointCloudLocalMaxima = pointCloudGradient.createEquivalent(type = ColorType.UINT8)
@@ -257,6 +262,12 @@ fun Program.pc05(data: DataModel, state: State) {
             }
         }
     }
+    pclms.destroy()
+    pointCloudLocalMaxima.destroy()
+
+    pointCloudGradient.shadow.download()
+    //val lines = equidistantFlowlines(pointCloudGradient, drawer.bounds.center, random = Random(0))
+    val flowLines = equidistantFlowlines(pointCloudGradient, drawer.bounds.center, distance0 = 20.0, distance1 = 30.0, random = Random(0))
 
     val labelPoints = labelPointsCandidates.map { state.kdtree.findNearest(it)!! }
 
@@ -295,7 +306,7 @@ fun Program.pc05(data: DataModel, state: State) {
             blur.apply(bg, bg)
 
             draw {
-                drawer.drawStyle.colorMatrix = tint(ColorRGBa.WHITE.shade(0.2))
+                drawer.drawStyle.colorMatrix = tint(ColorRGBa.WHITE.shade(0.5))
                 drawer.translate(-bg.width / (mul * 2.0), -bg.height / (mul * 2.0))
                 drawer.image(bg)
             }
@@ -308,6 +319,15 @@ fun Program.pc05(data: DataModel, state: State) {
             draw {
                 drawer.strokeWeight = 0.2
 
+                drawer.isolated {
+                    drawer.stroke = ColorRGBa.WHITE.opacify(0.25)
+                    drawer.strokeWeight = 0.25
+                    drawer.lineCap = LineCap.ROUND
+                    drawer.fill = null
+
+
+                    drawer.contours(flowLines)
+                }
                 pointCloudView.draw()
 
                 //drawer.circles(labelPoints, 3.0)
@@ -422,7 +442,7 @@ fun Program.pc05(data: DataModel, state: State) {
 
                    showcases.draw(drawer)
 
-                    slider.draw(drawer)
+                    //slider.draw(drawer)
                 }
 
             }

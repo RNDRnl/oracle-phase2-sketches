@@ -115,10 +115,14 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
         }
 
         pinchEvent.listen {
-
             activeElement?.pinched?.trigger(it)
+        }
 
-
+        mouseEvents.scrolled.listen {
+            activeElement?.scrolled?.trigger(it)
+            if (activeElement != null) {
+                requestDraw()
+            }
         }
     }
     val elements = mutableListOf<UIElement>()

@@ -19,7 +19,7 @@ class IdleDetector : Extension{
     val idleStarted = Event<Unit>("idle-started")
     val idleEnded = Event<Unit>("idle-ended")
     override fun setup(program: Program) {
-        listOf(program.mouse.moved, program.mouse.dragged, program.mouse.buttonDown, program.mouse.buttonDown).listen {
+        listOf(program.mouse.moved, program.mouse.dragged, program.mouse.buttonDown, program.mouse.buttonDown, program.mouse.scrolled).listen {
             lastInteraction = System.currentTimeMillis()
             if (idle) {
                 logger.info { "activity detected, ending idle mode" }

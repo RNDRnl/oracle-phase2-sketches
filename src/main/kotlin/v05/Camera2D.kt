@@ -149,19 +149,21 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
 
         }
 
+        scrolled.listen { mouse ->
+            val scaleFactor = 1.0 - mouse.rotation.y * zoomSpeed
+            zoomPosition = mouse.position
+
+            view = buildTransform {
+                translate(mouse.position)
+                scale(scaleFactor)
+                translate(-mouse.position)
+            } * view
+            dirty = true
+        }
+
     }
 
-    fun scrolled(mouse: MouseEvent) { // this
-        val scaleFactor = 1.0 - mouse.rotation.y * zoomSpeed
-        zoomPosition = mouse.position
 
-        view = buildTransform {
-            translate(mouse.position)
-            scale(scaleFactor)
-            translate(-mouse.position)
-        } * view
-        dirty = true
-    }
 
     override fun setup(program: Program) {
         this.program = program
