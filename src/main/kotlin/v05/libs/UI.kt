@@ -19,6 +19,7 @@ interface UIElement: MouseEvents {
     val actionBounds: Rectangle
     val visible: Boolean
     val pinched: Event<PinchEvent>
+    val clicked: Event<MouseEvent>
 }
 
 open class UIElementImpl : UIElement {
@@ -29,8 +30,10 @@ open class UIElementImpl : UIElement {
 
     override val buttonDown: Event<MouseEvent> = Event("ui-element-button-down")
     override val buttonUp: Event<MouseEvent> = Event("ui-element-button-up")
+    override val clicked: Event<MouseEvent> = Event("ui-element-clicked")
     override val dragged: Event<MouseEvent> = Event("ui-element-dragged")
     override val pinched: Event<PinchEvent> = Event("ui-element-pinched")
+
 
     override val entered: Event<MouseEvent> = Event("ui-element-entered")
     override val exited: Event<MouseEvent> = Event("ui-element-exited")
@@ -47,7 +50,7 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
     var dragElement: UIElement? = null
     var postDragElement: UIElement? = null
 
-    private var lastMousePosition = Vector2(0.0, 0.0)
+    var lastMousePosition = Vector2(0.0, 0.0)
     private var velocity = Vector2(0.0, 0.0)
     private var potentialVelocity = Vector2(0.0, 0.0)
 
@@ -104,6 +107,7 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
 
             activeElement?.buttonUp?.trigger(event)
             if (activeElement != null && dragElement == null) {
+                activeElement?.clicked?.trigger(event)
                 clicked.trigger(Unit)
             }
 
@@ -113,6 +117,7 @@ class UIManager(val window: Window, mouseEvents: MouseEvents, pinchEvent: Event<
                 dragElement = null
             }
         }
+
 
         pinchEvent.listen {
             activeElement?.pinched?.trigger(it)

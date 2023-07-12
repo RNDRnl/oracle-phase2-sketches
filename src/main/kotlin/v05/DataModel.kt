@@ -142,6 +142,7 @@ class State(val model: DataModel) {
     var zoom = 0.0
     var lookAt = model.frame.center
         set(value) {
+            field = value
             activePoints = findActivePoints(value)
         }
 
@@ -154,12 +155,12 @@ class State(val model: DataModel) {
     var activePoints = findActivePoints(model.frame.center)
         set(value) {
             field = value
-            closest = value.keys.first()
-            furthest = value.keys.last()
+            closest = value.keys.firstOrNull()
+            furthest = value.keys.lastOrNull()
         }
 
-    var closest  = activePoints.keys.minBy { it.distanceTo(model.frame.center) }
-    var furthest = activePoints.keys.maxBy { it.distanceTo(model.frame.center) }
+    var closest: Vector2?  = activePoints.keys.minBy { it.distanceTo(model.frame.center) }
+    var furthest: Vector2? = activePoints.keys.maxBy { it.distanceTo(model.frame.center) }
 
     fun findActivePoints(pos: Vector2): Map<Vector2, Article> {
         val nearest = kdtree.findKNearest(pos, 200).sortedBy { it.distanceTo(pos) }

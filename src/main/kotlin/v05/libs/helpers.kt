@@ -3,6 +3,7 @@ package v05
 import org.openrndr.draw.FontImageMap
 import org.openrndr.math.Matrix44
 import org.openrndr.math.Vector2
+import org.openrndr.math.Vector4
 
 fun FontImageMap.textWidth(string: String): Double {
     return string.fold(0.0) { a, b -> (glyphMetrics[b]?.advanceWidth ?: 0.0) + a }
@@ -11,6 +12,8 @@ fun FontImageMap.textWidth(string: String): Double {
 fun Vector2.transform(m : Matrix44) : Vector2 {
     return (m * this.xy01).xy
 }
+
+fun Matrix44.scale(): Double = (this * Vector4(1.0, 1.0, 0.0, 0.0).normalized).xy.length
 
 val lipsum = "Lorem ipsum dolor sit amet. " +
         "Quo quia delectus sed iste eaque nam deleniti " +

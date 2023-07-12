@@ -26,7 +26,7 @@ import kotlin.random.Random
 
 // zoom ranges
 val FURTHEST = 0.0..0.34
-val CLOSER = (FURTHEST.endInclusive + 0.01)..0.7
+val CLOSER = (FURTHEST.endInclusive + 0.01)..0.78
 val CLOSEST = (CLOSER.endInclusive + 0.01)..1.0
 
 class ArticleBody(val frame: Rectangle, val body: Body)

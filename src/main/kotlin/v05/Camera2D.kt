@@ -42,8 +42,6 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
         return floor(x * 10000.0) / 10000.0
     }
 
-    fun Matrix44.scale(): Double = (this * Vector4(1.0, 1.0, 0.0, 0.0).normalized).xy.length
-
     fun toNormalizedScale(scale: Double): Double {
         return quantize(ln(scale).map(ln(minZoom), ln(maxZoom), 0.0, 1.0, clamp = true))
     }
@@ -128,6 +126,10 @@ class Camera2D : Extension, ChangeEvents, UIElementImpl() {
 
         buttonDown.listen {
             it.cancelPropagation()
+        }
+
+        clicked.listen{
+            println("clicked")
         }
 
 

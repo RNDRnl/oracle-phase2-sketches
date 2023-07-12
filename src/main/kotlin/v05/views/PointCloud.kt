@@ -1,10 +1,12 @@
 package v05.views
 
 import org.openrndr.Clock
+import org.openrndr.animatable.Animatable
 import org.openrndr.color.ColorRGBa
 import org.openrndr.draw.Drawer
 import org.openrndr.draw.isolated
 import org.openrndr.draw.shadeStyle
+import org.openrndr.math.Vector2
 import org.openrndr.math.Vector3
 import org.openrndr.math.Vector4
 import org.openrndr.math.smoothstep
@@ -31,17 +33,38 @@ x_fill.rgb = mix(x_fill.rgb, res, p_fade);
     }
 }
 
-class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val data: DataModel) {
+class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val data: DataModel): Animatable() {
 
     var currentlySelected = Rectangle(0.0, 0.0, 3.0, 0.75) to 0.0
-    var closestArticle = state.filtered[state.closest]
+
+    private fun rectangleContour(rect: Rectangle, idx: Int): ShapeContour {
+        val rotation = data.rotations[idx]
+        return rect.contour.transform(buildTransform {
+            translate(rect.center)
+            rotate(rotation)
+            translate(-rect.center)
+        })
+    }
+    fun rectangle(pos: Vector2): Rectangle {
+        val size = (if (state.filtered[pos] != null) 3.0 else 1.0) * 0.75
+        return Rectangle.fromCenter(pos, 0.707 * size,  size)
+    }
+    fun contains(pos: Vector2): Boolean {
+        val closestPos = state.kdtree.findNearest(pos)
+        return if(closestPos != null) {
+            val rect = rectangle(state.lookAt)
+            val contour = rectangleContour(rect, data.pointsToArticles.keys.indexOf(state.lookAt))
+            contour.contains(pos)
+        } else {
+            false
+        }
+
+    }
 
     fun draw() {
 
         val up = unproject(Vector3(drawer.width/2.0, drawer.height/2.0, 1.0),drawer.projection, drawer.view * drawer.model, drawer.width, drawer.height)
         val center = up.xy
-
-        closestArticle = state.filtered[state.closest]
 
         drawer.isolated {
             pointCloudShadeStyle.parameter("time", clock.seconds)
@@ -52,15 +75,12 @@ class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val dat
                 var idx = 0
                 for ((point, article) in data.pointsToArticles) {
 
-                    val size = (if (state.filtered[point] != null) 3.0 else 1.0) * 0.75
                     val rotation = (data.rotations[idx])
-                    val rect = Rectangle.fromCenter(point, 0.707 * size,  size)
-
-                    val isInRect = (state.closest == point && point in rect && state.zoom in CLOSEST)
+                    val rect = rectangle(point)
 
                     val opacity = if (state.filtered[point] != null) 1.0 else 0.2
                     this.stroke = if (
-                        (state.activePoints[point] != null && state.zoom in CLOSER) || isInRect) article.faculty.facultyColor().mix(
+                        (state.activePoints[point] != null && state.zoom in CLOSER)) article.faculty.facultyColor().mix(
                         ColorRGBa.WHITE, 0.75
                     ) else null
 
@@ -71,8 +91,6 @@ class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val dat
 
                     this.rectangle(rect, rotation)
                     idx++
-
-                    if(article == closestArticle) currentlySelected = rect to rotation
 
                 }
             }
