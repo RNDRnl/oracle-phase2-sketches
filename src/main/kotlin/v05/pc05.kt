@@ -32,7 +32,6 @@ fun Program.pc05(data: DataModel, state: State) {
 
     val pointCloudView = PointCloud(drawer, this, state, data)
 
-    val slider = Slider(Vector2(width / 2.0, height - 60.0))
     val viewfinder = Viewfinder(state, camera)
 
     val discover = Discover(state)
@@ -74,7 +73,7 @@ fun Program.pc05(data: DataModel, state: State) {
     uiManagerExport = uiManager
 
     val uiElements =
-        listOf(camera, slider,
+        listOf(camera,
             showcases, showcases.filter,
             discover, discoverSelector,
             facultyFilter, topicFilter, dateFilter, articleFilter
@@ -187,15 +186,16 @@ fun Program.pc05(data: DataModel, state: State) {
 
 
     fun updateState() {
-        slider.current = camera.mappedZoom
         state.zoom = camera.mappedZoom
         state.changed.trigger(Unit)
     }
 
     camera.clicked.listen {
-        state.lookAt = (camera.view.inversed * it.position.xy01).xy
-        updateState()
-        viewfinder.moveTo(state.lookAt)
+        if(!pinchDetector.pinching) {
+            state.lookAt = (camera.view.inversed * it.position.xy01).xy
+            updateState()
+            viewfinder.moveTo(state.lookAt)
+        }
      /*   if (state.zoom in CLOSER && pointCloudView.contains(it.position.transform(camera.view))) {
 
             //pointCloudView.moveTo(it.position)
@@ -205,11 +205,6 @@ fun Program.pc05(data: DataModel, state: State) {
     camera.changed.listen {
         updateState()
     }
-
-    slider.valueChanged.listen {
-        camera.setNormalizedScale(it)
-    }
-
 
     val pointCloudDensity = drawImage(width, height, type = ColorType.FLOAT32) {
         drawer.clear(ColorRGBa.BLACK)
@@ -447,10 +442,7 @@ fun Program.pc05(data: DataModel, state: State) {
 
                    showcases.draw(drawer)
 
-                    //slider.draw(drawer)
-
                     showcases.draw(drawer)
-                    slider.draw(drawer)
 
                 }
 
