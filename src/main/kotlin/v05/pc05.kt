@@ -8,6 +8,7 @@ import org.openrndr.extra.compositor.compose
 import org.openrndr.extra.compositor.draw
 import org.openrndr.extra.compositor.layer
 import org.openrndr.extra.fx.blur.GaussianBlur
+import org.openrndr.extra.kdtree.kdTree
 import org.openrndr.extra.shadestyles.linearGradient
 import org.openrndr.math.*
 import org.openrndr.math.transforms.project
@@ -21,7 +22,9 @@ import v05.fx.LocalMaximaFilter
 import v05.libs.UIManager
 import v05.libs.equidistantFlowlines
 import v05.libs.watchProperty
+import v05.model.SelectedDataModel
 import v05.views.PointCloud
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.random.Random
 
@@ -32,7 +35,8 @@ fun Program.pc05(data: DataModel, state: State) {
 
     val pointCloudView = PointCloud(drawer, this, state, data)
 
-    val viewfinder = Viewfinder(state, camera)
+    val selectedDataModel = SelectedDataModel()
+    val viewfinder = Viewfinder(state, selectedDataModel)
 
     val discover = Discover(state)
     val discoverSelector = DiscoverSelector()
@@ -190,16 +194,28 @@ fun Program.pc05(data: DataModel, state: State) {
         state.changed.trigger(Unit)
     }
 
+    viewfinder.finder.returnEvent.listen {
+        camera.centerAtSlow(state.lookAt)
+    }
+
     camera.clicked.listen {
         if(!pinchDetector.pinching) {
             state.lookAt = (camera.view.inversed * it.position.xy01).xy
             updateState()
-            viewfinder.moveTo(state.lookAt)
-        }
-     /*   if (state.zoom in CLOSER && pointCloudView.contains(it.position.transform(camera.view))) {
 
-            //pointCloudView.moveTo(it.position)
-        }*/
+            if(state.zoom in CLOSER) {
+                selectedDataModel.selectedArticles = state.activePoints.values.toList()
+                selectedDataModel.filter = state.filterSet
+            }
+
+            viewfinder.positionChanged()
+
+            if (state.zoom in CLOSEST) {
+                pointCloudView.positionChanged()
+            }
+
+        }
+
     }
 
     camera.changed.listen {
@@ -318,11 +334,12 @@ fun Program.pc05(data: DataModel, state: State) {
         }
         layer {// Point cloud
 
-            val fm = loadFont("data/fonts/Roboto-Regular.ttf", 36.0)
+            val titleFm = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 36.0)
+            val dataTypeFm = loadFont("data/fonts/default.otf", 14.0)
+            val subtitleFm = loadFont("data/fonts/ArchivoNarrow-Regular.ttf", 26.0)
             val fms = loadFont("data/fonts/ArchivoNarrow-SemiBold.ttf", 24.0)
 
             draw {
-                drawer.strokeWeight = 0.2
 
                 drawer.isolated {
                     drawer.stroke = ColorRGBa.WHITE.opacify(0.25)
@@ -354,6 +371,56 @@ fun Program.pc05(data: DataModel, state: State) {
                 val labelTexts = filteredPoints.map { data.pointsToArticles[it]!!.faculty }
                 drawer.fontMap = fms
                 drawer.texts(labelTexts, projectedPoints)
+
+                val cs = pointCloudView.currentlySelected
+                if(cs != null) {
+                    val p = data.points[cs]
+                    val ap = state.activePoints[p]
+                    if(ap != null) {
+                        drawer.fill = ColorRGBa.WHITE
+
+                        val titleBox = Rectangle(
+                            (p + Vector2(1.5 * 2.3 * 0.707, -1.5 * 2.0)).transform(camera.view),
+                            8.0 * camera.view.scale(),
+                            4.0 * camera.view.scale()
+                        )
+
+
+
+                        writer {
+                            drawer.fontMap = titleFm
+                            box = titleBox
+                            newLine()
+                            text(ap.title.take((pointCloudView.fader * ap.title.length).toInt()))
+
+                            drawer.fontMap = dataTypeFm
+                            newLine()
+                            newLine()
+                            text("AUTHOR".take((pointCloudView.fader * "AUTHOR".length).toInt()))
+
+                            drawer.fontMap = subtitleFm
+                            newLine()
+                            text(ap.author.take((pointCloudView.fader * ap.author.length).toInt()))
+
+                            drawer.fontMap = dataTypeFm
+                            newLine()
+                            newLine()
+                            text("YEAR".take((pointCloudView.fader * "YEAR".length).toInt()))
+
+                            drawer.fontMap = subtitleFm
+                            newLine()
+                            text(ap.year.toString().take((pointCloudView.fader * ap.author.length).toInt()))
+                        }
+
+                        drawer.fill = ap.faculty.facultyColor()
+                        val circlePos = titleBox.corner + Vector2(10.0, titleBox.height * 1.3)
+                        drawer.circle(circlePos, 10.0 * pointCloudView.fader)
+                        drawer.fill = ColorRGBa.WHITE
+                        drawer.text(ap.faculty.take((pointCloudView.fader * ap.faculty.length).toInt()), circlePos + Vector2(20.0, 5.0))
+
+                    }
+                }
+
 
 //                val p = Vector2(state.closest.x + 3.0, state.closest.y)
 //                if(p in pointCloudView.currentlySelected.first && pointCloudView.closestArticle != null && state.zoom in CLOSEST) {

@@ -6,27 +6,31 @@ import v05.filters.FilterSet
 import v05.libs.brackets
 import v05.libs.histogramOf
 
-class FilteredDataModel(val allArticles: List<Article>) {
+class SelectedDataModel() {
     val dataChanged = Event<Unit>("data-changed")
+
+    var selectedArticles: List<Article> = listOf()
+        set(value) {
+            field = value
+            filteredArticles = value
+        }
 
     var filter: FilterSet = FilterSet.EMPTY
         set(value) {
-            if (field != value) {
-                field = value
-                filterData()
-                dataChanged.trigger(Unit)
-            }
+            println("new filter")
+            field = value
+            filterData()
+            dataChanged.trigger(Unit)
         }
 
     private fun filterData() {
         filteredArticles = if (filter == FilterSet.EMPTY) {
-            allArticles
+            selectedArticles
         } else {
-            println(filter.topics.isEmpty())
             val noTopics = filter.topics.joinToString("").isBlank()
             val noFaculties = filter.faculties.joinToString("").isBlank()
 
-            allArticles.filter {
+            selectedArticles.filter {
                 (noFaculties || (it.faculty in filter.faculties)) &&
                         (noTopics || (it.topic in filter.topics)) &&
                         it.year.toString().takeLast(4).toInt() in filter.dates.first..filter.dates.second
@@ -42,7 +46,7 @@ class FilteredDataModel(val allArticles: List<Article>) {
     }
 
 
-    var filteredArticles = allArticles
+    var filteredArticles = selectedArticles
         private set
 
     val articles: List<Article>
