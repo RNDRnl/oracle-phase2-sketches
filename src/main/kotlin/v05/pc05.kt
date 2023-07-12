@@ -77,7 +77,7 @@ fun Program.pc05(data: DataModel, state: State) {
     uiManagerExport = uiManager
 
     val uiElements =
-        listOf(camera,
+        listOf(camera, viewfinder.finder,
             showcases, showcases.filter,
             discover, discoverSelector,
             facultyFilter, topicFilter, dateFilter, articleFilter
