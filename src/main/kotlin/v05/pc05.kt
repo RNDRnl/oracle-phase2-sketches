@@ -543,7 +543,7 @@ fun Program.pc05(data: DataModel, state: State) {
 
     extend(camera)
     extend {
-
+        val start = System.currentTimeMillis()
         c.draw(drawer)
         //uiManager.drawDebugBoxes(drawer)
 
@@ -553,6 +553,8 @@ fun Program.pc05(data: DataModel, state: State) {
 //            fragmentTransform = """x_fill.rg = x_fill.rg * 0.5 + 0.5;"""
 //        }
 //        drawer.image(pointCloudGradient)
+        val end = System.currentTimeMillis()
+        println("${end-start}ms")
     }
 
 

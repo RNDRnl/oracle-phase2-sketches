@@ -1,5 +1,6 @@
 package v05
 
+import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.annotations.ColumnName
 import org.jetbrains.kotlinx.dataframe.api.*
@@ -10,6 +11,7 @@ import org.jetbrains.kotlinx.dataframe.name
 import org.openrndr.events.Event
 import org.openrndr.extra.kdtree.kdTree
 import org.openrndr.math.Vector2
+import org.openrndr.math.Vector4
 import org.openrndr.shape.Rectangle
 import org.openrndr.shape.bounds
 import org.openrndr.shape.map
@@ -20,6 +22,7 @@ import v05.libs.brackets
 import v05.libs.histogramOf
 import v05.filters.TopicFilterModel
 import java.awt.geom.Arc2D
+import java.io.File
 import java.io.Serializable
 import java.math.BigDecimal
 
@@ -30,6 +33,20 @@ enum class SortMode {
 }
 
 class DataModel(val frame: Rectangle = Rectangle(0.0, 0.0, 100.0, 100.0)) {
+
+    val umap8 = csvReader().open(File("offline-data/umap-8d-v5.csv")) {
+        readAllWithHeaderAsSequence().map {
+            Pair(
+                Vector4(it["0"]!!.toDouble(), it["1"]!!.toDouble(),
+                    it["2"]!!.toDouble(),it["3"]!!.toDouble()
+                ),
+                Vector4(it["4"]!!.toDouble(), it["5"]!!.toDouble(),
+                    it["6"]!!.toDouble(),it["7"]!!.toDouble()
+                )
+            )
+        }.toList()
+    }
+
      val topicsDf = DataFrame.readCSV("offline-data/zeroshot-all-data-v5.csv")
         .add("topic") {
             val r = getRow(index()).toMap().values

@@ -5,10 +5,7 @@ import org.openrndr.animatable.Animatable
 import org.openrndr.animatable.PropertyAnimationKey
 import org.openrndr.animatable.easing.Easing
 import org.openrndr.color.ColorRGBa
-import org.openrndr.draw.Drawer
-import org.openrndr.draw.isolated
-import org.openrndr.draw.loadFont
-import org.openrndr.draw.shadeStyle
+import org.openrndr.draw.*
 import org.openrndr.math.Vector2
 import org.openrndr.math.Vector4
 import org.openrndr.math.mixAngle
@@ -18,24 +15,12 @@ import org.openrndr.shape.Rectangle
 import org.openrndr.shape.ShapeContour
 import org.openrndr.shape.contains
 import v05.*
+import v05.shadestyles.coverStyle
 import kotlin.math.abs
 import kotlin.math.min
 
 
-val pointCloudShadeStyle by lazy {
-    shadeStyle {
-        fragmentTransform = """float dx = cos(v_worldPosition.x*10.0)*2.0+2.0; 
-            float dy = cos(v_worldPosition.y*10.0)*2.0+2.0;
-float c = 0.5 + 0.5 * cos(va_texCoord0.y * 3.1415 * dx + dy + p_time) * sin(va_texCoord0.x * 3.1415 * dy + dx + p_time);
-            vec3 black = vec3(0.2);
-            vec3 white = vec3(1.0);
-            vec3 color = x_fill.rgb;
-            vec3 res = mix(mix(black, color, min(1.0,c*2.0)), white, max(0.0, c*2.0 - 1.0) ) ; 
 
-x_fill.rgb = mix(x_fill.rgb, res, p_fade);                             
-        """
-    }
-}
 
 class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val data: DataModel): Animatable() {
 
@@ -111,6 +96,21 @@ class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val dat
             }
             field = value
         }
+    val instanceAttributes = vertexBuffer(vertexFormat {
+        attribute("umap0", VertexElementType.VECTOR4_FLOAT32)
+        attribute("umap1", VertexElementType.VECTOR4_FLOAT32)
+    }, data.umap8.size)
+
+    init {
+        instanceAttributes.put {
+            for (u in data.umap8) {
+                write(u.first)
+                write(u.second)
+            }
+        }
+    }
+
+    val pointCloudShadeStyle = coverStyle(instanceAttributes)
 
     val fm = loadFont("data/fonts/Roboto-Regular.ttf", 24.0)
     fun draw() {
@@ -123,7 +123,7 @@ class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val dat
 
         drawer.isolated {
 
-            pointCloudShadeStyle.parameter("time", clock.seconds)
+            pointCloudShadeStyle.parameter("time", clock.seconds*0.1)
             val scale = (drawer.view * Vector4(1.0, 1.0, 0.0, 0.0)).xy.length
             pointCloudShadeStyle.parameter("fade", smoothstep(20.0, 30.0, scale))
             drawer.shadeStyle = pointCloudShadeStyle
@@ -158,12 +158,6 @@ class PointCloud(val drawer: Drawer, val clock: Clock, val state: State, val dat
 
                 }
             }
-
-
         }
-
-
-
-
     }
 }
